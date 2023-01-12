@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "tiltakspenger-vedtak": "git@github.com:navikt/tiltakspenger-vedtak",
+    "tiltakspenger-vedtak-rivers": "git@github.com:navikt/tiltakspenger-vedtak-rivers"
+  }
+}

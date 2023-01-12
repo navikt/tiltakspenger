@@ -1,5 +1,6 @@
 rootProject.name = "tiltakspenger"
 
+includeBuild "tiltakspenger-libs"
+includeBuild "tiltakspenger-person"
 includeBuild "tiltakspenger-vedtak"
 includeBuild "tiltakspenger-vedtak-rivers"
-

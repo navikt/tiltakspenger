@@ -1,0 +1,5 @@
+rootProject.name = "tiltakspenger"
+
+includeBuild "tiltakspenger-vedtak"
+includeBuild "tiltakspenger-vedtak-rivers"
+

@@ -1,8 +1,17 @@
 {
   "projects": {
+    "tiltakspenger-iac": "git@github.com:navikt/tiltakspenger-iac",
     "tiltakspenger-libs": "git@github.com:navikt/tiltakspenger-libs",
+    "tiltakspenger-mottak": "git@github.com:navikt/tiltakspenger-mottak",
+    "tiltakspenger-arena": "git@github.com:navikt/tiltakspenger-area"
     "tiltakspenger-person": "git@github.com:navikt/tiltakspenger-person",
+    "tiltakspenger-fp": "git@github.com:navikt/tiltakspenger-fp",
+    "tiltakspenger-ufore": "git@github.com:navikt/tiltakspenger-ufore",
+    "tiltakspenger-institusjon": "git@github.com:navikt/tiltakspenger-institusjon",
+    "tiltakspenger-skjerming": "git@github.com:navikt/tiltakspenger-skjerming",
     "tiltakspenger-vedtak": "git@github.com:navikt/tiltakspenger-vedtak",
-    "tiltakspenger-vedtak-rivers": "git@github.com:navikt/tiltakspenger-vedtak-rivers"
+    "tiltakspenger-vedtak-rivers": "git@github.com:navikt/tiltakspenger-vedtak-rivers",
+    "tiltakspenger-testmeldinger": "git@github.com:navikt/tiltakspenger-testmeldinger",
+    "tiltakspenger-saksbehandler": "git@github.com:navikt/tiltakspenger-saksbehandler",
   }
 }

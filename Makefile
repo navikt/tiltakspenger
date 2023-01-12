@@ -7,3 +7,4 @@ help:
 
 meta-update: ## Clone any repos that exist in your .meta file but aren't cloned locally
 	@meta git update
+	

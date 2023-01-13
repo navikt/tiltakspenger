@@ -8,3 +8,6 @@ help:
 meta-update: ## Clone any repos that exist in your .meta file but aren't cloned locally
 	@meta git update
 	
+pull: ## Run git pull --all --rebase --autostash on all repos
+	@meta exec "$(root_dir)script/pull_from_repo.sh" --parallel
+	

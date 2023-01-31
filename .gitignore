@@ -15,3 +15,5 @@ tiltakspenger-*/
 !.idea/codeStyles/codeStyleConfig.xml
 !.idea/codeStyles/Project.xml
 /tiltakspenger-scheduler/
+/tiltakspenger-template/
+/tiltakspenger-admin/

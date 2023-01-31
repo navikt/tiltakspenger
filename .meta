@@ -13,6 +13,8 @@
     "tiltakspenger-vedtak-rivers": "git@github.com:navikt/tiltakspenger-vedtak-rivers",
     "tiltakspenger-testmeldinger": "git@github.com:navikt/tiltakspenger-testmeldinger",
     "tiltakspenger-saksbehandler": "git@github.com:navikt/tiltakspenger-saksbehandler",
-    "tiltakspenger-scheduler": "git@github.com:navikt/tiltakspenger-scheduler"
+    "tiltakspenger-scheduler": "git@github.com:navikt/tiltakspenger-scheduler",
+    "tiltakspenger-template": "git@github.com:navikt/tiltakspenger-template",
+    "tiltakspenger-admin": "git@github.com:navikt/tiltakspenger-admin"
   }
 }

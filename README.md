@@ -44,3 +44,11 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-scheduler] (https://github.com/navikt/tiltakspenger-scheduler)
 - [tiltakspenger-template] (https://github.com/navikt/tiltakspenger-template)
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin)
+
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```

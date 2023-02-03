@@ -46,9 +46,12 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin)
 
 ```mermaid
-  graph TD;
-      A-->B;
-      A-->C;
-      B-->D;
-      C-->D;
+sequenceDiagram
+mottak->>vedtak: søknad
+vedtak->>person: behov for personopplysninger
+person-->>vedtak: personopplysninger
+vedtak->>skjerming: behov for skjerming
+skjerming-->>vedtak: skjerming
+scheduler->>vedtak: dayHasBegun
+vedtak->>vedtak: utdatert innsending
 ```

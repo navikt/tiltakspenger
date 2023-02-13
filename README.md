@@ -21,6 +21,12 @@ meta git clone git@github.com:navikt/tiltakspenger.git
 
 Nå kan git brukes som normalt for hvert repo.
 
+For å legge til et nytt repo kan man skrive
+
+```
+meta project import tiltakspenger-whatnot git@github.com:navikt/tiltakspenger-whatnot
+```
+
 Se [meta](https://github.com/mateodelnorte/meta) for flere kommandoer.
 
 Dersom du nå åpner `build.gradle` med `Open` (som Project) i IntelliJ så får du alle komponentene inn i ett

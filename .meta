@@ -16,5 +16,6 @@
     "tiltakspenger-scheduler": "git@github.com:navikt/tiltakspenger-scheduler",
     "tiltakspenger-template": "git@github.com:navikt/tiltakspenger-template",
     "tiltakspenger-admin": "git@github.com:navikt/tiltakspenger-admin"
+    "tiltakspenger-overgangsstonad": "git@github.com:navikt/tiltakspenger-overgangsstonad"
   }
 }

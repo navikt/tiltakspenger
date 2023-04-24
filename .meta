@@ -19,6 +19,6 @@
     "tiltakspenger-overgangsstonad": "git@github.com:navikt/tiltakspenger-overgangsstonad",
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
-    "tiltakspengesoknad": "git@github.com:navikt/tiltakspengesoknad"
+    "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad"
   }
 }

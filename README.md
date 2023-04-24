@@ -50,6 +50,10 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-scheduler] (https://github.com/navikt/tiltakspenger-scheduler)
 - [tiltakspenger-template] (https://github.com/navikt/tiltakspenger-template)
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin)
+- [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad)
+- [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
+- [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
+- [tiltakspengesoknad] (https://github.com/navikt/tiltakspengesoknad)
 
 ```mermaid
 sequenceDiagram

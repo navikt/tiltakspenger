@@ -44,6 +44,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-institusjon] (https://github.com/navikt/tiltakspenger-institusjon)
 - [tiltakspenger-skjerming] (https://github.com/navikt/tiltakspenger-skjerming)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak)
+- [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak)
 - [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers)
 - [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler)

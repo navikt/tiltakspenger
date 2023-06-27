@@ -53,7 +53,30 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
-- [tiltakspengesoknad] (https://github.com/navikt/tiltakspengesoknad)
+- [tiltakspengesoknad] (https://github.com/navikt/tiltakspenger-soknad)
+
+Lenker til PR-sidene
+
+- [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
+- [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs/pulls)
+- [tiltakspenger-mottak] (https://github.com/navikt/tiltakspenger-mottak/pulls)
+- [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena/pulls)
+- [tiltakspenger-person] (https://github.com/navikt/tiltakspenger-person/pulls)
+- [tiltakspenger-fp] (https://github.com/navikt/tiltakspenger-fp/pulls)
+- [tiltakspenger-ufore] (https://github.com/navikt/tiltakspenger-ufore/pulls)
+- [tiltakspenger-institusjon] (https://github.com/navikt/tiltakspenger-institusjon/pulls)
+- [tiltakspenger-skjerming] (https://github.com/navikt/tiltakspenger-skjerming/pulls)
+- [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
+- [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers/pulls)
+- [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger/pulls)
+- [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler/pulls)
+- [tiltakspenger-scheduler] (https://github.com/navikt/tiltakspenger-scheduler/pulls)
+- [tiltakspenger-template] (https://github.com/navikt/tiltakspenger-template/pulls)
+- [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin/pulls)
+- [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad/pulls)
+- [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
+- [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
+- [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad/pulls)
 
 ```mermaid
 sequenceDiagram

@@ -54,7 +54,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
-- [tiltakspengesoknad] (https://github.com/navikt/tiltakspenger-soknad)
+- [tiltakspengr--soknad] (https://github.com/navikt/tiltakspenger-soknad)
 
 Lenker til PR-sidene
 
@@ -68,6 +68,7 @@ Lenker til PR-sidene
 - [tiltakspenger-institusjon] (https://github.com/navikt/tiltakspenger-institusjon/pulls)
 - [tiltakspenger-skjerming] (https://github.com/navikt/tiltakspenger-skjerming/pulls)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
+- [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
 - [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers/pulls)
 - [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger/pulls)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler/pulls)

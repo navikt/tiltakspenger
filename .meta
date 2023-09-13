@@ -21,5 +21,6 @@
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
     "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad"
+    "tiltakspenger-utbetaling": "git@github.com:navikt/tiltakspenger-utbetaling"
   }
 }

@@ -54,8 +54,9 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
-- [tiltakspengr--soknad] (https://github.com/navikt/tiltakspenger-soknad)
-
+- [tiltakspengr-soknad] (https://github.com/navikt/tiltakspenger-soknad)
+- [tiltakspengr-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling)
+  
 Lenker til PR-sidene
 
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
@@ -79,7 +80,8 @@ Lenker til PR-sidene
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad/pulls)
-
+- [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling/pulls)
+  
 ```mermaid
 sequenceDiagram
 mottak->>vedtak: søknad

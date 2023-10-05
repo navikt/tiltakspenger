@@ -20,7 +20,8 @@
     "tiltakspenger-overgangsstonad": "git@github.com:navikt/tiltakspenger-overgangsstonad",
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
-    "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad"
-    "tiltakspenger-utbetaling": "git@github.com:navikt/tiltakspenger-utbetaling"
+    "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad",
+    "tiltakspenger-utbetaling": "git@github.com:navikt/tiltakspenger-utbetaling",
+    "tiltakspenger-dokument": "git@github.com:navikt/tiltakspenger-dokument"
   }
 }

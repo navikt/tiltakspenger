@@ -22,5 +22,6 @@
     "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad",
     "tiltakspenger-utbetaling": "git@github.com:navikt/tiltakspenger-utbetaling",
     "tiltakspenger-dokument": "git@github.com:navikt/tiltakspenger-dokument"
+    "tiltakspenger-meldekort-api": "git@github.com:navikt/tiltakspenger-meldekort-api"
   }
 }

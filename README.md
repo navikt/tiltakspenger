@@ -57,6 +57,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling)
 - [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument)
 - [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
+- [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager)
 - 
 Lenker til PR-sidene
 
@@ -83,6 +84,7 @@ Lenker til PR-sidene
 - [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling/pulls)
 - [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument/pulls)
 - [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api/pulls)
+- [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager/pulls)
 - 
 
 ```mermaid

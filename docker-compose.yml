@@ -169,6 +169,7 @@ services:
       - 8083:8080
       - 5005:5005
     environment:
+      PORT: 8080
       # Authserver env
       AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure

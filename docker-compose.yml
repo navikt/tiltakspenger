@@ -73,7 +73,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,BROKER://kafka:9092
       TZ: Europe/Oslo
 
-  backend:
+  tiltakspenger-vedtak:
     build:
       context: ./tiltakspenger-vedtak
       dockerfile: Dockerfile
@@ -89,6 +89,92 @@ services:
 #      interval: 30s
 #      timeout: 10s
 #      retries: 5
+    environment:
+      # Postgres env
+      DB_HOST: postgresVedtak
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: test
+      DB_DATABASE: vedtak
+      # Authserver env
+      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
+      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
+      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
+      # Kafka env
+      KAFKA_BROKERS: "BROKER://kafka:9092,PLAINTEXT://kafka:9092"
+      KAFKA_TRUSTSTORE_PATH: ""
+      KAFKA_KEYSTORE_PATH: ""
+      KAFKA_CREDSTORE_PASSWORD: ""
+      TPTS_TOPIC: tpts.rapid.v1
+      NAIS_CLUSTER_NAME: "lokal"
+      # Spesifikk for remote debugging
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
+
+  tiltakspenger-meldekort-api:
+    build:
+      context: ./tiltakspenger-meldekort-api
+      dockerfile: Dockerfile
+    depends_on:
+      - tiltakspenger-vedtak
+    ports:
+      - 8081:8080
+      - 5005:5005
+    environment:
+      # Postgres env
+      DB_HOST: postgresMeldekort
+      DB_PORT: 5431
+      DB_USERNAME: postgres
+      DB_PASSWORD: test
+      DB_DATABASE: meldekort
+      # Authserver env
+      AZURE_APP_CLIENT_ID: tiltakspenger-meldekort-api
+      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
+      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
+      NAIS_CLUSTER_NAME: "compose"
+      # Spesifikk for remote debugging
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
+  tiltakspenger-vedtak-rivers:
+    build:
+      context: ./tiltakspenger-vedtak-rivers
+      dockerfile: Dockerfile
+    depends_on:
+      - tiltakspenger-vedtak
+    ports:
+      - 8082:8080
+      - 5005:5005
+    environment:
+      # Kafka env
+      KAFKA_BROKERS: "BROKER://kafka:9092,PLAINTEXT://kafka:9092"
+      KAFKA_TRUSTSTORE_PATH: ""
+      KAFKA_KEYSTORE_PATH: ""
+      KAFKA_CREDSTORE_PASSWORD: ""
+      TPTS_TOPIC: tpts.rapid.v1
+      NAIS_CLUSTER_NAME: "lokal"
+      # Spesifikk for remote debugging
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
+  tiltakspenger-utbetaling:
+    build:
+      context: ./tiltakspenger-vedtak
+      dockerfile: Dockerfile
+    depends_on:
+      - postgresVedtak
+      - kafka
+      - authserver
+    ports:
+      - 8083:8080
+      - 5005:5005
+    #    healthcheck:
+    #      test: [ "CMD", "curl", "-f", "http://backend:8080/internal/isready" ]
+    #      interval: 30s
+    #      timeout: 10s
+    #      retries: 5
     environment:
       # Postgres env
       DB_HOST: postgresVedtak

@@ -25,11 +25,76 @@ services:
       - postgres-meldekort-data:/var/lib/postgresql/data
 
   authserver:
-    image: ghcr.io/navikt/mock-oauth2-server:0.5.5
+    image: ghcr.io/navikt/mock-oauth2-server:2.1.1
     environment:
       TZ: Europe/Oslo
       SERVER_PORT: 6969
-      JSON_CONFIG: "{\"interactiveLogin\":true,\"tokenCallbacks\":[{\"issuerId\":\"azure\",\"tokenExpiry\":3600,\"requestMappings\":[{\"requestParam\":\"grant_type\",\"claims\":{\"aud\":[\"tiltakspenger-vedtak\"],\"NAVident\":\"Z123456\",\"preferred_username\":\"test.testesen@nav.no\",\"name\":\"Test Testesen\",\"groups\":[\"1b3a2c4d-d620-4fcf-a29b-a6cdadf29680\"]}}]}]}"
+      LOG_LEVEL: ALL
+      JSON_CONFIG: >
+        {
+            "interactiveLogin": true,
+            "httpServer": "NettyWrapper",
+            "tokenCallbacks": [
+                {
+                    "issuerId": "azure",
+                    "tokenExpiry": 3600,
+                    "requestMappings": [
+                        {
+                            "requestParam": "scope",
+                            "match": "meldekort",
+                            "claims": {
+                                "aud": "tiltakspenger-meldekort-api",
+                                "oid": "Z123456",
+                                "sub": "Z123456",
+                                "azp_name": "tiltakspenger-vedtak-rivers"
+                            }
+                        },
+                        {
+                            "requestParam": "scope",
+                            "match": "vedtak",
+                            "claims": {
+                                "aud": "tiltakspenger-vedtak",
+                                "oid": "Z123456",
+                                "sub": "Z123456",
+                                "azp_name": "tiltakspenger-vedtak-rivers",
+                                "roles": [
+                                    "LAGE_HENDELSER"
+                                ]
+                            }
+                        },
+                        {
+                            "requestParam": "grant_type",
+                            "match": "*",  
+                            "claims": {
+                                "aud": "tiltakspenger-vedtak",
+                                "NAVident": "Z123456",
+                                "preferred_username": "test.testesen@nav.no",
+                                "name": "Test Testesen",
+                                "groups": [
+                                    "1b3a2c4d-d620-4fcf-a29b-a6cdadf29680",
+                                    "79985315-b2de-40b8-a740-9510796993c6",
+                                    "cbe715d0-6f67-46bf-86b4-688c4419b747"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "issuerId": "tokendings",
+                    "tokenExpiry": 3600,
+                    "requestMappings": [
+                        {
+                            "requestParam": "scope",
+                            "match": "*",
+                            "claims": {
+                                "aud": "somescope",
+                                "NAVident": "someident"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
     ports:
       - 6969:6969
 
@@ -42,11 +107,6 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
-#    healthcheck:
-#      test: [ "CMD", "curl", "-f", "http://zookeeper:2181" ]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.2.2
@@ -83,7 +143,6 @@ services:
       - authserver
     ports:
       - 8080:8080
-      - 5005:5005
     environment:
       # Postgres env
       DB_HOST: postgresVedtak
@@ -96,7 +155,7 @@ services:
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       # Kafka env
       KAFKA_BROKERS: "BROKER://kafka:9092,PLAINTEXT://kafka:9092"
       KAFKA_TRUSTSTORE_PATH: ""
@@ -104,23 +163,20 @@ services:
       KAFKA_CREDSTORE_PASSWORD: ""
       TPTS_TOPIC: tpts.rapid.v1
       NAIS_CLUSTER_NAME: "lokal"
-      # Spesifikk for remote debugging
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-
 
   meldekort-api-service:
     build:
       context: ./tiltakspenger-meldekort-api
       dockerfile: Dockerfile
     depends_on:
+      - postgresMeldekort
       - vedtak-service
     ports:
       - 8081:8080
-      - 5005:5005
     environment:
       # Postgres env
       DB_HOST: postgresMeldekort
-      DB_PORT: 5431
+      DB_PORT: 5432
       DB_USERNAME: postgres
       DB_PASSWORD: test
       DB_DATABASE: meldekort
@@ -129,13 +185,11 @@ services:
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       NAIS_CLUSTER_NAME: "compose"
       # Utbetaling
       SCOPE_UTBETALING: host.docker.internal.update-me
-      ENDPOINT_UTBETALING: tiltakspenger-utbetaling
-      # Spesifikk for remote debugging
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      UTBETALING_URL: utbetaling-service
 
   vedtak-rivers-service:
     build:
@@ -143,9 +197,9 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - vedtak-service
+      - meldekort-api-service
     ports:
       - 8082:8080
-      - 5005:5005
     environment:
       # Kafka env
       KAFKA_BROKERS: "BROKER://kafka:9092,PLAINTEXT://kafka:9092"
@@ -157,9 +211,13 @@ services:
       # Authserver env
       AZURE_APP_CLIENT_ID: tiltakspenger-vedtak-rivers
       AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
-      # Spesifikk for remote debugging
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
+      # Meldekort
+      MELDEKORTSCOPE: meldekort
+      MELDEKORTBASEURL: http://host.docker.internal:8081
+      # Vedtak
+      VEDTAKSCOPE: vedtak
+      VEDTAKBASEURL: http://host.docker.internal:8080
 
   utbetaling-service:
     build:
@@ -167,7 +225,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8083:8080
-      - 5005:5005
     environment:
       PORT: 8080
       # Authserver env
@@ -175,21 +232,18 @@ services:
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/well-known
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       # Nais
       NAIS_CLUSTER_NAME: "compose"
       # Iverksett
       TILTAKSPENGER_IVERKSETT_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
       TILTAKSPENGER_IVERKSETT_ENDPOINT: "" # Må fylles ut når vi har mockservice på denne tjenesten
-      # Spesifikk for remote debugging
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
   redis:
     image: redis:7-alpine
     restart: always
     ports:
       - 6379:6379
-
   wonderwall:
     image: ghcr.io/nais/wonderwall:latest
     depends_on:

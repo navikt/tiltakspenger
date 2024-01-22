@@ -24,6 +24,18 @@ services:
     volumes:
       - postgres-meldekort-data:/var/lib/postgresql/data
 
+  postgresUtbetaling:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: utbetaling
+    ports:
+      - 5430:5432
+    volumes:
+      - postgres-utbetaling-data:/var/lib/postgresql/data
+
   authserver:
     image: ghcr.io/navikt/mock-oauth2-server:2.1.1
     environment:
@@ -288,6 +300,14 @@ services:
       WONDERWALL_AUTO_LOGIN: true
     restart: on-failure
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8090:8080
+
 volumes:
   postgres-vedtak-data: #
   postgres-meldekort-data: #
+  postgres-utbetaling-data: #

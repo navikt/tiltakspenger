@@ -244,6 +244,12 @@ services:
       - 8083:8080
     environment:
       PORT: 8080
+      # Postgres env
+      DB_HOST: postgresUtbetaling
+      DB_PORT: 5430
+      DB_USERNAME: postgres
+      DB_PASSWORD: test
+      DB_DATABASE: utbetaling
       # Authserver env
       AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure

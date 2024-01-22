@@ -219,8 +219,8 @@ services:
       VEDTAKSCOPE: vedtak
       VEDTAKBASEURL: http://host.docker.internal:8080
       # Dokument
-      VEDTAKSCOPE: dokument
-      VEDTAKBASEURL: http://host.docker.internal:8084
+      DOKUMENTSCOPE: dokument
+      DOKUMENTBASEURL: http://host.docker.internal:8084
 
   utbetaling-service:
     build:
@@ -243,6 +243,29 @@ services:
       # Iverksett
       TILTAKSPENGER_IVERKSETT_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
       TILTAKSPENGER_IVERKSETT_ENDPOINT: "" # Må fylles ut når vi har mockservice på denne tjenesten
+
+  dokument-service:
+    build:
+      context: ./tiltakspenger-dokument
+      dockerfile: Dockerfile
+    depends_on:
+      - authserver
+    ports:
+      - 8084:8080
+    environment:
+      PORT: 8080
+      # Authserver env
+      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
+      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
+      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
+      # Nais
+      NAIS_CLUSTER_NAME: "compose"
+      # Iverksett
+      PDF_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      JOARK_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      JOARK_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
 
   redis:
     image: redis:7-alpine

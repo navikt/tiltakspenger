@@ -218,6 +218,9 @@ services:
       # Vedtak
       VEDTAKSCOPE: vedtak
       VEDTAKBASEURL: http://host.docker.internal:8080
+      # Dokument
+      VEDTAKSCOPE: dokument
+      VEDTAKBASEURL: http://host.docker.internal:8084
 
   utbetaling-service:
     build:

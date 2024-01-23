@@ -34,9 +34,6 @@ do
     esac
 done
 
-	set -E
-	trap '[ "$?" -ne 13 ] || exit 13' ERR
-
 for repo in "${repoer[@]}"
 do
 	cdin="cd $repo"

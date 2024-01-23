@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# Script for å bygge og starte alle apper i docker-compose
+# Bruk:
+#   ./up.sh for å bare kjøre opp
+#   ./up.sh -b for å bygge og kjøre opp
+#   ./up.sh -p -b for å pulle, bygge og kjøre opp
+#   ./up.sh -c -p -b for å pulle, clean-bygge og kjøre opp
 
 bygg=false
 git_pull=false

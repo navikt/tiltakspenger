@@ -259,8 +259,8 @@ services:
       # Nais
       NAIS_CLUSTER_NAME: "compose"
       # Iverksett
-      TILTAKSPENGER_IVERKSETT_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
-      TILTAKSPENGER_IVERKSETT_ENDPOINT: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      IVERKSETT_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      IVERKSETT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
 
   dokument-service:
     build:

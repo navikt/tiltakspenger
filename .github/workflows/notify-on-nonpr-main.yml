@@ -1,0 +1,16 @@
+name: Post slack notification on main push
+
+on: push
+
+jobs:
+  notify:
+    name: Notify tiltakspenger-pull-requests
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message, 'Merge pull request') && github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Post message
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          curl -X POST --data "{\"text\": \"Push til main: $GITHUB_ACTOR på $GITHUB_REPOSITORY - $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA - $COMMIT_MESSAGE\"}" $WEBHOOK_URL

@@ -257,8 +257,8 @@ services:
       # Nais
       NAIS_CLUSTER_NAME: "compose"
       # Iverksett
-      IVERKSETT_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
-      IVERKSETT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      IVERKSETT_SCOPE: iverksett
+      IVERKSETT_URL: http://host.docker.internal:8091
 
   dokument-service:
     build:

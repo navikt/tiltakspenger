@@ -1,0 +1,62 @@
+{
+  "request": {
+    "urlPath": "/rest/journalpostapi/v1/journalpost",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    },
+    "queryParameters": {
+      "forsoekFerdigstill": {
+          "or": [
+            {"equalTo":  "true"},
+            {"equalTo":  "false"}
+          ]
+        }
+      },
+    "bodyPatterns" : [{
+      "equalToJson" : {
+        "tittel": "${json-unit.any-string}",
+        "journalpostType": "${json-unit.any-string}",
+        "tema": "${json-unit.any-string}",
+        "kanal": "${json-unit.any-string}",
+        "journalfoerendeEnhet": "${json-unit.any-string}",
+        "avsenderMottaker": {
+          "id": "${json-unit.any-string}",
+          "idType": "${json-unit.any-string}"
+        },
+        "bruker": {
+          "id": "${json-unit.any-string}",
+          "idType": "${json-unit.any-string}"
+        },
+        "sak": "${json-unit.ignore}",
+        "dokumenter": [
+          {
+            "tittel": "${json-unit.any-string}",
+            "brevkode": "${json-unit.any-string}",
+            "dokumentvarianter": [
+              {
+                "filtype": "${json-unit.any-string}",
+                "variantformat": "${json-unit.any-string}",
+                "filnavn": "${json-unit.any-string}"
+              },
+              {
+                "filtype": "${json-unit.any-string}",
+                "variantformat": "${json-unit.any-string}",
+                "filnavn": "${json-unit.any-string}"
+              }
+            ]
+          }
+        ],
+        "eksternReferanseId": "${json-unit.any-string}"
+      }
+    }]
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "journalpostId": "journalpostId"
+    }
+  }
+}

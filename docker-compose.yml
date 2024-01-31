@@ -313,6 +313,15 @@ services:
     ports:
       - 8090:8080
 
+  wiremock:
+    image: wiremock/wiremock:3.3.1
+    command:
+      - -global-response-templating
+    volumes:
+      - ./mock-req-res/mappings:/home/wiremock/mappings
+    ports:
+      - 8091:8080
+
 volumes:
   postgres-vedtak-data: #
   postgres-meldekort-data: #

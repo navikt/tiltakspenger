@@ -1,0 +1,32 @@
+{
+  "request": {
+    "urlPath": "/api/iverksetting",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    },
+    "bodyPatterns" : [{
+      "equalToJson" : {
+        "sakId": "${json-unit.any-string}",
+        "behandlingId": "${json-unit.any-string}",
+        "personident": "${json-unit.any-string}",
+        "vedtak": {
+          "vedtakstype": "${json-unit.any-string}",
+          "vedtakstidspunkt": "${json-unit.any-string}",
+          "resultat": "${json-unit.any-string}",
+          "saksbehandlerId": "${json-unit.any-string}",
+          "beslutterId": "${json-unit.any-string}",
+          "utbetalinger": "${json-unit.ignore}",
+          "vedtaksperioder": "${json-unit.ignore}"
+        },
+        "forrigeIverksetting": "${json-unit.ignore}"
+      }
+    }]
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {}
+  }
+}

@@ -10,23 +10,30 @@
     "bodyPatterns" : [{
       "equalToJson" : {
         "sakId": "${json-unit.any-string}",
+        "saksreferanse": "${json-unit.any-string}",
         "behandlingId": "${json-unit.any-string}",
-        "personident": "${json-unit.any-string}",
+        "personIdent": "${json-unit.ignore}",
+        "personident": {
+          "verdi": "${json-unit.any-string}"
+        },
         "vedtak": {
-          "vedtakstype": "${json-unit.any-string}",
+          "vedtakstype": "RAMMEVEDTAK",
           "vedtakstidspunkt": "${json-unit.any-string}",
           "resultat": "${json-unit.any-string}",
           "saksbehandlerId": "${json-unit.any-string}",
           "beslutterId": "${json-unit.any-string}",
-          "utbetalinger": "${json-unit.ignore}",
+          "brukersNavKontor": null,
+          "utbetalinger": [],
           "vedtaksperioder": "${json-unit.ignore}"
         },
-        "forrigeIverksetting": "${json-unit.ignore}"
+        "forrigeIverksetting": null
       }
     }]
   },
   "response": {
-    "status": 200,
-    "jsonBody": {}
+    "status": 202,
+    "jsonBody": {
+      "message": "iverksetting er mottatt"
+    }
   }
 }

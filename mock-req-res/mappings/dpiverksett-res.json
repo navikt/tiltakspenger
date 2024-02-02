@@ -9,22 +9,21 @@
     },
     "bodyPatterns" : [{
       "equalToJson" : {
-        "sakId": "${json-unit.any-string}",
-        "saksreferanse": "${json-unit.any-string}",
-        "behandlingId": "${json-unit.any-string}",
-        "personIdent": "${json-unit.ignore}",
+        "sakId": {
+          "id": "${json-unit.any-string}"
+        },
+        "behandlingId": {
+          "id": "${json-unit.any-string}"
+        },
         "personident": {
           "verdi": "${json-unit.any-string}"
         },
         "vedtak": {
-          "vedtakstype": "RAMMEVEDTAK",
           "vedtakstidspunkt": "${json-unit.any-string}",
-          "resultat": "${json-unit.any-string}",
           "saksbehandlerId": "${json-unit.any-string}",
           "beslutterId": "${json-unit.any-string}",
           "brukersNavKontor": null,
-          "utbetalinger": [],
-          "vedtaksperioder": "${json-unit.ignore}"
+          "utbetalinger": []
         },
         "forrigeIverksetting": null
       }

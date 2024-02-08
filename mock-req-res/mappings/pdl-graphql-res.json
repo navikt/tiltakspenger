@@ -1,0 +1,47 @@
+{
+  "request": {
+    "urlPath": "/graphql",
+    "method": "POST",
+    "headers": {
+      "Content-Type": {
+        "equalTo": "application/json"
+      }
+    },
+    "bodyPatterns": [{
+        "equalToJson": {
+          "query": "query HentPerson {\n    hentPerson(ident: null) {\n        adressebeskyttelse {\n            gradering\n        }\n        bostedsadresse {\n            angittFlyttedato\n            gyldigFraOgMed\n            gyldigTilOgMed\n            coAdressenavn\n        }\n        foedsel {\n            foedselsaar\n            foedselsdato\n            foedeland\n            foedested\n            foedekommune\n        }\n    }\n}\n\" }"
+        },
+      "ignoreExtraElements" : true
+    }]
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "navn": {
+        "fornavn": "",
+        "etternavn": "",
+        "mellomnavn": "",
+        "metadata": null,
+        "folkeregistermetadata": null
+      },
+      "foedsel": [
+        {
+          "foedselsdato": "",
+          "folkeregistermetadata": null,
+          "metadata": null
+        }
+      ],
+      "adressebeskyttelse": [],
+      "forelderBarnRelasjon": [
+        {
+          "relatertPersonsIdent": "",
+          "relatertPersonsRolle": "",
+          "minRolleForPerson": "",
+          "relatertPersonUtenFolkeregisteridentifikator": null,
+          "folkeregistermetadata": null,
+          "metadata": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "request": {
+    "urlPath": "/graphql",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "navn": {
+        "fornavn": "TRIVIELL",
+        "etternavn": "SKILPADDE",
+        "mellomnavn": null,
+        "metadata": {
+          "endringer": [
+            {
+              "kilde": "Dolly",
+              "registrert": "2021-06-24T09:33:27",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "type": "OPPRETT"
+            }
+          ],
+          "master": "FREG"
+        },
+        "folkeregistermetadata": {
+          "aarsak": null,
+          "ajourholdstidspunkt": "2021-06-24T09:33:27",
+          "gyldighetstidspunkt": "2021-06-24T09:33:27",
+          "kilde": "Dolly",
+          "opphoerstidspunkt": null,
+          "sekvens": null
+        }
+      },
+      "foedsel": [
+        {
+          "foedselsdato": "1987-07-30",
+          "folkeregistermetadata": {
+            "aarsak": null,
+            "ajourholdstidspunkt": "2021-06-24T09:33:27",
+            "gyldighetstidspunkt": "2021-06-24T09:33:27",
+            "kilde": "Dolly",
+            "opphoerstidspunkt": null,
+            "sekvens": null
+          },
+          "metadata": {
+            "endringer": [
+              {
+                "kilde": "Dolly",
+                "registrert": "2021-06-24T09:33:27",
+                "registrertAv": "Folkeregisteret",
+                "systemkilde": "FREG",
+                "type": "OPPRETT"
+              }
+            ],
+            "master": "FREG"
+          }
+        }
+      ],
+      "adressebeskyttelse": [],
+      "forelderBarnRelasjon": []
+    }
+  }
+}

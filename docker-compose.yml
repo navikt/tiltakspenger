@@ -320,6 +320,7 @@ services:
       - -global-response-templating
     volumes:
       - ./mock-req-res/mappings:/home/wiremock/mappings
+      - ./mock-req-res/wiremock-graphql-extension-0.8.2-jar-with-dependencies.jar:/var/wiremock/extensions/wiremock-graphql-extension-0.8.2-jar-with-dependencies.jar
     ports:
       - 8091:8080
 

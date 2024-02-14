@@ -198,8 +198,8 @@ services:
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       NAIS_CLUSTER_NAME: "compose"
       # Utbetaling
-      SCOPE_UTBETALING: host.docker.internal.update-me
-      UTBETALING_URL: utbetaling-service
+      SCOPE_UTBETALING: utbetaling
+      UTBETALING_URL: http://host.docker.internal:8083
 
   vedtak-rivers-service:
     build:
@@ -283,6 +283,8 @@ services:
       PDF_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
       JOARK_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
       JOARK_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      DOKDIST_ENDPOINT_URL: ""
+      DOKDIST_SCOPE: ""
 
   redis:
     image: redis:7-alpine
@@ -320,7 +322,6 @@ services:
       - -global-response-templating
     volumes:
       - ./mock-req-res/mappings:/home/wiremock/mappings
-      - ./mock-req-res/wiremock-graphql-extension-0.8.2-jar-with-dependencies.jar:/var/wiremock/extensions/wiremock-graphql-extension-0.8.2-jar-with-dependencies.jar
     ports:
       - 8091:8080
 

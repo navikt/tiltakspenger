@@ -22,10 +22,13 @@
           "vedtakstidspunkt": "${json-unit.any-string}",
           "saksbehandlerId": "${json-unit.any-string}",
           "beslutterId": "${json-unit.any-string}",
-          "brukersNavKontor": null,
-          "utbetalinger": []
+          "brukersNavKontor": {
+            "enhet": "0220",
+            "gjelderFom": "2024-01-01"
+          },
+          "utbetalinger": "${json-unit.ignore}"
         },
-        "forrigeIverksetting": null
+        "forrigeIverksetting": "${json-unit.ignore}"
       }
     }]
   },

@@ -199,7 +199,9 @@ services:
       NAIS_CLUSTER_NAME: "compose"
       # Utbetaling
       SCOPE_UTBETALING: host.docker.internal.update-me
+      SCOPE_DOKUMENT: host.docker.internal.update-me
       UTBETALING_URL: utbetaling-service
+      DOKUMENT_URL: dokument-service
 
   vedtak-rivers-service:
     build:

@@ -24,7 +24,7 @@
           "beslutterId": "${json-unit.any-string}",
           "brukersNavKontor": {
             "enhet": "0220",
-            "gjelderFom": "2024-01-01"
+            "gjelderFom": "1970-01-01"
           },
           "utbetalinger": "${json-unit.ignore}"
         },

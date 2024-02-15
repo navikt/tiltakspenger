@@ -285,6 +285,8 @@ services:
       PDF_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
       JOARK_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
       JOARK_SCOPE: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      DOKDIST_ENDPOINT_URL: ""
+      DOKDIST_SCOPE: ""
 
   redis:
     image: redis:7-alpine

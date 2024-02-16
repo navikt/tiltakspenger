@@ -282,7 +282,7 @@ services:
       # Nais
       NAIS_CLUSTER_NAME: "compose"
       # Iverksett
-      PDF_ENDPOINT_URL: "" # Må fylles ut når vi har mockservice på denne tjenesten
+      PDF_ENDPOINT_URL: http://localhost:8085 # Må fylles ut når vi har mockservice på denne tjenesten
       JOARK_ENDPOINT_URL: http://host.docker.internal:8091
       JOARK_SCOPE: joark
       DOKDIST_ENDPOINT_URL: http://host.docker.internal:8091

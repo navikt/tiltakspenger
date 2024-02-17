@@ -31,32 +31,26 @@
           "idType": "${json-unit.any-string}"
         },
         "sak": "${json-unit.ignore}",
-        "dokumenter": [
-          {
-            "tittel": "${json-unit.any-string}",
-            "brevkode": "${json-unit.any-string}",
-            "dokumentvarianter": [
-              {
-                "filtype": "${json-unit.any-string}",
-                "variantformat": "${json-unit.any-string}",
-                "filnavn": "${json-unit.any-string}"
-              },
-              {
-                "filtype": "${json-unit.any-string}",
-                "variantformat": "${json-unit.any-string}",
-                "filnavn": "${json-unit.any-string}"
-              }
-            ]
-          }
-        ],
+        "dokumenter": "${json-unit.ignore}",
         "eksternReferanseId": "${json-unit.any-string}"
       }
     }]
   },
   "response": {
-    "status": 200,
+    "status": 201,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
     "jsonBody": {
-      "journalpostId": "journalpostId"
+      "journalpostId": "journalpostId",
+      "journalpostferdigstilt": true,
+      "melding": "melding",
+      "dokumenter": [
+        {
+          "dokumentInfoId": "id",
+          "tittel": "tittel"
+        }
+      ]
     }
   }
 }

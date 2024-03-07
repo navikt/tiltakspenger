@@ -282,11 +282,25 @@ services:
       # Nais
       NAIS_CLUSTER_NAME: "compose"
       # Iverksett
-      PDF_ENDPOINT_URL: http://localhost:8085 # Må fylles ut når vi har mockservice på denne tjenesten
+      PDF_ENDPOINT_URL: http://host.docker.internal:8085
       JOARK_ENDPOINT_URL: http://host.docker.internal:8091
       JOARK_SCOPE: joark
       DOKDIST_ENDPOINT_URL: http://host.docker.internal:8091
       DOKDIST_SCOPE: dokdist
+
+  pdfgen-service:
+    build:
+      context: ./tiltakspenger-pdfgen
+      dockerfile: Dockerfile
+    ports:
+      - 8085:8080
+    volumes:
+        - ./templates:/app/templates \
+        - ./fonts:/app/fonts \
+        - ./data:/app/data \
+        - ./resources:/app/resources \
+    environment:
+      DISABLE_PDF_GET: false
 
   redis:
     image: redis:7-alpine

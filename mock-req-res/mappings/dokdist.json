@@ -1,0 +1,29 @@
+{
+  "request": {
+    "urlPath": "/rest/v1/distribuerjournalpost",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    },
+    "bodyPatterns" : [{
+      "equalToJson" : {
+      "journalpostId" : "journalpostId",
+      "bestillendeFagsystem" : "IND",
+      "dokumentProdApp" : "Tiltakspenger",
+      "distribusjonstype" : "VEDTAK",
+      "distribusjonstidspunkt" : "KJERNETID"
+      }
+    }]
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "bestillingsId": "bestillingsId"
+    }
+  }
+}

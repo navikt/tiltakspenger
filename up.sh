@@ -8,6 +8,7 @@
 
 bygg=false
 git_pull=false
+livepdf=false
 repoer=(
 	"tiltakspenger-vedtak"
 	"tiltakspenger-meldekort-api"
@@ -15,24 +16,51 @@ repoer=(
 	"tiltakspenger-utbetaling"
 	"tiltakspenger-dokument"
 )
-docker_cmd="docker compose up --build -d"
 build_cmd="./gradlew build installDist"
+
+hjelpetekst="# Bruk: \
+\n \
+\n./up.sh for å bare kjøre opp \
+\n-b for å bygge og kjøre opp \
+\n-p -b for å pulle, bygge og kjøre opp \
+\n-c -p -b for å pulle, clean-bygge og kjøre opp \
+\n-f for å kjøre opp PDFGEN lokalt \
+\n \
+\n *** \
+\n"
+
+hjelp() {
+  printf "$hjelpetekst"
+}
+
+while getopts bcpfh flag
+do
+    case "${flag}" in
+        b) bygg=true;;
+        p) git_pull=true;;
+		c) build_cmd="./gradlew clean build installDist";;
+		f) livepdf=true;;
+		h) hjelp
+		   exit 1 ;;
+    esac
+done
+
+if $livepdf; then
+	echo -e "\033[31m*** Bruker LIVE pdfgen! ***\033[0m"
+	profiles="livepdf"
+else
+	echo -e "\033[36m*** Bruker MOCK pdfgen! ***\033[0m"
+	profiles="mockpdf"
+fi
+
+docker_cmd="docker compose --profile $profiles up -d"
 
 # Sjekk om docker-compose finnes; bruk i så fall den
 if command -v docker-compose &> /dev/null
 then
     echo "Bruker docker-compose"
-    docker_cmd="docker-compose up --build -d"
+    docker_cmd="docker-compose --profile $profiles up -d"
 fi
-
-while getopts bcp flag
-do
-    case "${flag}" in
-        b) bygg=true;;
-        p) git_pull=true;;
-		c) build_cmd="./gradlew clean build installDist"
-    esac
-done
 
 for repo in "${repoer[@]}"
 do

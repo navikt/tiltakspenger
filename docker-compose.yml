@@ -262,7 +262,7 @@ services:
       IVERKSETT_SCOPE: iverksett
       IVERKSETT_URL: http://host.docker.internal:8091
 
-  dokument-service:
+  dokument-livepdf-service:
     build:
       context: ./tiltakspenger-dokument
       dockerfile: Dockerfile
@@ -287,6 +287,34 @@ services:
       JOARK_SCOPE: joark
       DOKDIST_ENDPOINT_URL: http://host.docker.internal:8091
       DOKDIST_SCOPE: dokdist
+    profiles: ["livepdf"]
+
+  dokument-mockpdf-service:
+    build:
+      context: ./tiltakspenger-dokument
+      dockerfile: Dockerfile
+    depends_on:
+      - authserver
+      - vedtak-service
+    ports:
+      - 8084:8080
+    environment:
+      PORT: 8080
+      # Authserver env
+      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
+      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
+      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
+      # Nais
+      NAIS_CLUSTER_NAME: "compose"
+      # Iverksett
+      PDF_ENDPOINT_URL: http://host.docker.internal:8091
+      JOARK_ENDPOINT_URL: http://host.docker.internal:8091
+      JOARK_SCOPE: joark
+      DOKDIST_ENDPOINT_URL: http://host.docker.internal:8091
+      DOKDIST_SCOPE: dokdist
+    profiles: ["mockpdf"]
 
   pdfgen-service:
     build:
@@ -301,6 +329,7 @@ services:
         - ./resources:/app/resources \
     environment:
       DISABLE_PDF_GET: false
+    profiles: ["livepdf"]
 
   redis:
     image: redis:7-alpine

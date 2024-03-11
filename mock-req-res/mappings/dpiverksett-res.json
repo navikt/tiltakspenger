@@ -23,8 +23,8 @@
           "saksbehandlerId": "${json-unit.any-string}",
           "beslutterId": "${json-unit.any-string}",
           "brukersNavKontor": {
-            "enhet": "0220",
-            "gjelderFom": "1970-01-01"
+            "enhet": "${json-unit.any-string}",
+            "gjelderFom": "${json-unit.ignore}"
           },
           "utbetalinger": "${json-unit.ignore}"
         },

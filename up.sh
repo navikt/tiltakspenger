@@ -53,13 +53,13 @@ else
 	profiles="mockpdf"
 fi
 
-docker_cmd="docker compose --profile $profiles up -d"
+docker_cmd="docker compose --profile $profiles up --build -d"
 
 # Sjekk om docker-compose finnes; bruk i så fall den
 if command -v docker-compose &> /dev/null
 then
     echo "Bruker docker-compose"
-    docker_cmd="docker-compose --profile $profiles up -d"
+    docker_cmd="docker-compose --profile $profiles up --build -d"
 fi
 
 for repo in "${repoer[@]}"

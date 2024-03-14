@@ -4,6 +4,8 @@ Startpunkt (metarepo) for tiltakspenger
 
 ## Komme i gang
 
+### Oppsett av meta-repo
+
 [meta](https://github.com/mateodelnorte/meta) brukes til å sette opp
 repositories for alle repoene.
 
@@ -97,3 +99,20 @@ skjerming-->>vedtak: skjerming
 scheduler->>vedtak: dayHasBegun
 vedtak->>vedtak: utdatert innsending
 ```
+
+### Lokal kjøring av verdikjeden
+
+Meta-repoet kommer med et docker-compose oppsett som kan benyttes for å kjøre opp
+hele verdikjeden lokalt i Docker-containere, med noen unntak (`tiltakspenger-saksbehandler`,
+`tiltakspenger-soknad` og `tiltakspenger-soknad-api`). Merk at `tiltakspenger-saksbehandler` kan kjøres opp
+på siden av øvrige apper for å kunne teste frontend lokalt.
+
+#### Bruk av docker-compose oppsett
+
+For enkel bruk av docker-compose-oppsett er det skrevet noen bash-script som ligger på
+rot av dette repositoryet.
+
+| script | beskrivelse                                                                                                                                                |
+| ------ |------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ | ./up.sh | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options) |
+| ./down.sh | Script for å stoppe alle apper i docker-compose (se i [down.sh](https://github.com/navikt/tiltakspenger/blob/main/down.sh) for tilgjengelige options)      |

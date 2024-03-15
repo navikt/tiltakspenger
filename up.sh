@@ -69,18 +69,18 @@ do
 		if [ "$git_pull" = true ] ; then
 			echo -e "\033[32m*** Puller $repo ***\033[0m"
 			git pull
-			if [ $? -ne 0 ]; then 
+			if [ $? -ne 0 ]; then
 				echo -e "\033[31mPull feilet på $repo\033[0m"
 				exit 1
-			fi 
+			fi
 		fi
 		if [ "$bygg" = true ] ; then
 			echo -e "\033[44m*** Bygger $repo ***\033[0m"
 			$build_cmd
-			if [ $? -ne 0 ]; then 
+			if [ $? -ne 0 ]; then
 				echo -e "\033[31mBygg feilet på $repo\033[0m"
 				exit 1
-			fi 
+			fi
 		fi
 		cd ..
 done

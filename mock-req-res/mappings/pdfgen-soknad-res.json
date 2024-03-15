@@ -1,0 +1,21 @@
+{
+  "request": {
+    "urlPath": "/api/v1/genpdf/tpts/soknad",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/pdf"
+    },
+    "bodyFileName": "tilfeldigfile.pdf",
+    "transformerParameters": {
+      "disableBodyFileTemplating": true
+    }
+  }
+}

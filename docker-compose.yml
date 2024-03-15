@@ -367,6 +367,7 @@ services:
       - -global-response-templating
     volumes:
       - ./mock-req-res/mappings:/home/wiremock/mappings
+      - ./mock-req-res/__files:/home/wiremock/__files
     ports:
       - 8091:8080
 

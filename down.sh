@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Script for å bygge og starte alle apper i docker-compose
+# Script for å stoppe alle apper i docker-compose
 # Bruk:
 #   ./down.sh for ta ned kjørende compose med default-profil (mockpdf)
 #   ./down.sh -f for å ta ned kjørende compose med pdfgen (livepdf)

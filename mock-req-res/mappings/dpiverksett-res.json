@@ -9,12 +9,8 @@
     },
     "bodyPatterns" : [{
       "equalToJson" : {
-        "sakId": {
-          "id": "${json-unit.any-string}"
-        },
-        "behandlingId": {
-          "id": "${json-unit.any-string}"
-        },
+        "sakId": "${json-unit.any-string}",
+        "behandlingId": "${json-unit.any-string}",
         "personident": {
           "verdi": "${json-unit.any-string}"
         },

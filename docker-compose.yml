@@ -75,6 +75,16 @@ services:
                             }
                         },
                         {
+                            "requestParam": "scope",
+                            "match": "person",
+                            "claims": {
+                                "aud": "tiltakspenger-person",
+                                "oid": "Z123456",
+                                "sub": "Z123456",
+                                "azp_name": "tiltakspenger-person-rivers"
+                            }
+                        },
+                        {
                             "requestParam": "grant_type",
                             "match": "*",  
                             "claims": {
@@ -379,8 +389,8 @@ services:
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       # person
-      PERSONSCOPE: person
-      PERSONBASEURL: http://host.docker.internal:8086
+      PERSON_SCOPE: person
+      PERSON_BASE_URL: http://host.docker.internal:8086
 
   redis:
     image: redis:7-alpine

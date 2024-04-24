@@ -61,6 +61,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
 - [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager)
 - [tiltakspenger-person-river] (https://github.com/navikt/tiltakspenger-person-river)
+- [tiltakspenger-skjerming-river] (https://github.com/navikt/tiltakspenger-skjerming-river)
 - 
 Lenker til PR-sidene
 
@@ -89,7 +90,8 @@ Lenker til PR-sidene
 - [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api/pulls)
 - [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager/pulls)
 - [tiltakspenger-person-river] (https://github.com/navikt/tiltakspenger-person-river/pulls)
-
+- [tiltakspenger-skjerming-river] (https://github.com/navikt/tiltakspenger-skjerming-river/pulls)
+- 
 ```mermaid
 sequenceDiagram
 mottak->>vedtak: søknad

@@ -15,6 +15,8 @@ repoer=(
 	"tiltakspenger-vedtak-rivers"
 	"tiltakspenger-utbetaling"
 	"tiltakspenger-dokument"
+	"tiltakspenger-person"
+	"tiltakspenger-person-river"
 )
 build_cmd="./gradlew build installDist"
 

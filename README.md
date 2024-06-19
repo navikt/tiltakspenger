@@ -62,7 +62,9 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager)
 - [tiltakspenger-person-river] (https://github.com/navikt/tiltakspenger-person-river)
 - [tiltakspenger-skjerming-river] (https://github.com/navikt/tiltakspenger-skjerming-river)
-- 
+- [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
+-
+
 Lenker til PR-sidene
 
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
@@ -91,7 +93,9 @@ Lenker til PR-sidene
 - [tiltakspenger-kafka-manager] (https://github.com/navikt/tiltakspenger-kafka-manager/pulls)
 - [tiltakspenger-person-river] (https://github.com/navikt/tiltakspenger-person-river/pulls)
 - [tiltakspenger-skjerming-river] (https://github.com/navikt/tiltakspenger-skjerming-river/pulls)
-- 
+- [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling/pulls)
+-
+
 ```mermaid
 sequenceDiagram
 mottak->>vedtak: søknad
@@ -117,7 +121,7 @@ rot av dette repositoryet.
 
 | script          | beskrivelse                                                                                                                                                |
 |-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
- | ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options) |
+| ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options) |
 | ./down.sh       | Script for å stoppe alle apper i docker-compose (se i [down.sh](https://github.com/navikt/tiltakspenger/blob/main/down.sh) for tilgjengelige options)      |
 | ./dkill.sh      | Script for å kjøre docker compose down, stopper og fjerner alle containere som eventuelt fortsatt kjører, og fjerner det tilhørende nettverket             |
 | ./slettAlt.sh   | Kjører "docker compose down --rmi all --volumes", i.e. sletter alt.                                                                                        |

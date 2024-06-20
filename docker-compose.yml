@@ -341,57 +341,6 @@ services:
       DISABLE_PDF_GET: false
     profiles: ["livepdf"]
 
-  person-service:
-    build:
-      context: ./tiltakspenger-person
-      dockerfile: Dockerfile
-    depends_on:
-      - kafka-service
-      - authserver
-    ports:
-      - 8086:8080
-    environment:
-      # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-person
-      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
-      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
-      AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      TOKEN_X_CLIENT_ID: tiltakspenger-person
-      TOKEN_X_WELL_KNOWN_URL: http://host.docker.internal:6969/tokendings/.well-known/openid-configuration
-      # Kafka env
-      KAFKA_BROKERS: "PLAINTEXT://kafka-service:29092"
-      KAFKA_TRUSTSTORE_PATH: ""
-      KAFKA_KEYSTORE_PATH: ""
-      KAFKA_CREDSTORE_PASSWORD: ""
-      TPTS_TOPIC: tpts.rapid.v1
-      NAIS_CLUSTER_NAME: "lokal"
-
-  person-rivers-service:
-    build:
-      context: ./tiltakspenger-person-river
-      dockerfile: Dockerfile
-    depends_on:
-      - kafka-service
-      - person-service
-    ports:
-      - 8087:8080
-    environment:
-      # Kafka env
-      KAFKA_BROKERS: "PLAINTEXT://kafka-service:29092"
-      KAFKA_TRUSTSTORE_PATH: ""
-      KAFKA_KEYSTORE_PATH: ""
-      KAFKA_CREDSTORE_PASSWORD: ""
-      TPTS_TOPIC: tpts.rapid.v1
-      NAIS_CLUSTER_NAME: "compose"
-      # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-person-river
-      AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      # person
-      PERSON_SCOPE: person
-      PERSON_BASE_URL: http://host.docker.internal:8086
-
   redis:
     image: redis:7-alpine
     restart: always

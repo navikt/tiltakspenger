@@ -1,0 +1,146 @@
+services:
+  pdfgen-service:
+    build:
+      context: ./tiltakspenger-pdfgen
+      dockerfile: Dockerfile
+    ports:
+      - 8085:8080
+    volumes:
+      - ./tiltakspenger-pdfgen/templates:/app/templates \
+      - ./tiltakspenger-pdfgen/fonts:/app/fonts \
+      - ./tiltakspenger-pdfgen/data:/app/data \
+      - ./tiltakspenger-pdfgen/resources:/app/resources \
+    environment:
+      DISABLE_PDF_GET: false
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - 6379:6379
+
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8090:8080
+    environment:
+      DOZZLE_NO_ANALYTICS: true
+
+  soknad-api:
+    build:
+      context: ./tiltakspenger-soknad-api
+      dockerfile: Dockerfile
+    environment:
+      AZURE_APP_WELL_KNOWN_URL: "http://host.docker.internal:6969/azure/.well-known/openid-configuration"
+      AZURE_APP_CLIENT_SECRET: mocked_secret
+      AZURE_APP_CLIENT_ID: mocked_client_id
+      TOKEN_X_WELL_KNOWN_URL: "http://host.docker.internal:6969/tokendings/.well-known/openid-configuration"
+      TOKEN_X_CLIENT_ID: localhost:tpts:tiltakspenger-soknad-api
+      TOKEN_X_PRIVATE_JWK: '{"p":"_xCPvqs85ZZVg460Qfot26rQoNRPTOVDo5p4nqH3ep6BK_5TvoU5LFXd26W-1V1Lc5fcvvftClPOT201xgat4DVtliNtoc8od_tWr190A3AzbsAVFOx0nKa5uhLBxP9SsPM84llp6PXF6QTMGFiPYuoLDaQQqL1K4BbHq3ZzF2M","kty":"RSA","q":"7QLqW75zkfSDrn5rMoF50WXyB_ysNx6-2SvaXKGXaOn80IR7QW5vwkleJnsdz_1kr04rJws2p4HBJjUFfSJDi1Dapj7tbIwb0a1szDs6Y2fAa3DlzgXZCkoE2TIrW6UITgs14pI_a7RasclE71FpoZ78XNBvj3NmZugkNLBvRjs","d":"f7aT4poed8uKdcSD95mvbfBdb6X-M86d99su0c390d6gWwYudeilDugH9PMwqUeUhY0tdaRVXr6rDDIKLSE-uEyaYKaramev0cG-J_QWYJU2Lx-4vDGNHAE7gC99o1Ee_LXqMDCBawMYyVcSWx7PxGQfzhSsARsAIbkarO1sg9zsqPS4exSMbK8wyCTPgRbnkB32_UdZSGbdSib1jSYyyoAItZ8oZHiltVsZIlA97kS4AGPtozde043NC7Ik0uEzgB5qJ_tR7vW8MfDrBj6da2NrLh0UH-q28dooBO1vEu0rvKZIescXYk9lk1ZakHhhpZaLykDOGzxCpronzP3_kQ","e":"AQAB","use":"sig","qi":"9kMIR6pEoiwN3M6O0n8bnh6c3KbLMoQQ1j8_Zyir7ZIlmRpWYl6HtK0VnD88zUuNKTrQa7-jfE5uAUa0PubzfRqybACb4S3HIAuSQP00_yCPzCSRrbpGRDFqq-8eWVwI9VdiN4oqkaaWcL1pd54IDcHIbfk-ZtNtZgsOlodeRMo","dp":"VUecSAvI2JpjDRFxg326R2_dQWi6-uLMsq67FY7hx8WnOqZWKaUxcHllLENGguAmkgd8bv1F6-YJXNUO3Z7uE8DJWyGNTkSNK1CFsy0fBOdGywi-A7jrZFT6VBRhZRRY-YDaInPyzUkfWsGX26wAhPnrqCvqxgBEQJhdOh7obDE","alg":"RS256","dq":"7EUfw92T8EhEjUrRKkQQYEK0iGnGdBxePLiOshEUky3PLT8kcBHbr17cUJgjHBiKqofOVNnE3i9nkOMCWcAyfUtY7KmGndL-WIP-FYplpnrjQzgEnuENgEhRlQOCXZWjNcnPKdKJDqF4WAtAgSIznz6SbSQMUoDD8IoyraPFCck","n":"7CU8tTANiN6W_fD9SP1dK2vQvCkf7-nwvBYe5CfANV0_Bb0ZmQb77FVVsl1beJ7EYLz3cJmL8Is1RCHKUK_4ydqihNjEWTyZiQoj1i67pkqk_zRvfQa9raZR4uZbuBxx7dWUoPC6fFH2F_psAlHW0zf90fsLvhB6Aqq3uvO7XXqo8qNl9d_JSG0Rg_2QUYVb0WKmPVbbhgwtkFu0Tyuev-VZ9IzTbbr5wmZwEUVY7YAi73pDJkcZt5r2WjOF_cuIXe-O2vwbOrRgmJfHO9--mVLdATnEyrb6q2oy_75h6JjP-R4-TD1hyoFFoE2gmj-kSS6Z_Gggljs3Aw7--Nh10Q"}'
+      PDL_AUDIENCE: mock_audience
+      PDL_SCOPE: mock_scope
+      PDL_ENDPOINT_URL: "http://host.docker.internal:8484/personalia"
+      PDF_ENDPOINT_URL: "http://host.docker.internal:8085"
+      JOARK_ENDPOINT_URL: "http://host.docker.internal:8484"
+      JOARK_AUDIENCE: "mock_audience"
+      JOARK_SCOPE: "mock_scope"
+      TILTAKSPENGER_ARENA_URL: "http://host.docker.internal:8484"
+      TILTAKSPENGER_ARENA_AUDIENCE: "mock-audience"
+      UNLEASH_SERVER_API_URL: "http://host.docker.internal:8484/unleash"
+      UNLEASH_SERVER_API_TOKEN: "blabla"
+      UNLEASH_ENVIRONMENT: "blabla"
+      AV_ENDPOINT_URL: "http://host.docker.internal:8484/av"
+      TILTAKSPENGER_TILTAK_ENDPOINT_URL: "http://host.docker.internal:8484"
+      TILTAKSPENGER_TILTAK_AUDIENCE: "mock_audience"
+    depends_on:
+      - soknad-authserver
+    ports:
+      - 8080:8080
+    profiles: [api]
+
+  soknad-mock-api:
+    build:
+      context: ./tiltakspenger-soknad-mock-api
+      dockerfile: Dockerfile
+    ports:
+      - 8484:8484
+
+  soknad-wonderwall:
+    image: ghcr.io/nais/wonderwall:latest
+    depends_on:
+      - soknad-authserver
+    ports:
+      - "2222:2222"
+    environment:
+      WONDERWALL_OPENID_CLIENT_ID: localhost:tpts:tiltakspenger-soknad
+      WONDERWALL_OPENID_CLIENT_JWK: '{"p":"_xCPvqs85ZZVg460Qfot26rQoNRPTOVDo5p4nqH3ep6BK_5TvoU5LFXd26W-1V1Lc5fcvvftClPOT201xgat4DVtliNtoc8od_tWr190A3AzbsAVFOx0nKa5uhLBxP9SsPM84llp6PXF6QTMGFiPYuoLDaQQqL1K4BbHq3ZzF2M","kty":"RSA","q":"7QLqW75zkfSDrn5rMoF50WXyB_ysNx6-2SvaXKGXaOn80IR7QW5vwkleJnsdz_1kr04rJws2p4HBJjUFfSJDi1Dapj7tbIwb0a1szDs6Y2fAa3DlzgXZCkoE2TIrW6UITgs14pI_a7RasclE71FpoZ78XNBvj3NmZugkNLBvRjs","d":"f7aT4poed8uKdcSD95mvbfBdb6X-M86d99su0c390d6gWwYudeilDugH9PMwqUeUhY0tdaRVXr6rDDIKLSE-uEyaYKaramev0cG-J_QWYJU2Lx-4vDGNHAE7gC99o1Ee_LXqMDCBawMYyVcSWx7PxGQfzhSsARsAIbkarO1sg9zsqPS4exSMbK8wyCTPgRbnkB32_UdZSGbdSib1jSYyyoAItZ8oZHiltVsZIlA97kS4AGPtozde043NC7Ik0uEzgB5qJ_tR7vW8MfDrBj6da2NrLh0UH-q28dooBO1vEu0rvKZIescXYk9lk1ZakHhhpZaLykDOGzxCpronzP3_kQ","e":"AQAB","use":"sig","qi":"9kMIR6pEoiwN3M6O0n8bnh6c3KbLMoQQ1j8_Zyir7ZIlmRpWYl6HtK0VnD88zUuNKTrQa7-jfE5uAUa0PubzfRqybACb4S3HIAuSQP00_yCPzCSRrbpGRDFqq-8eWVwI9VdiN4oqkaaWcL1pd54IDcHIbfk-ZtNtZgsOlodeRMo","dp":"VUecSAvI2JpjDRFxg326R2_dQWi6-uLMsq67FY7hx8WnOqZWKaUxcHllLENGguAmkgd8bv1F6-YJXNUO3Z7uE8DJWyGNTkSNK1CFsy0fBOdGywi-A7jrZFT6VBRhZRRY-YDaInPyzUkfWsGX26wAhPnrqCvqxgBEQJhdOh7obDE","alg":"RS256","dq":"7EUfw92T8EhEjUrRKkQQYEK0iGnGdBxePLiOshEUky3PLT8kcBHbr17cUJgjHBiKqofOVNnE3i9nkOMCWcAyfUtY7KmGndL-WIP-FYplpnrjQzgEnuENgEhRlQOCXZWjNcnPKdKJDqF4WAtAgSIznz6SbSQMUoDD8IoyraPFCck","n":"7CU8tTANiN6W_fD9SP1dK2vQvCkf7-nwvBYe5CfANV0_Bb0ZmQb77FVVsl1beJ7EYLz3cJmL8Is1RCHKUK_4ydqihNjEWTyZiQoj1i67pkqk_zRvfQa9raZR4uZbuBxx7dWUoPC6fFH2F_psAlHW0zf90fsLvhB6Aqq3uvO7XXqo8qNl9d_JSG0Rg_2QUYVb0WKmPVbbhgwtkFu0Tyuev-VZ9IzTbbr5wmZwEUVY7YAi73pDJkcZt5r2WjOF_cuIXe-O2vwbOrRgmJfHO9--mVLdATnEyrb6q2oy_75h6JjP-R4-TD1hyoFFoE2gmj-kSS6Z_Gggljs3Aw7--Nh10Q"}'
+      WONDERWALL_OPENID_WELL_KNOWN_URL: http://host.docker.internal:6969/idporten/.well-known/openid-configuration
+      WONDERWALL_INGRESS: http://localhost:2222
+      WONDERWALL_BIND_ADDRESS: 0.0.0.0:2222
+      WONDERWALL_UPSTREAM_HOST: host.docker.internal:3000
+      WONDERWALL_AUTO_LOGIN: true
+    restart: on-failure
+
+  soknad-authserver:
+    image: "ghcr.io/navikt/mock-oauth2-server:2.0.0"
+    ports:
+      - "6969:6969"
+    environment:
+      SERVER_PORT: 6969
+      JSON_CONFIG: >
+        {
+            "interactiveLogin": true,
+            "httpServer": "NettyWrapper",
+            "tokenCallbacks": [
+                {
+                    "issuerId": "idporten",
+                    "tokenExpiry": 3600,
+                    "requestMappings": [
+                        {
+                            "requestParam": "grant_type",
+                            "match": "*",
+                            "claims": {
+                                "sub": "12345678901",
+                                "pid": "12345678901",
+                                "client_id": "localhost:tpts:tiltakspenger-soknad",
+                                "acr": "Level4"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "issuerId": "tokendings",
+                    "tokenExpiry": 3600,
+                    "requestMappings": [
+                        {
+                            "requestParam": "grant_type",
+                            "match": "*",
+                            "claims": {
+                                "sub": "12345678901",
+                                "pid": "12345678901",
+                                "aud": ["localhost:tpts:tiltakspenger-soknad-api"],
+                                "acr": "Level4"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "issuerId": "azure",
+                    "tokenExpiry": 3600,
+                    "requestMappings": [
+                        {
+                            "requestParam": "grant_type",
+                            "match": "*",
+                            "claims": {
+                                "sub": "12345678901",
+                                "pid": "12345678901",
+                                "aud": ["localhost:tpts:tiltakspenger-soknad-api"],
+                                "acr": "Level4"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }

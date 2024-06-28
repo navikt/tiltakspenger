@@ -54,6 +54,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin)
 - [tiltakspenger-overgangsstonad] (https://github.com/navikt/tiltakspenger-overgangsstonad)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
+- [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling)
@@ -63,7 +64,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-person-river] (https://github.com/navikt/tiltakspenger-person-river)
 - [tiltakspenger-skjerming-river] (https://github.com/navikt/tiltakspenger-skjerming-river)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
--
 
 Lenker til PR-sidene
 
@@ -114,7 +114,7 @@ hele verdikjeden lokalt i Docker-containere, med noen unntak (`tiltakspenger-sak
 `tiltakspenger-soknad` og `tiltakspenger-soknad-api`). Merk at `tiltakspenger-saksbehandler` kan kjøres opp
 på siden av øvrige apper for å kunne teste frontend lokalt.
 
-#### Bruk av docker-compose oppsett
+#### Bruk av docker-compose oppsett for saksbehandling
 
 For enkel bruk av docker-compose-oppsett er det skrevet noen bash-script som ligger på
 rot av dette repositoryet.
@@ -126,3 +126,13 @@ rot av dette repositoryet.
 | ./dkill.sh      | Script for å kjøre docker compose down, stopper og fjerner alle containere som eventuelt fortsatt kjører, og fjerner det tilhørende nettverket             |
 | ./slettAlt.sh   | Kjører "docker compose down --rmi all --volumes", i.e. sletter alt.                                                                                        |
 | ./slettBaser.sh | Kjører "docker compose down --volumes", i.e. sletter basene.                                                                                               |
+
+#### Bruk av docker-compose oppsett for søknad
+
+For kjøring av utviklingsmiljø for å jobbe med søknaden er det lagd et eget bash-script på
+rot av dette repositoryet. Det kan kjøres opp med eller uten søknads-api'et, hvis man eksempelvis
+skulle ønske å kjøre opp api'et fra IntelliJ.
+
+| script          | beskrivelse                                                                                                                                                                     |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ./up-soknad.sh  | Script for å bygge og starte alle apper i docker-compose-soknad (se i [up-soknad.sh](https://github.com/navikt/tiltakspenger/blob/main/up-soknad.sh) for tilgjengelige options) |

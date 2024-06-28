@@ -6,10 +6,10 @@ services:
     ports:
       - 8085:8080
     volumes:
-      - ./templates:/app/templates \
-      - ./fonts:/app/fonts \
-      - ./data:/app/data \
-      - ./resources:/app/resources \
+      - ./tiltakspenger-pdfgen/templates:/app/templates \
+      - ./tiltakspenger-pdfgen/fonts:/app/fonts \
+      - ./tiltakspenger-pdfgen/data:/app/data \
+      - ./tiltakspenger-pdfgen/resources:/app/resources \
     environment:
       DISABLE_PDF_GET: false
 

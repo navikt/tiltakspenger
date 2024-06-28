@@ -18,6 +18,7 @@
     "tiltakspenger-admin": "git@github.com:navikt/tiltakspenger-admin",
     "tiltakspenger-overgangsstonad": "git@github.com:navikt/tiltakspenger-overgangsstonad",
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
+    "tiltakspenger-soknad-mock-api": "git@github.com:navikt/tiltakspenger-soknad-mock-api",
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
     "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad",
     "tiltakspenger-utbetaling": "git@github.com:navikt/tiltakspenger-utbetaling",

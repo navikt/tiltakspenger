@@ -1,0 +1,23 @@
+{
+  "request": {
+    "urlPath": "/skjermet",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    },
+    "bodyPatterns" : [{
+      "equalToJson" : {
+      "personident" : "${json-unit.any-string}"
+      }
+    }]
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "body": "false"
+  }
+}

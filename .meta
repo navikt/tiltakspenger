@@ -4,10 +4,6 @@
     "tiltakspenger-libs": "git@github.com:navikt/tiltakspenger-libs",
     "tiltakspenger-mottak": "git@github.com:navikt/tiltakspenger-mottak",
     "tiltakspenger-arena": "git@github.com:navikt/tiltakspenger-arena",
-    "tiltakspenger-person": "git@github.com:navikt/tiltakspenger-person",
-    "tiltakspenger-fp": "git@github.com:navikt/tiltakspenger-fp",
-    "tiltakspenger-ufore": "git@github.com:navikt/tiltakspenger-ufore",
-    "tiltakspenger-skjerming": "git@github.com:navikt/tiltakspenger-skjerming",
     "tiltakspenger-vedtak": "git@github.com:navikt/tiltakspenger-vedtak",
     "tiltakspenger-tiltak": "git@github.com:navikt/tiltakspenger-tiltak",
     "tiltakspenger-vedtak-rivers": "git@github.com:navikt/tiltakspenger-vedtak-rivers",
@@ -16,7 +12,6 @@
     "tiltakspenger-scheduler": "git@github.com:navikt/tiltakspenger-scheduler",
     "tiltakspenger-template": "git@github.com:navikt/tiltakspenger-template",
     "tiltakspenger-admin": "git@github.com:navikt/tiltakspenger-admin",
-    "tiltakspenger-overgangsstonad": "git@github.com:navikt/tiltakspenger-overgangsstonad",
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
     "tiltakspenger-soknad-mock-api": "git@github.com:navikt/tiltakspenger-soknad-mock-api",
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
@@ -25,8 +20,6 @@
     "tiltakspenger-dokument": "git@github.com:navikt/tiltakspenger-dokument",
     "tiltakspenger-meldekort-api": "git@github.com:navikt/tiltakspenger-meldekort-api",
     "tiltakspenger-kafka-manager": "git@github.com:navikt/tiltakspenger-kafka-manager.git",
-    "tiltakspenger-person-river": "git@github.com:navikt/tiltakspenger-person-river.git",
-    "tiltakspenger-skjerming-river": "git@github.com:navikt/tiltakspenger-skjerming-river.git",
     "tiltakspenger-datadeling": "git@github.com:navikt/tiltakspenger-datadeling"
   }
 }

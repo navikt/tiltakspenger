@@ -8,7 +8,6 @@ tiltakspenger-*/
 
 .idea/**
 .vscode/**
-/tiltakspenger-scheduler/
 /tiltakspenger-template/
 /tiltakspenger-admin/
 /tiltakspenger-soknad-api/

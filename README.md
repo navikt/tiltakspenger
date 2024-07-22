@@ -45,7 +45,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers)
 - [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler)
-- [tiltakspenger-scheduler] (https://github.com/navikt/tiltakspenger-scheduler)
 - [tiltakspenger-template] (https://github.com/navikt/tiltakspenger-template)
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
@@ -69,7 +68,6 @@ Lenker til PR-sidene
 - [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers/pulls)
 - [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger/pulls)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler/pulls)
-- [tiltakspenger-scheduler] (https://github.com/navikt/tiltakspenger-scheduler/pulls)
 - [tiltakspenger-template] (https://github.com/navikt/tiltakspenger-template/pulls)
 - [tiltakspenger-admin] (https://github.com/navikt/tiltakspenger-admin/pulls)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
@@ -89,7 +87,6 @@ vedtak->>person: behov for personopplysninger
 person-->>vedtak: personopplysninger
 vedtak->>skjerming: behov for skjerming
 skjerming-->>vedtak: skjerming
-scheduler->>vedtak: dayHasBegun
 vedtak->>vedtak: utdatert innsending
 ```
 

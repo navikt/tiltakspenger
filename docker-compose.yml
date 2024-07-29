@@ -75,16 +75,6 @@ services:
                             }
                         },
                         {
-                            "requestParam": "scope",
-                            "match": "person",
-                            "claims": {
-                                "aud": "tiltakspenger-person",
-                                "oid": "Z123456",
-                                "sub": "Z123456",
-                                "azp_name": "tiltakspenger-person-rivers"
-                            }
-                        },
-                        {
                             "requestParam": "grant_type",
                             "match": "*",  
                             "claims": {

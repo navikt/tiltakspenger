@@ -8,23 +8,15 @@ tiltakspenger-*/
 
 .idea/**
 .vscode/**
-/tiltakspenger-template/
-/tiltakspenger-admin/
 /tiltakspenger-soknad-api/
 /tiltakspenger-soknad-mock-api/
 /tiltakspenger-pdfgen/
-/tiltakspenger-person/
 /tiltakspenger-arena/
-/tiltakspenger-fp/
 /tiltakspenger-iac/
-/tiltakspenger-institusjon/
 /tiltakspenger-libs/
 /tiltakspenger-mottak/
-/tiltakspenger-overgangsstonad/
 /tiltakspenger-saksbehandler/
-/tiltakspenger-skjerming/
 /tiltakspenger-testmeldinger/
-/tiltakspenger-ufore/
 /tiltakspenger-vedtak/
 /tiltakspenger-tiltak/
 /tiltakspenger-vedtak-rivers/
@@ -32,7 +24,4 @@ tiltakspenger-*/
 /tiltakspenger-utbetaling/
 /tiltakspenger-dokument/
 /tiltakspenger-meldekort-api/
-/tiltakspenger-kafka-manager/
-/tiltakspenger-person-river/
-/tiltakspenger-skjerming-river/
 /tiltakspenger-datadeling/

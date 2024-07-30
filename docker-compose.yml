@@ -198,7 +198,7 @@ services:
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
       NAIS_CLUSTER_NAME: "compose"
       # Utbetaling
-      SCOPE_UTBETALING: utbetaling
+      SCOPE_UTBETALING: tiltakspenger-utbetaling
       SCOPE_DOKUMENT: dokument
       UTBETALING_URL: http://host.docker.internal:8083
       DOKUMENT_URL: http://host.docker.internal:8084
@@ -251,7 +251,7 @@ services:
       DB_PASSWORD: test
       DB_DATABASE: utbetaling
       # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
+      AZURE_APP_CLIENT_ID: tiltakspenger-utbetaling
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret

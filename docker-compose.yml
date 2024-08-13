@@ -55,6 +55,7 @@ services:
                             "match": "meldekort",
                             "claims": {
                                 "aud": "tiltakspenger-vedtak",
+                                "idtyp": "app",
                                 "oid": "Z123456",
                                 "sub": "Z123456",
                                 "azp_name": "tiltakspenger-vedtak-rivers"
@@ -180,6 +181,7 @@ services:
     depends_on:
       - postgresMeldekort
       - vedtak-service
+      - authserver
     ports:
       - 8081:8080
     environment:
@@ -195,7 +197,7 @@ services:
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      NAIS_CLUSTER_NAME: "compose"
+      NAIS_CLUSTER_NAME: "lokal"
       # Utbetaling
       SCOPE_UTBETALING: tiltakspenger-utbetaling
       SCOPE_DOKUMENT: tiltakspenger-dokument

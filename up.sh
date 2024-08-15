@@ -16,7 +16,7 @@ repoer=(
 	"tiltakspenger-utbetaling"
 	"tiltakspenger-dokument"
 )
-build_cmd="./gradlew build installDist"
+build_cmd="./gradlew build installDist -x test"
 
 hjelpetekst="# Bruk: \
 \n \
@@ -38,7 +38,7 @@ do
     case "${flag}" in
         b) bygg=true;;
         p) git_pull=true;;
-		c) build_cmd="./gradlew clean build installDist";;
+		c) build_cmd="./gradlew clean build installDist -x test";;
 		f) livepdf=true;;
 		h) hjelp
 		   exit 1 ;;

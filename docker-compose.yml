@@ -12,6 +12,7 @@ services:
       - postgres-vedtak-data:/var/lib/postgresql/data
 
   postgresMeldekort:
+    hostname: postgresMeldekort
     image: postgres:15
     restart: always
     environment:
@@ -172,7 +173,7 @@ services:
       KAFKA_KEYSTORE_PATH: ""
       KAFKA_CREDSTORE_PASSWORD: ""
       TPTS_TOPIC: tpts.rapid.v1
-      NAIS_CLUSTER_NAME: "lokal"
+      NAIS_CLUSTER_NAME: lokal
 
   meldekort-api-service:
     build:
@@ -197,7 +198,7 @@ services:
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      NAIS_CLUSTER_NAME: "lokal"
+      NAIS_CLUSTER_NAME: compose
       # Utbetaling
       SCOPE_UTBETALING: tiltakspenger-utbetaling
       SCOPE_DOKUMENT: tiltakspenger-dokument

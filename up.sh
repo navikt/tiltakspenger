@@ -13,7 +13,6 @@ repoer=(
 	"tiltakspenger-vedtak"
 	"tiltakspenger-meldekort-api"
 	"tiltakspenger-vedtak-rivers"
-	"tiltakspenger-utbetaling"
 	"tiltakspenger-dokument"
 )
 build_cmd="./gradlew build installDist -x test"

@@ -49,7 +49,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
-- [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling)
 - [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument)
 - [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
@@ -69,7 +68,6 @@ Lenker til PR-sidene
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
 - [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger/pulls)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
-- [tiltakspenger-utbetaling] (https://github.com/navikt/tiltakspenger-utbetaling/pulls)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
 - [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers/pulls)
 

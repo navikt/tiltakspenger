@@ -52,6 +52,18 @@ services:
                         },
                         {
                             "requestParam": "scope",
+                            "match": "meldekort-api",
+                            "claims": {
+                                "aud": "tiltakspenger-meldekort-api",
+                                "idtyp": "app",
+                                "NAVident": "Z123456",
+                                "oid": "Z123456",
+                                "sub": "Z123456",
+                                "azp_name": "tiltakspenger-vedtak"
+                            }
+                        },
+                        {
+                            "requestParam": "scope",
                             "match": "vedtak",
                             "claims": {
                                 "aud": "tiltakspenger-vedtak",
@@ -164,6 +176,8 @@ services:
       KAFKA_CREDSTORE_PASSWORD: ""
       TPTS_TOPIC: tpts.rapid.v1
       NAIS_CLUSTER_NAME: lokal
+      MELDEKORT_SCOPE: meldekort-api
+      MELDEKORT_URL: http://host.docker.internal:8081
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -185,7 +199,7 @@ services:
       DB_PASSWORD: test
       DB_DATABASE: meldekort
       # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak
+      AZURE_APP_CLIENT_ID: tiltakspenger-meldekort-api
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
       AZURE_APP_CLIENT_SECRET: secret

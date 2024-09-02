@@ -11,7 +11,6 @@ git_pull=false
 livepdf=false
 repoer=(
 	"tiltakspenger-vedtak"
-	"tiltakspenger-meldekort-api"
 	"tiltakspenger-vedtak-rivers"
 	"tiltakspenger-dokument"
 )

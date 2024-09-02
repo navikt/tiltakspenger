@@ -52,18 +52,6 @@ services:
                         },
                         {
                             "requestParam": "scope",
-                            "match": "meldekort-api",
-                            "claims": {
-                                "aud": "tiltakspenger-meldekort-api",
-                                "idtyp": "app",
-                                "NAVident": "Z123456",
-                                "oid": "Z123456",
-                                "sub": "Z123456",
-                                "azp_name": "tiltakspenger-vedtak"
-                            }
-                        },
-                        {
-                            "requestParam": "scope",
                             "match": "vedtak",
                             "claims": {
                                 "aud": "tiltakspenger-vedtak",
@@ -176,40 +164,6 @@ services:
       KAFKA_CREDSTORE_PASSWORD: ""
       TPTS_TOPIC: tpts.rapid.v1
       NAIS_CLUSTER_NAME: lokal
-      MELDEKORT_SCOPE: meldekort-api
-      MELDEKORT_URL: http://host.docker.internal:8081
-    extra_hosts:
-      - host.docker.internal:host-gateway
-
-  meldekort-api-service:
-    build:
-      context: ./tiltakspenger-meldekort-api
-      dockerfile: Dockerfile
-    depends_on:
-      - postgresMeldekort
-      - vedtak-service
-      - authserver
-    ports:
-      - 8081:8080
-    environment:
-      # Postgres env
-      DB_HOST: postgresMeldekort
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: test
-      DB_DATABASE: meldekort
-      # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-meldekort-api
-      AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
-      AZURE_OPENID_CONFIG_JWKS_URI: http://host.docker.internal:6969/azure/jwks
-      AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      NAIS_CLUSTER_NAME: compose
-      # Utbetaling
-      SCOPE_UTBETALING: tiltakspenger-utbetaling
-      SCOPE_DOKUMENT: tiltakspenger-dokument
-      UTBETALING_URL: http://host.docker.internal:8083
-      DOKUMENT_URL: http://host.docker.internal:8084
     extra_hosts:
       - host.docker.internal:host-gateway
 

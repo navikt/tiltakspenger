@@ -50,7 +50,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument)
-- [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
 
 Lenker til PR-sidene
@@ -59,7 +58,6 @@ Lenker til PR-sidene
 - [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument/pulls)
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
 - [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs/pulls)
-- [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api/pulls)
 - [tiltakspenger-mottak] (https://github.com/navikt/tiltakspenger-mottak/pulls)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler/pulls)

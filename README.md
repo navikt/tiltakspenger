@@ -38,36 +38,28 @@ Repoene som er inkludert i dette meta-repoet er
 
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac)
 - [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs)
-- [tiltakspenger-mottak] (https://github.com/navikt/tiltakspenger-mottak)
 - [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak)
-- [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers)
-- [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
-- [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
 
 Lenker til PR-sidene
 - [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena/pulls)
 - [tiltakspenger-datadeling] (https://github.com/navikt/datadeling/pulls)
-- [tiltakspenger-dokument] (https://github.com/navikt/tiltakspenger-dokument/pulls)
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
 - [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs/pulls)
-- [tiltakspenger-mottak] (https://github.com/navikt/tiltakspenger-mottak/pulls)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler/pulls)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad/pulls)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
-- [tiltakspenger-testmeldinger] (https://github.com/navikt/tiltakspenger-testmeldinger/pulls)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
-- [tiltakspenger-vedtak-rivers] (https://github.com/navikt/tiltakspenger-vedtak-rivers/pulls)
 
 ```mermaid
 sequenceDiagram

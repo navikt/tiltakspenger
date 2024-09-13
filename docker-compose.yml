@@ -143,35 +143,6 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
-  vedtak-rivers-service:
-    build:
-      context: ./tiltakspenger-vedtak-rivers
-      dockerfile: Dockerfile
-    depends_on:
-      - vedtak-service
-    ports:
-      - 8082:8080
-    environment:
-      # Kafka env
-      KAFKA_BROKERS: "PLAINTEXT://kafka-service:29092"
-      KAFKA_TRUSTSTORE_PATH: ""
-      KAFKA_KEYSTORE_PATH: ""
-      KAFKA_CREDSTORE_PASSWORD: ""
-      TPTS_TOPIC: tpts.rapid.v1
-      NAIS_CLUSTER_NAME: "compose"
-      # Authserver env
-      AZURE_APP_CLIENT_ID: tiltakspenger-vedtak-rivers
-      AZURE_APP_CLIENT_SECRET: secret
-      AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azure/.well-known/openid-configuration
-      # Vedtak
-      VEDTAKSCOPE: vedtak
-      VEDTAKBASEURL: http://host.docker.internal:8080
-      # Dokument
-      DOKUMENTSCOPE: dokument
-      DOKUMENTBASEURL: http://host.docker.internal:8084
-    extra_hosts:
-      - host.docker.internal:host-gateway
-
   dokument-livepdf-service:
     build:
       context: ./tiltakspenger-dokument

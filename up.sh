@@ -11,7 +11,6 @@ git_pull=false
 livepdf=false
 repoer=(
 	"tiltakspenger-vedtak"
-	"tiltakspenger-dokument"
 )
 build_cmd="./gradlew build installDist -x test"
 

@@ -19,15 +19,6 @@ services:
     ports:
       - 6379:6379
 
-  dozzle:
-    image: amir20/dozzle:latest
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - 8090:8080
-    environment:
-      DOZZLE_NO_ANALYTICS: true
-
   soknad-api:
     build:
       context: ./tiltakspenger-soknad-api

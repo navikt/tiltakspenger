@@ -12,7 +12,7 @@ livepdf=false
 repoer=(
 	"tiltakspenger-vedtak"
 )
-build_cmd="./gradlew build installDist -x test"
+build_cmd="./gradlew build installDist -x test -x gitHooks"
 
 hjelpetekst="# Bruk: \
 \n \
@@ -34,7 +34,7 @@ do
     case "${flag}" in
         b) bygg=true;;
         p) git_pull=true;;
-		c) build_cmd="./gradlew clean build installDist -x test";;
+		c) build_cmd="./gradlew clean build installDist -x test -x gitHooks";;
 		f) livepdf=true;;
 		h) hjelp
 		   exit 1 ;;

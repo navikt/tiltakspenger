@@ -47,6 +47,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
+- [titlakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort)
 
 Lenker til PR-sidene
 - [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena/pulls)
@@ -60,6 +61,7 @@ Lenker til PR-sidene
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
 - [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
+- [tiltakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort/pulls)
 
 ```mermaid
 sequenceDiagram

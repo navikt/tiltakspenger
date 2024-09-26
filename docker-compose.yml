@@ -26,6 +26,17 @@ services:
                     "issuerId": "azure",
                     "tokenExpiry": 3600,
                     "requestMappings": [
+                      {
+                          "requestParam": "scope",
+                          "match": "localhost",
+                          "claims": {
+                            "aud": "joark",
+                            "idtyp": "app",
+                            "oid": "Z123456",
+                            "sub": "tiltakspenger-vedtak",
+                            "azp_name": "tiltakspenger-vedtak"
+                          }
+                        },
                         {
                             "requestParam": "grant_type",
                             "match": "*",  

@@ -1,0 +1,19 @@
+{
+  "request": {
+    "urlPath": "/tilgangstyring/api/v1/personBolk",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {"{{ jsonPath request.body '$[0]'}}": {"person": {"adressebeskyttelse": []}}},
+    "transformers": ["response-template"]
+  }
+}

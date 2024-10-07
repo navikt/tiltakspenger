@@ -11,58 +11,124 @@
   "response": {
     "status": 200,
     "jsonBody": {
-      "navn": {
-        "fornavn": "TRIVIELL",
-        "etternavn": "SKILPADDE",
-        "mellomnavn": null,
-        "metadata": {
-          "endringer": [
+      "data": {
+        "hentGeografiskTilknytning": {
+          "gtType": "KOMMUNE",
+          "gtKommune": "5444",
+          "gtBydel": null,
+          "gtLand": null,
+          "regel": "2"
+        },
+        "hentPerson": {
+          "adressebeskyttelse": [],
+          "forelderBarnRelasjon": [
             {
-              "kilde": "Dolly",
-              "registrert": "2021-06-24T09:33:27",
-              "registrertAv": "Folkeregisteret",
-              "systemkilde": "FREG",
-              "type": "OPPRETT"
+              "relatertPersonsIdent": "10020662730",
+              "relatertPersonsRolle": "BARN",
+              "minRolleForPerson": "MOR",
+              "relatertPersonUtenFolkeregisteridentifikator": null,
+              "folkeregistermetadata": {
+                "aarsak": null,
+                "ajourholdstidspunkt": "2022-06-17T09:32:16",
+                "gyldighetstidspunkt": "2022-06-17T09:32:16",
+                "kilde": "Dolly",
+                "opphoerstidspunkt": null,
+                "sekvens": null
+              },
+              "metadata": {
+                "endringer": [
+                  {
+                    "kilde": "Dolly",
+                    "registrert": "2022-06-17T09:32:16",
+                    "registrertAv": "Folkeregisteret",
+                    "systemkilde": "FREG",
+                    "type": "OPPRETT"
+                  }
+                ],
+                "master": "FREG"
+              }
+            },
+            {
+              "relatertPersonsIdent": "07070676243",
+              "relatertPersonsRolle": "BARN",
+              "minRolleForPerson": "MOR",
+              "relatertPersonUtenFolkeregisteridentifikator": null,
+              "folkeregistermetadata": {
+                "aarsak": null,
+                "ajourholdstidspunkt": "2022-06-17T09:32:16",
+                "gyldighetstidspunkt": "2022-06-17T09:32:16",
+                "kilde": "Dolly",
+                "opphoerstidspunkt": null,
+                "sekvens": null
+              },
+              "metadata": {
+                "endringer": [
+                  {
+                    "kilde": "Dolly",
+                    "registrert": "2022-06-17T09:32:16",
+                    "registrertAv": "Folkeregisteret",
+                    "systemkilde": "FREG",
+                    "type": "OPPRETT"
+                  }
+                ],
+                "master": "FREG"
+              }
             }
           ],
-          "master": "FREG"
-        },
-        "folkeregistermetadata": {
-          "aarsak": null,
-          "ajourholdstidspunkt": "2021-06-24T09:33:27",
-          "gyldighetstidspunkt": "2021-06-24T09:33:27",
-          "kilde": "Dolly",
-          "opphoerstidspunkt": null,
-          "sekvens": null
-        }
-      },
-      "foedselsdato": [
-        {
-          "foedselsdato": "1987-07-30",
-          "folkeregistermetadata": {
-            "aarsak": null,
-            "ajourholdstidspunkt": "2021-06-24T09:33:27",
-            "gyldighetstidspunkt": "2021-06-24T09:33:27",
-            "kilde": "Dolly",
-            "opphoerstidspunkt": null,
-            "sekvens": null
-          },
-          "metadata": {
-            "endringer": [
-              {
+          "navn": [
+            {
+              "fornavn": "Lykkelig",
+              "mellomnavn": null,
+              "etternavn": "Eksamen",
+              "folkeregistermetadata": {
+                "aarsak": null,
+                "ajourholdstidspunkt": "2022-06-17T09:32:15",
+                "gyldighetstidspunkt": "2022-06-17T09:32:15",
                 "kilde": "Dolly",
-                "registrert": "2021-06-24T09:33:27",
-                "registrertAv": "Folkeregisteret",
-                "systemkilde": "FREG",
-                "type": "OPPRETT"
+                "opphoerstidspunkt": null,
+                "sekvens": null
+              },
+              "metadata": {
+                "endringer": [
+                  {
+                    "kilde": "Dolly",
+                    "registrert": "2022-06-17T09:32:15",
+                    "registrertAv": "Folkeregisteret",
+                    "systemkilde": "FREG",
+                    "type": "OPPRETT"
+                  }
+                ],
+                "master": "FREG"
               }
-            ],
-            "master": "FREG"
-          }
+            }
+          ],
+          "foedsel": [
+            {
+              "foedselsdato": "1984-07-04",
+              "folkeregistermetadata": {
+                "aarsak": null,
+                "ajourholdstidspunkt": "2022-06-17T09:32:15",
+                "gyldighetstidspunkt": "2022-06-17T09:32:15",
+                "kilde": "Dolly",
+                "opphoerstidspunkt": null,
+                "sekvens": null
+              },
+              "metadata": {
+                "endringer": [
+                  {
+                    "kilde": "Dolly",
+                    "registrert": "2022-06-17T09:32:15",
+                    "registrertAv": "Folkeregisteret",
+                    "systemkilde": "FREG",
+                    "type": "OPPRETT"
+                  }
+                ],
+                "master": "FREG"
+              }
+            }
+          ]
         }
-      ],
-      "adressebeskyttelse": [],
-      "forelderBarnRelasjon": []
+      }
     }
   }
 }

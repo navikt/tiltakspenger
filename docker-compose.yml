@@ -108,7 +108,7 @@ services:
       context: ./tiltakspenger-pdfgen
       dockerfile: Dockerfile
     ports:
-      - 8085:8080
+      - 8081:8080
     environment:
       DISABLE_PDF_GET: false
 

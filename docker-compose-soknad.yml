@@ -4,7 +4,7 @@ services:
       context: ./tiltakspenger-pdfgen
       dockerfile: Dockerfile
     ports:
-      - 8085:8080
+      - 8081:8080
     volumes:
       - ./tiltakspenger-pdfgen/templates:/app/templates \
       - ./tiltakspenger-pdfgen/fonts:/app/fonts \
@@ -33,7 +33,7 @@ services:
       PDL_AUDIENCE: mock_audience
       PDL_SCOPE: mock_scope
       PDL_ENDPOINT_URL: "http://host.docker.internal:8484/personalia"
-      PDF_ENDPOINT_URL: "http://host.docker.internal:8085"
+      PDF_ENDPOINT_URL: "http://host.docker.internal:8081"
       JOARK_ENDPOINT_URL: "http://host.docker.internal:8484"
       JOARK_AUDIENCE: "mock_audience"
       JOARK_SCOPE: "mock_scope"

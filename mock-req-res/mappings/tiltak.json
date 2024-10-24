@@ -35,6 +35,22 @@
         "deltakelseProsent": 100.0,
         "kilde": "Komet",
         "registrertDato": "2023-10-27T00:00:00"
+      },
+      {
+        "id": "06b6f890-d886-44f0-9deb-9726c2e56440",
+        "gjennomforing": {
+          "id": "",
+          "arrangørnavn": "ASKER KOMMUNE ADM OG LEDELSE SENTER FOR INNOVASJON OG LÆRING",
+          "typeNavn": "GRUPPEAMO",
+          "arenaKode": "ENKFAGYRKE"
+        },
+        "deltakelseFom": "2024-06-01",
+        "deltakelseTom": "2025-05-30",
+        "deltakelseStatus": "DELTAR",
+        "deltakelseDagerUke": null,
+        "deltakelseProsent": 100.0,
+        "kilde": "Komet",
+        "registrertDato": "2023-10-27T00:00:00"
       }
     ]
   }

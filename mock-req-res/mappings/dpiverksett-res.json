@@ -1,6 +1,6 @@
 {
   "request": {
-    "urlPath": "/api/iverksetting",
+    "urlPath": "/api/iverksetting/v2",
     "method": "POST",
     "headers": {
       "Accept": {
@@ -11,6 +11,7 @@
       "equalToJson" : {
         "sakId": "${json-unit.any-string}",
         "behandlingId": "${json-unit.any-string}",
+        "iverksettingId" : "${json-unit.any-string}",
         "personident": {
           "verdi": "${json-unit.any-string}"
         },

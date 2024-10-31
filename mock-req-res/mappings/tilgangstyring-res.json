@@ -13,7 +13,7 @@
     "headers" : {
       "Content-Type" : "application/json;charset=UTF-8"
     },
-    "jsonBody": {"{{ jsonPath request.body '$[0]'}}": {"person": {"adressebeskyttelse": []}}},
+    "jsonBody": {"15850598247": {"person": {"adressebeskyttelse": []}}, "04880298335": {"person": {"adressebeskyttelse": []}}, "25927798800": {"person": {"adressebeskyttelse": []}}, "15850598247": {"person": {"adressebeskyttelse": []}}, "22888699787": {"person": {"adressebeskyttelse": []}}, "14838098925": {"person": {"adressebeskyttelse": []}}, "21838099944": {"person": {"adressebeskyttelse": []}}, "31528732014": {"person": {"adressebeskyttelse": []}}, "16498425414": {"person": {"adressebeskyttelse": []}}},
     "transformers": ["response-template"]
   }
 }

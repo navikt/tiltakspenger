@@ -3,7 +3,7 @@
     "tiltakspenger-iac": "git@github.com:navikt/tiltakspenger-iac",
     "tiltakspenger-libs": "git@github.com:navikt/tiltakspenger-libs",
     "tiltakspenger-arena": "git@github.com:navikt/tiltakspenger-arena",
-    "tiltakspenger-vedtak": "git@github.com:navikt/tiltakspenger-vedtak",
+    "tiltakspenger-saksbehandling-api": "git@github.com:navikt/tiltakspenger-saksbehandling-api",
     "tiltakspenger-tiltak": "git@github.com:navikt/tiltakspenger-tiltak",
     "tiltakspenger-saksbehandler": "git@github.com:navikt/tiltakspenger-saksbehandler",
     "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",

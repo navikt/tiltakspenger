@@ -39,7 +39,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac)
 - [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs)
 - [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena)
-- [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak)
+- [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak)
 - [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandler)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
@@ -60,18 +60,8 @@ Lenker til PR-sidene
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
-- [tiltakspenger-vedtak] (https://github.com/navikt/tiltakspenger-vedtak/pulls)
+- [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api/pulls)
 - [tiltakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort/pulls)
-
-```mermaid
-sequenceDiagram
-mottak->>vedtak: søknad
-vedtak->>person: behov for personopplysninger
-person-->>vedtak: personopplysninger
-vedtak->>skjerming: behov for skjerming
-skjerming-->>vedtak: skjerming
-vedtak->>vedtak: utdatert innsending
-```
 
 ### Lokal kjøring av verdikjeden
 

@@ -9,7 +9,7 @@
 bygg=false
 git_pull=false
 repoer=(
-	"tiltakspenger-vedtak"
+	"tiltakspenger-saksbehandling-api"
 )
 build_cmd="./gradlew build installDist -x test -x gitHooks"
 

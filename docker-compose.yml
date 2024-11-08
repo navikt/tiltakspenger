@@ -1,6 +1,6 @@
 services:
   postgresSaksbehandling:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -10,6 +10,18 @@ services:
       - 5433:5432
     volumes:
       - postgres-saksbehandling-data:/var/lib/postgresql/data
+
+  postgresDatadeling:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: datadeling
+    ports:
+      - 5434:5432
+    volumes:
+      - postgres-datadeling-data:/var/lib/postgresql/data
 
   authserver:
     image: ghcr.io/navikt/mock-oauth2-server:2.1.1
@@ -148,3 +160,4 @@ services:
 
 volumes:
   postgres-saksbehandling-data: #
+  postgres-datadeling-data: #

@@ -1,6 +1,10 @@
 {
   "request": {
-    "urlPath": "/rest/journalpostapi/v1/journalpost",
+    "urlPath": {"or": [
+    {"equalTo":  "/rest/journalpostapi/v1/journalpost"},
+    {"equalTo":  "/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true"}
+
+]},
     "method": "POST",
     "headers": {
       "Accept": {
@@ -31,7 +35,11 @@
           "idType": "${json-unit.any-string}"
         },
         "sak": "${json-unit.ignore}",
+        "fagsakId" : "sak_01HSTRQBRYJJXXHSVK4NGAM2RT",
+        "fagsaksystem" : "TILTAKSPENGER",
         "dokumenter": "${json-unit.ignore}",
+        "brevkode" : "MELDEKORT-TILTAKSPENGER",
+        "dokumentvarianter" : "${json-unit.ignore}",
         "eksternReferanseId": "${json-unit.any-string}"
       }
     }]

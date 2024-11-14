@@ -19,10 +19,6 @@
           "vedtakstidspunkt": "${json-unit.any-string}",
           "saksbehandlerId": "${json-unit.any-string}",
           "beslutterId": "${json-unit.any-string}",
-          "brukersNavKontor": {
-            "enhet": "${json-unit.any-string}",
-            "gjelderFom": "${json-unit.ignore}"
-          },
           "utbetalinger": "${json-unit.ignore}"
         },
         "forrigeIverksetting": "${json-unit.ignore}"

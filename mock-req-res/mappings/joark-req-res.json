@@ -1,10 +1,6 @@
 {
   "request": {
-    "urlPath": {"or": [
-    {"equalTo":  "/rest/journalpostapi/v1/journalpost"},
-    {"equalTo":  "/rest/journalpostapi/v1/journalpost?forsoekFerdigstill=true"}
-
-]},
+    "urlPath": "/rest/journalpostapi/v1/journalpost",
     "method": "POST",
     "headers": {
       "Accept": {
@@ -13,36 +9,16 @@
     },
     "queryParameters": {
       "forsoekFerdigstill": {
-          "or": [
-            {"equalTo":  "true"},
-            {"equalTo":  "false"}
-          ]
-        }
-      },
-    "bodyPatterns" : [{
-      "equalToJson" : {
-        "tittel": "${json-unit.any-string}",
-        "journalpostType": "${json-unit.any-string}",
-        "tema": "${json-unit.any-string}",
-        "kanal": "${json-unit.any-string}",
-        "journalfoerendeEnhet": "${json-unit.any-string}",
-        "avsenderMottaker": {
-          "id": "${json-unit.any-string}",
-          "idType": "${json-unit.any-string}"
-        },
-        "bruker": {
-          "id": "${json-unit.any-string}",
-          "idType": "${json-unit.any-string}"
-        },
-        "sak": "${json-unit.ignore}",
-        "fagsakId" : "sak_01HSTRQBRYJJXXHSVK4NGAM2RT",
-        "fagsaksystem" : "TILTAKSPENGER",
-        "dokumenter": "${json-unit.ignore}",
-        "brevkode" : "MELDEKORT-TILTAKSPENGER",
-        "dokumentvarianter" : "${json-unit.ignore}",
-        "eksternReferanseId": "${json-unit.any-string}"
+        "or": [
+          {
+            "equalTo": "true"
+          },
+          {
+            "equalTo": "false"
+          }
+        ]
       }
-    }]
+    }
   },
   "response": {
     "status": 201,

@@ -11,6 +11,7 @@
     "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
     "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad",
     "tiltakspenger-datadeling": "git@github.com:navikt/tiltakspenger-datadeling",
-    "tiltakspenger-meldekort": "git@github.com:navikt/tiltakspenger-meldekort.git"
+    "tiltakspenger-meldekort": "git@github.com:navikt/tiltakspenger-meldekort.git",
+    "tiltakspenger-meldekort-api": "git@github.com:navikt/tiltakspenger-meldekort-api.git"
   }
 }

@@ -11,7 +11,7 @@ git_pull=false
 repoer=(
 	"tiltakspenger-saksbehandling-api"
 )
-build_cmd="./gradlew build installDist -x test -x gitHooks"
+build_cmd="./gradlew build installDist -x test -x gitHooks -x spotlessCheck -x spotlessApply"
 
 hjelpetekst="# Bruk: \
 \n \
@@ -32,7 +32,7 @@ do
     case "${flag}" in
         b) bygg=true;;
         p) git_pull=true;;
-        c) build_cmd="./gradlew clean build installDist -x test -x gitHooks";;
+        c) build_cmd="./gradlew clean build installDist -x test -x gitHooks -x spotlessCheck -x spotlessApply";;
         h) hjelp
 		   exit 1 ;;
     esac

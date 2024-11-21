@@ -10,6 +10,7 @@ bygg=false
 git_pull=false
 repoer=(
 	"tiltakspenger-saksbehandling-api"
+	"tiltakspenger-meldekort-api"
 )
 build_cmd="./gradlew build installDist -x test -x gitHooks -x spotlessCheck -x spotlessApply"
 

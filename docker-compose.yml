@@ -197,6 +197,7 @@ services:
       DOWNSTREAM_APP_NAME: tiltakspenger-meldekort-api
       DOWNSTREAM_APP_NAMESPACE: ""
       DOWNSTREAM_APP_CLUSTER: ""
+      NAIS_POD_NAME: tiltakspenger-meldekort-api-local
       AZURE_ENABLED: true
       AZURE_APP_CLIENT_ID: tiltakspenger-meldekort-api
       AZURE_OPENID_CONFIG_ISSUER: http://localhost:6969/azuread

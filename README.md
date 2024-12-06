@@ -55,19 +55,19 @@ Lenker til PR-sidene
 - [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
 - [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs/pulls)
 - [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
-- [tiltakspenger-saksbehandler] (https://github.com/navikt/tiltakspenger-saksbehandling/pulls)
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad/pulls)
 - [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
 - [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
 - [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
+- [tiltakspenger-saksbehandling] (https://github.com/navikt/tiltakspenger-saksbehandling/pulls)
 - [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api/pulls)
 - [tiltakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort/pulls)
 
 ### Lokal kjøring av verdikjeden
 
 Meta-repoet kommer med et docker-compose oppsett som kan benyttes for å kjøre opp
-hele verdikjeden lokalt i Docker-containere, med noen unntak (`tiltakspenger-saksbehandler`,
-`tiltakspenger-soknad` og `tiltakspenger-soknad-api`). Merk at `tiltakspenger-saksbehandler` kan kjøres opp
+hele verdikjeden lokalt i Docker-containere, med noen unntak (`tiltakspenger-saksbehandling`,
+`tiltakspenger-soknad` og `tiltakspenger-soknad-api`). Merk at `tiltakspenger-saksbehandling` kan kjøres opp
 på siden av øvrige apper for å kunne teste frontend lokalt.
 
 #### Bruk av docker-compose oppsett for saksbehandling

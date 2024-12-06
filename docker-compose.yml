@@ -24,7 +24,7 @@ services:
       - postgres-datadeling-data:/var/lib/postgresql/data
 
   postgresMeldekort:
-    image: postgres:16
+    image: postgres:17
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -81,7 +81,7 @@ services:
                                     "cbe715d0-6f67-46bf-86b4-688c4419b747"
                                 ],
                                 "azp": "5f28c10f-ecd5-45ef-96b8-db4311802e89",
-                                "azp_name": "dev-gcp:tpts:tiltakspenger-saksbehandler"
+                                "azp_name": "dev-gcp:tpts:tiltakspenger-saksbehandling"
                             }
                         }
                     ]

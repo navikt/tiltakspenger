@@ -71,7 +71,7 @@ services:
                             "requestParam": "grant_type",
                             "match": "*",
                             "claims": {
-                                "aud": "tiltakspenger-meldekort-api",
+                                "aud": "tiltakspenger-saksbehandling-api",
                                 "NAVident": "Z123456",
                                 "preferred_username": "test.testesen@nav.no",
                                 "name": "Test Testesen",

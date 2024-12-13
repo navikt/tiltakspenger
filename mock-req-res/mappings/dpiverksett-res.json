@@ -6,24 +6,7 @@
       "Accept": {
         "contains": "json"
       }
-    },
-    "bodyPatterns" : [{
-      "equalToJson" : {
-        "sakId": "${json-unit.any-string}",
-        "behandlingId": "${json-unit.any-string}",
-        "iverksettingId" : "${json-unit.any-string}",
-        "personident": {
-          "verdi": "${json-unit.any-string}"
-        },
-        "vedtak": {
-          "vedtakstidspunkt": "${json-unit.any-string}",
-          "saksbehandlerId": "${json-unit.any-string}",
-          "beslutterId": "${json-unit.any-string}",
-          "utbetalinger": "${json-unit.ignore}"
-        },
-        "forrigeIverksetting": "${json-unit.ignore}"
-      }
-    }]
+    }
   },
   "response": {
     "status": 202,

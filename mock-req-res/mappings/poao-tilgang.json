@@ -1,0 +1,18 @@
+{
+  "request": {
+    "urlPath": "/api/v1/skjermet-person",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "body": "false"
+  }
+}

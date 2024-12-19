@@ -48,6 +48,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
 - [titlakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort)
+- [titlakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
 
 Lenker til PR-sidene
 - [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena/pulls)
@@ -62,6 +63,7 @@ Lenker til PR-sidene
 - [tiltakspenger-saksbehandling] (https://github.com/navikt/tiltakspenger-saksbehandling/pulls)
 - [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api/pulls)
 - [tiltakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort/pulls)
+- [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api/pulls)
 
 ### Lokal kjøring av verdikjeden
 

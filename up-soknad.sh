@@ -14,7 +14,7 @@ repoer=(
 	"tiltakspenger-soknad-api"
 	"tiltakspenger-soknad-mock-api"
 )
-build_cmd="./gradlew build installDist"
+build_cmd="./gradlew build installDist -x test -x spotlessCheck -x spotlessApply"
 
 hjelpetekst="# Bruk: \
 \n \
@@ -36,7 +36,7 @@ do
     case "${flag}" in
         b) bygg=true;;
         p) git_pull=true;;
-		c) build_cmd="./gradlew clean build installDist";;
+		c) build_cmd="./gradlew clean build installDist -x test -x spotlessCheck -x spotlessApply";;
 		f) run_api=true;;
 		h) hjelp
 		   exit 1 ;;

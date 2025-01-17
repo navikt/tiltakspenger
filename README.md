@@ -95,3 +95,31 @@ skulle ønske å kjøre opp api'et fra IntelliJ.
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ./up-soknad.sh   | Script for å bygge og starte alle apper i docker-compose-soknad (se i [up-soknad.sh](https://github.com/navikt/tiltakspenger/blob/main/up-soknad.sh) for tilgjengelige options) |
 | ./down-soknad.sh | Script for å stoppe alle apper i docker-compose (se i [down-søknad.sh](https://github.com/navikt/tiltakspenger/blob/main/down-soknad.sh) for tilgjengelige options)             |
+
+### Import av data til lokale databaser
+
+Det kan være praktisk å populere lokale databaser med data fra dev-miljøet. Du trenger `pg_dump` og `pg_restore` fra [Postgres binaries](https://www.postgresql.org/download/).
+
+#### Fremgangsmåte
+Eksempel for saksbehandling-api, se docker-compose for parametre for andre apper.
+
+- Start den lokale databasen:
+```
+docker compose up -d postgresSaksbehandling
+```
+
+- Start en lokal proxy til dev-databasen du skal importere fra, med [nais cli](https://docs.nais.io/persistence/postgres/how-to/personal-access/). Se doc'en for førstegangsoppsett, senere kan du kjøre disse kommandoene:
+```
+kubectl config use-context dev-gcp
+nais postgres proxy -p 5444 tiltakspenger-saksbehandling-api
+```
+
+- Kjør `pg_dump` for å dumpe dev-databasen:
+```
+pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP brukernavn> --schema=public --format=directory --file=<path til dump>
+```
+
+- Kjør `pg_restore` for å gjenopprette databasen lokalt (se docker-compose for passord, antagelig `test`)
+```
+pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --clean --no-owner --no-privileges <path til dump>
+```

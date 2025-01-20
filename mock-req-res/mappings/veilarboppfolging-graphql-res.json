@@ -1,0 +1,24 @@
+{
+  "request": {
+    "urlPath": "/veilarboppfolging/graphql",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "data": {
+        "oppfolgingsEnhet": {
+          "enhet": {
+            "id": "0220",
+            "navn": "Nav Asker"
+          }
+        }
+      }
+    }
+  }
+}

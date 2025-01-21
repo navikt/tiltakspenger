@@ -1,0 +1,23 @@
+{
+  "request": {
+    "urlPath": "/veilarboppfolging/api/v2/person/system/hent-oppfolgingsstatus",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "oppfolgingsenhet": {
+        "navn": "Nav Asker",
+        "enhetId": "0220"
+      }
+    }
+  }
+}

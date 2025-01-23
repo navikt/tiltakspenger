@@ -24,12 +24,6 @@ services:
     environment:
       DISABLE_PDF_GET: false
 
-  redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - 6379:6379
-
   soknad-api:
     build:
       context: ./tiltakspenger-soknad-api

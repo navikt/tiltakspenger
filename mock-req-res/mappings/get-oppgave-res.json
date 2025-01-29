@@ -1,0 +1,22 @@
+{
+  "request": {
+    "urlPath": "/api/v1/oppgaver/1",
+    "method": "GET",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "id": 1,
+      "status": "OPPRETTET",
+      "versjon": 1
+    }
+  }
+}

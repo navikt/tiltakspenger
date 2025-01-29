@@ -1,0 +1,21 @@
+{
+  "request": {
+    "urlPath": "/api/v1/oppgaver?tema=IND&oppgavetype=BEH_SAK&journalpostId=1&statuskategori=AAPEN",
+    "method": "GET",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "antallTreffTotalt": 0,
+      "oppgaver": []
+    }
+  }
+}

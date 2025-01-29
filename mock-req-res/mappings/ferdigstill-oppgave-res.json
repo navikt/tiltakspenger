@@ -1,0 +1,17 @@
+{
+  "request": {
+    "urlPath": "/api/v1/oppgaver/1",
+    "method": "PATCH",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    }
+  }
+}

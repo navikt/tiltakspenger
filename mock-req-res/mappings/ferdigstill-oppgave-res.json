@@ -1,6 +1,6 @@
 {
   "request": {
-    "urlPath": "/api/v1/oppgaver/1",
+    "urlPath": "/api/v1/oppgaver/100",
     "method": "PATCH",
     "headers": {
       "Accept": {

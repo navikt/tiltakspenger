@@ -1,6 +1,6 @@
 {
   "request": {
-    "urlPath": "/api/v1/oppgaver/1",
+    "urlPath": "/api/v1/oppgaver/100",
     "method": "GET",
     "headers": {
       "Accept": {
@@ -14,7 +14,7 @@
       "Content-Type" : "application/json;charset=UTF-8"
     },
     "jsonBody": {
-      "id": 1,
+      "id": 100,
       "status": "OPPRETTET",
       "versjon": 1
     }

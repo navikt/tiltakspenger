@@ -1,6 +1,6 @@
 {
   "request": {
-    "urlPath": "/api/v1/oppgaver/100",
+    "urlPathTemplate": "/api/v1/oppgaver/{oppgaveId}",
     "method": "GET",
     "headers": {
       "Accept": {

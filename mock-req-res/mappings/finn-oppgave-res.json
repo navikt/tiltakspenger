@@ -1,6 +1,12 @@
 {
   "request": {
-    "urlPath": "/api/v1/oppgaver?tema=IND&oppgavetype=BEH_SAK&journalpostId=1&statuskategori=AAPEN",
+    "urlPathTemplate": "/api/v1/oppgaver",
+    "queryParameters": {
+      "tema": { "matches": ".*" },
+      "oppgavetype": { "matches": ".*" },
+      "journalpostId": { "matches": ".*" },
+      "statuskategori": { "matches": ".*" }
+    },
     "method": "GET",
     "headers": {
       "Accept": {

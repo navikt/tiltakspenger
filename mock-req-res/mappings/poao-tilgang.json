@@ -1,18 +1,13 @@
 {
   "request": {
     "urlPath": "/api/v1/skjermet-person",
-    "method": "POST",
-    "headers": {
-      "Accept": {
-        "contains": "json"
-      }
-    }
+    "method": "POST"
   },
   "response": {
     "status": 200,
     "headers" : {
       "Content-Type" : "application/json;charset=UTF-8"
     },
-    "body": "false"
+    "body": "{ {{#each (jsonPath request.body '$.norskeIdenter[*]') as |fnr|}}\"{{fnr}}\": false{{#not @last}},{{/not}}{{/each}} }"
   }
 }

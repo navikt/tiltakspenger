@@ -13,6 +13,6 @@
     "headers" : {
       "Content-Type" : "application/json;charset=UTF-8"
     },
-    "jsonBody": {"15850598247":false,"04880298335":false,"25927798800":false,"22888699787":false,"14838098925":false,"21838099944":false,"31528732014":false,"16498425414":false}
+    "body": "{ {{#each (jsonPath request.body '$.personidenter[*]') as |fnr|}}\"{{fnr}}\": false{{#not @last}},{{/not}}{{/each}} }"
   }
 }

@@ -7,43 +7,41 @@
         "contains": "json"
       }
     },
-    "bodyPatterns" : [{
-      "equalToJson" : {
-      "ident" : "${json-unit.any-string}"
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "ident": "${json-unit.any-string}"
+        }
       }
-    }]
+    ]
   },
   "response": {
     "status": 200,
-    "headers" : {
-      "Content-Type" : "application/json;charset=UTF-8"
+    "headers": {
+      "Content-Type": "application/json;charset=UTF-8"
     },
-    "jsonBody": 
-    [
+    "jsonBody": [
       {
         "id": "TA6418307",
         "gjennomføringId": "",
+        "deltakelseFom": "2023-08-20",
+        "deltakelseTom": "2024-06-30",
         "typeNavn": "Enkeltplass Fag- og yrkesopplæring VGS og høyere yrkesfaglig utdanning",
         "typeKode": "ENKFAGYRKE",
-        "deltakelsesPeriode": {
-          "fom": "2023-08-20",
-          "tom": "2024-06-30"
-        },
         "deltakelseStatus": "DELTAR",
-        "antallDagerPerUke": 5,
+        "deltakelsePerUke": 5,
         "deltakelseProsent": 100.0,
         "kilde": "Komet"
-      },   {
-      "id": "TA6418307",
-      "gjennomføringId": "",
-      "typeNavn": "Enkeltplass Fag- og yrkesopplæring VGS og høyere yrkesfaglig utdanning",
-      "typeKode": "ENKFAGYRKE",
-      "deltakelsesPeriode": {
-        "fom": "2023-08-20",
-        "tom": "2024-06-30"
       },
+      {
+        "id": "TA6418307",
+        "gjennomføringId": "",
+        "deltakelseFom": "2024-08-20",
+        "deltakelseTom": "2025-06-30",
+        "typeNavn": "Enkeltplass Fag- og yrkesopplæring VGS og høyere yrkesfaglig utdanning",
+        "typeKode": "ENKFAGYRKE",
         "deltakelseStatus": "DELTAR",
-        "antallDagerPerUke": 5,
+        "deltakelsePerUke": 5,
         "deltakelseProsent": 100.0,
         "kilde": "Komet"
       }

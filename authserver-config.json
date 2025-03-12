@@ -59,8 +59,8 @@
           "requestParam": "grant_type",
           "match": "*",
           "claims": {
-            "sub": "12345678901",
-            "pid": "12345678901",
+            "sub": "12345678911",
+            "pid": "12345678911",
             "aud": "tiltakspenger-meldekort-api",
             "acr": "Level4"
           }
@@ -75,8 +75,8 @@
           "requestParam": "grant_type",
           "match": "*",
           "claims": {
-            "sub": "12345678901",
-            "pid": "12345678901",
+            "sub": "12345678911",
+            "pid": "12345678911",
             "client_id": "tiltakspenger-meldekort",
             "acr": "Level4"
           }

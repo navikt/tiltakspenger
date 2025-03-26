@@ -1,0 +1,15 @@
+{
+  "request": {
+    "urlPathTemplate": "/api/iverksetting/{saksnummer}/{vedtakId}/status",
+    "method": "GET",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": "OK"
+  }
+}

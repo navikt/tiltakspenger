@@ -9,7 +9,7 @@
     },
     "bodyPatterns" : [{
       "equalToJson" : {
-      "journalpostId" : "journalpostId",
+      "journalpostId" : "${json-unit.any-string}",
       "bestillendeFagsystem" : "IND",
       "dokumentProdApp" : "Tiltakspenger",
       "distribusjonstype" : "VEDTAK",

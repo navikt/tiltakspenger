@@ -1,0 +1,40 @@
+{
+  "request": {
+    "urlPath": "/meldekortservice/api/v2/historiskemeldekort",
+    "method": "GET",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "personId": 0,
+      "etternavn": "McNavnface",
+      "fornavn": "Navn",
+      "maalformkode": "string",
+      "meldeform": "string",
+      "antallGjenstaaendeFeriedager": 0,
+      "meldekortListe": [
+        {
+          "beregningstatus": "string",
+          "bruttoBelop": 0,
+          "forskudd": false,
+          "fraDato": "2025-05-07",
+          "hoyesteMeldegruppe": "string",
+          "kortType": "string",
+          "meldekortId": 0,
+          "meldeperiode": "string",
+          "mottattDato": "2025-05-07",
+          "tilDato": "2025-05-07"
+        }
+      ],
+      "fravaerListe": []
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "request": {
+    "urlPath": "/v2/hent-utbetalingsinformasjon/intern",
+    "method": "POST",
+    "headers": {
+      "Accept": {
+        "contains": "json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers" : {
+      "Content-Type" : "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "ytelseListe": []
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "request": {
-    "urlPath": "/v2/hent-utbetalingsinformasjon/intern",
+    "urlPath": "/utbetaldata/api/v2/hent-utbetalingsinformasjon/intern",
     "method": "POST",
     "headers": {
       "Accept": {
@@ -13,8 +13,6 @@
     "headers" : {
       "Content-Type" : "application/json;charset=UTF-8"
     },
-    "jsonBody": {
-      "ytelseListe": []
-    }
+    "jsonBody": []
   }
 }

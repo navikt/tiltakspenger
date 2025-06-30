@@ -136,6 +136,7 @@ services:
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_APP_WELL_KNOWN_URL: http://host.docker.internal:6969/azuread/.well-known/openid-configuration
       NAIS_CLUSTER_NAME: lokal
+      BRUK_FAKE_MELDEKORT_API: true
     extra_hosts:
       - host.docker.internal:host-gateway
 

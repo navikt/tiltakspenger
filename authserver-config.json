@@ -48,6 +48,23 @@
               "tiltakspenger-meldekort-api"
             ]
           }
+        },
+        {
+          "requestParam": "scope",
+          "match": "api://tiltakspenger-saksbehandling-api/.default",
+          "claims": {
+            "aud": [
+              "tiltakspenger-saksbehandling-api"
+            ],
+            "idtyp": "app",
+            "sub": "tiltakspenger-meldekort-api",
+            "oid": "tiltakspenger-meldekort-api",
+            "azp": "tiltakspenger-meldekort-api",
+            "azp_name": "tiltakspenger-meldekort-api",
+            "roles": [
+              "LAGRE_MELDEKORT"
+            ]
+          }
         }
       ]
     },

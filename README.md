@@ -36,34 +36,20 @@ IntelliJ-oppsett.
 
 Repoene som er inkludert i dette meta-repoet er
 
-- [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac)
-- [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs)
-- [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena)
-- [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api)
-- [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak)
-- [tiltakspenger-saksbehandling] (https://github.com/navikt/tiltakspenger-saksbehandling)
-- [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api)
-- [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api)
-- [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen)
-- [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad)
-- [tiltakspenger-datadeling] (https://github.com/navikt/tiltakspenger-datadeling)
-- [titlakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort)
-- [titlakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api)
-
-Lenker til PR-sidene
-- [tiltakspenger-arena] (https://github.com/navikt/tiltakspenger-arena/pulls)
-- [tiltakspenger-datadeling] (https://github.com/navikt/datadeling/pulls)
-- [tiltakspenger-iac] (https://github.com/navikt/tiltakspenger-iac/pulls)
-- [tiltakspenger-libs] (https://github.com/navikt/tiltakspenger-libs/pulls)
-- [tiltakspenger-pdfgen] (https://github.com/navikt/tiltakspenger-pdfgen/pulls)
-- [tiltakspenger-soknad] (https://github.com/navikt/tiltakspenger-soknad/pulls)
-- [tiltakspenger-soknad-api] (https://github.com/navikt/tiltakspenger-soknad-api/pulls)
-- [tiltakspenger-soknad-mock-api] (https://github.com/navikt/tiltakspenger-soknad-mock-api/pulls)
-- [tiltakspenger-tiltak] (https://github.com/navikt/tiltakspenger-tiltak/pulls)
-- [tiltakspenger-saksbehandling] (https://github.com/navikt/tiltakspenger-saksbehandling/pulls)
-- [tiltakspenger-saksbehandling-api] (https://github.com/navikt/tiltakspenger-saksbehandling-api/pulls)
-- [tiltakspenger-meldekort] (https://github.com/navikt/tiltakspenger-meldekort/pulls)
-- [tiltakspenger-meldekort-api] (https://github.com/navikt/tiltakspenger-meldekort-api/pulls)
+- [tiltakspenger-iac](https://github.com/navikt/tiltakspenger-iac)
+- [tiltakspenger-libs](https://github.com/navikt/tiltakspenger-libs)
+- [tiltakspenger-arena](https://github.com/navikt/tiltakspenger-arena)
+- [tiltakspenger-saksbehandling-api](https://github.com/navikt/tiltakspenger-saksbehandling-api)
+- [tiltakspenger-tiltak](https://github.com/navikt/tiltakspenger-tiltak)
+- [tiltakspenger-saksbehandling](https://github.com/navikt/tiltakspenger-saksbehandling)
+- [tiltakspenger-soknad-api](https://github.com/navikt/tiltakspenger-soknad-api)
+- [tiltakspenger-soknad-mock-api](https://github.com/navikt/tiltakspenger-soknad-mock-api)
+- [tiltakspenger-pdfgen](https://github.com/navikt/tiltakspenger-pdfgen)
+- [tiltakspenger-soknad](https://github.com/navikt/tiltakspenger-soknad)
+- [tiltakspenger-datadeling](https://github.com/navikt/tiltakspenger-datadeling)
+- [tiltakspenger-meldekort](https://github.com/navikt/tiltakspenger-meldekort)
+- [tiltakspenger-meldekort-api](https://github.com/navikt/tiltakspenger-meldekort-api)
+- [tiltakspenger-meldekort-microfrontend](https://github.com/navikt/tiltakspenger-meldekort-microfrontend)
 
 ### Lokal kjøring av verdikjeden
 

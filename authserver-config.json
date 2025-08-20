@@ -41,8 +41,8 @@
           }
         },
         {
-          "requestParam": "client_id",
-          "match": "tiltakspenger-saksbehandling-api",
+          "requestParam": "scope",
+          "match": "api://tiltakspenger-meldekort-api/.default",
           "claims": {
             "aud": [
               "tiltakspenger-meldekort-api"

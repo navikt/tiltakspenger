@@ -23,6 +23,10 @@ meta git clone git@github.com:navikt/tiltakspenger.git
 
 Nå kan git brukes som normalt for hvert repo.
 
+
+Dersom noen har lagt til et nytt repo som du ikke har, kan du oppdatere med:
+```meta git update```
+
 For å legge til et nytt repo kan man skrive
 
 ```

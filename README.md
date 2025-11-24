@@ -99,6 +99,8 @@ Eksempel for saksbehandling-api, se docker-compose for parametre for andre apper
 docker compose up -d postgresSaksbehandling
 ```
 
+Hvis du allerede har en lokal database, slett den (inkludert volume) og kjør opp på nytt.
+
 - Start en lokal proxy til dev-databasen du skal importere fra, med [nais cli](https://docs.nais.io/persistence/postgres/how-to/personal-access/). Se doc'en for førstegangsoppsett, senere kan du kjøre disse kommandoene:
 ```
 kubectl config use-context dev-gcp

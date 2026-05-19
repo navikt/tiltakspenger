@@ -1,0 +1,10 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# These are explicitly windows files and should use crlf
+*.bat           text eol=crlf
+
+# Shell scripts must always use LF, otherwise they break on macOS/Linux
+*.sh            text eol=lf
+gradlew         text eol=lf
+

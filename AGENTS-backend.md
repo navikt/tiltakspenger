@@ -6,10 +6,10 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 
 ## Arkitektur
 
-- **Lagdelt struktur per feature/domeneområde:**
-  - `domene/` — ren domenelogikk, ingen eksterne avhengigheter. Skal ikke importere fra `*.infra.*`.
+- **Arkitekturretning — to lag:** Målbildet er **to lag** per feature/domeneområde, `domene/` og `infra/`, der service-/orkestreringslogikk bor i domenet. Vi er på vei dit, men omskrivingen er gradvis og kan ta år — derfor finnes begge formene i kodebasen samtidig. **Ikke gjør en stor migrering på eget initiativ; følg strukturen som allerede finnes i repoet/feature-området du jobber i.** For ny kode, foretrekk målbildet der det er naturlig.
+  - `domene/` — ren domenelogikk, ingen eksterne avhengigheter. Skal ikke importere fra `*.infra.*`. I målbildet bor også services her: tilstandsbærende orkestrering mellom domene og infrastruktur, med minimalt/ingen forretningslogikk.
   - `infra/` — infrastruktur: setup, routes, repos, kafka consumers/producers, klienter (http), DTO-er og DTO-mapping.
-  - `service/` — denne bør egentlig ligge under domenet, men har fra gammelt av vært skilt ut som noe eget. Tilstandsbærende orkestreringslag mellom domene og infrastruktur. Minimalt/ingen forretningslogikk.
+  - `service/` *(eldre form, under utfasing)* — et orkestreringslag skilt ut fra domenet «fra gammelt av». Flere repoer har fortsatt dette. Når du jobber i et slikt repo, behold den lokale strukturen i stedet for å flytte alt på én gang.
 - **Pakkerot**: `no.nav.tiltakspenger.<modul>`
 - **DDD**: domenelogikk hører hjemme på domenemodellen som er nærmest dataene; `init`/`require`-blokker håndhever invarianter.
 

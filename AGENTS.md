@@ -25,6 +25,14 @@ Denne filen dokumenterer **tverrgående regler** som gjelder for alle sub-repoer
 - **Foretrekk innebygde shell-/CLI-kommandoer framfor å opprette nye script-filer** (`.sh`, `.py`, …). Engangsoppgaver løses i terminalen med `bash`, `rg`, `find`, `jq`, `python3 -c "…"` osv. Opprett nye script kun når noe er ment å gjenbrukes, og legg det da i et passende sub-repo.
 - **Bruk `python3`, ikke `python`.** På utvikler-Macene ligger `python3` på PATH mens `python` ofte ikke gjør det — ikke bruk tid på å lete etter en `python`-binær.
 
+## Personlig task-tracking (`TASKS.md`)
+
+Personlige/lokale oppgaver og backlog som ikke (ennå) hører hjemme i en issue-tracker, lagres i `TASKS.md` i monorepo-roten. Filen er `.gitignore`-t (committes aldri) og er per-utvikler.
+
+- **Agentens egen sesjons-backlog er ikke varig.** Verktøy som holder tasks i en per-sesjon-database mister dem for nye sesjoner. Skriv derfor gjenstående oppgaver til `TASKS.md` slik at de overlever på tvers av sesjoner, og les `TASKS.md` ved oppstart for å gjenoppta kontekst.
+- **Kun gjenstående oppgaver listes.** Når noe er ferdig, fjern det (eller flytt til en kort «Ferdig»-logg nederst om ønskelig).
+- Bruk Markdown-checkbokser (`- [ ]`) gruppert per tema/repo, med nok kontekst (fil, linje, PR-nummer) til at oppgaven kan utføres uten å lete.
+
 ## Repostruktur
 
 ### Kotlin-backendtjenester (deployes til NAIS)

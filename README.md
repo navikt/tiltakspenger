@@ -87,6 +87,27 @@ skulle ønske å kjøre opp api'et fra IntelliJ.
 | ./up-soknad.sh   | Script for å bygge og starte alle apper i docker-compose-soknad (se i [up-soknad.sh](https://github.com/navikt/tiltakspenger/blob/main/up-soknad.sh) for tilgjengelige options) |
 | ./down-soknad.sh | Script for å stoppe alle apper i docker-compose (se i [down-søknad.sh](https://github.com/navikt/tiltakspenger/blob/main/down-soknad.sh) for tilgjengelige options)             |
 
+### Status på bygg og pods
+
+`script/status.sh` gir et hurtigblikk på tilstanden til hele verdikjeden:
+
+- **Siste utrulling** (`Build and deploy`) på `main` for alle våre GitHub-repoer, hentet med `gh`.
+- **Pod-status** i namespace `tpts` i dev og prod, hentet med `kubectl`.
+
+```
+./script/status.sh
+```
+
+Forventer kun at du er logget inn — `gh auth login` for GitHub og `nais kubeconfig`
+for kubectl-contextene. Scriptet feiler på vanlig måte hvis du ikke er det.
+
+> On-prem-klyngene (`*-fss`, f.eks. `tiltakspenger-arena`) krever at du har huket
+> av `onprem-k8s-dev` / `onprem-k8s-prod` i naisdevice. Mangler tilgangen, gir
+> scriptet en kort melding om det i stedet for å henge.
+
+Oppførsel kan justeres med miljøvariabler, bl.a. `NAMESPACE`, `DEV_CLUSTERS`,
+`PROD_CLUSTERS`, `KUBE_TIMEOUT` og `DEPLOY_WORKFLOW` — se toppen av scriptet.
+
 ### Import av data til lokale databaser
 
 Det kan være praktisk å populere lokale databaser med data fra dev-miljøet. Du trenger `pg_dump` og `pg_restore` fra [Postgres binaries](https://www.postgresql.org/download/).

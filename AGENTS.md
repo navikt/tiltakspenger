@@ -74,6 +74,7 @@ Følg [`AGENTS-frontend.md`](AGENTS-frontend.md).
 | Modul | Beskrivelse | Sub-repo AGENTS.md |
 |---|---|---|
 | `tiltakspenger-iac` | Infrastruktur som kode | [lenke](tiltakspenger-iac/AGENTS.md) |
+| `skills/` | Delte, verktøy-uavhengige agent-skills (åpent `SKILL.md`-format) som hele teamet kan bruke på tvers av agentverktøy | [lenke](skills/README.md) |
 
 ## Arbeid på tvers av sub-repoer
 

@@ -24,6 +24,7 @@ Denne filen dokumenterer **tverrgående regler** som gjelder for alle sub-repoer
 - Hvis en endring ser ut til å kreve en muterende git-operasjon utover unntakene over, beskriv hva som bør gjøres og la brukeren kjøre det.
 - **Foretrekk innebygde shell-/CLI-kommandoer framfor å opprette nye script-filer** (`.sh`, `.py`, …). Engangsoppgaver løses i terminalen med `bash`, `rg`, `find`, `jq`, `python3 -c "…"` osv. Opprett nye script kun når noe er ment å gjenbrukes, og legg det da i et passende sub-repo.
 - **Bruk `python3`, ikke `python`.** På utvikler-Macene ligger `python3` på PATH mens `python` ofte ikke gjør det — ikke bruk tid på å lete etter en `python`-binær.
+- **Verifiser Markdown-filer etter endring.** Når du oppretter eller endrer `.md`-filer (særlig tabeller), kjør et tilgjengelig verktøy for å sjekke formatteringen — f.eks. `markdownlint`/`markdownlint-cli2`, `prettier --check`, eller `npx` av disse — og rett opp feil. Tabeller må være gyldig GitHub-flavored Markdown (justerte kolonner / korrekt antall `|`), siden bl.a. IntelliJ flagger feilformaterte tabeller. Finnes ingen verktøy, kontroller formatteringen manuelt.
 
 ## Personlig task-tracking (`TASKS.md`)
 

@@ -49,6 +49,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-soknad-api](https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-soknad-mock-api](https://github.com/navikt/tiltakspenger-soknad-mock-api)
 - [tiltakspenger-pdfgen](https://github.com/navikt/tiltakspenger-pdfgen)
+- [tiltakspenger-pdfgenrs](https://github.com/navikt/tiltakspenger-pdfgenrs)
 - [tiltakspenger-soknad](https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-datadeling](https://github.com/navikt/tiltakspenger-datadeling)
 - [tiltakspenger-meldekort](https://github.com/navikt/tiltakspenger-meldekort)

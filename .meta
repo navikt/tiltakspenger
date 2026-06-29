@@ -13,6 +13,7 @@
     "tiltakspenger-meldekort": "git@github.com:navikt/tiltakspenger-meldekort.git",
     "tiltakspenger-meldekort-api": "git@github.com:navikt/tiltakspenger-meldekort-api.git",
     "tiltakspenger-meldekort-microfrontend": "git@github.com:navikt/tiltakspenger-meldekort-microfrontend",
-    "tiltakspenger-journalposthendelser": "git@github.com:navikt/tiltakspenger-journalposthendelser"
+    "tiltakspenger-journalposthendelser": "git@github.com:navikt/tiltakspenger-journalposthendelser",
+    "tiltakspenger-pdfgenrs": "git@github.com:navikt/tiltakspenger-pdfgenrs"
   }
 }

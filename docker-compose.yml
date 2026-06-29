@@ -194,6 +194,16 @@ services:
     environment:
       DISABLE_PDF_GET: false
 
+  pdfgenrs-service:
+    platform: linux/arm64/v8
+    build:
+      context: ./tiltakspenger-pdfgenrs
+      dockerfile: Dockerfile
+    ports:
+      - 8083:8080
+    environment:
+      DISABLE_PDF_GET: false
+
   wiremock:
     image: wiremock/wiremock:3.3.1
     command:

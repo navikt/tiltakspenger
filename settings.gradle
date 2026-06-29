@@ -9,6 +9,7 @@ includeBuild "tiltakspenger-tiltak"
 includeBuild "tiltakspenger-soknad-api"
 includeBuild "tiltakspenger-soknad"
 includeBuild "tiltakspenger-pdfgen"
+includeBuild 'tiltakspenger-pdfgenrs'
 includeBuild "tiltakspenger-datadeling"
 includeBuild "tiltakspenger-meldekort"
 includeBuild "tiltakspenger-meldekort-api"

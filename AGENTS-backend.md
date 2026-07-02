@@ -18,6 +18,7 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - Kotlin JVM på gjeldende LTS; nyeste stabile Kotlin, eksperimentelle features er tillatt
 - 4 mellomrom som innrykk, trailing comma både i deklarasjoner og kallsteder
 - **Ingen star imports** — alltid eksplisitt
+- **KDoc og kommentarer: én setning per linje.** Skriv hver setning i KDoc (`/** ... */`) og vanlige kommentarer på sin egen linje, med linjeskift etter hvert punktum, i stedet for å pakke flere setninger sammen i én lang avsnittslinje. Dette gir renere diffs (én endret setning = én endret linje) og bedre lesbarhet. Gjelder også `//`-kommentarer som består av flere setninger. (Agenter glipper ofte på dette — sjekk før du er ferdig.)
 - **Norske domenenavn** — se språkregelen i [`AGENTS.md`](AGENTS.md#delte-konvensjoner). Domenetyper, pakker, funksjoner og felter som modellerer forretningsbegreper bruker norsk (`Sak`, `Søknad`, `Periode`, `Behandling`, `Vedtak`, `Saksbehandler`, …). Ikke oversett til engelsk.
 - Funksjonell stil og immutabilitet foretrekkes — unngå `var` og muterbar tilstand
 - Ingen `Optional` eller Arrows `Option` — bruk nullable typer eller `Either`

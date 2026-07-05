@@ -89,7 +89,7 @@ Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.
   - `ktlint_code_style` = `ktlint_official`
   - `ktlint_experimental` = enabled
 - **Detekt** for statisk analyse (`config/detekt.yml`); navnemønstrene tillater norske tegn (`æøå`)
-- **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert
+- **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert. `koverVerify` håndhever en streng linjedekningsterskel (i `tiltakspenger-libs` er kravet **100 %**), og kjøres som en del av `build`/CI. Den kjøres **ikke** av `:<modul>:test` alene, så det er lett å overse: kjør `./gradlew :<modul>:koverVerify` (eller full `build`) etter kodeendringer, og legg til tester for ny/endret kode. Unngå å skrive uoppnåelig defensiv kode (f.eks. `?: error(...)` på en gren som aldri kan nås) på egne linjer — kover teller dem som udekket og feiler bygget.
 - **Gradle version catalog** i `gradle/libs.versions.toml` der den finnes
 - **`com.github.ben-manes.versions`**-plugin for sjekk av oppdateringer på avhengigheter
 

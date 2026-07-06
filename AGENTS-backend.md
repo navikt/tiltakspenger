@@ -78,6 +78,14 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - Testlivssyklus: `@TestInstance(Lifecycle.PER_CLASS)`
 - **Ikke** bruk JUnits assertion-metoder (`assertEquals`, `assertTrue`, …)
 
+### Ende-til-ende og databasetester
+
+- **Foretrekk ende-til-ende route-tester mot ekte DB.** Send JSON inn på route-laget, assert på JSON-responsen, og suppler ved å spørre databasen og inspisere fakes for sideeffekter når responsen ikke dekker alt.
+- **To kjøremoduser for DB-tester (testcontainers, via `TestDatabaseManager` i `tiltakspenger-libs:persistering-test-common`):**
+  - **Ikke-isolert (standard, parallelt skjema):** tester deler skjema og lever side om side. Gi hver test sin egen sak/person (unike `sakId`/`saksnummer`/`fnr`) slik at de ikke kolliderer.
+  - **Isolert:** tømmer DB før testen og kjører sekvensielt. Reserver dette for **aggregerte / på-tvers-av-sak**-tester — typisk jobber som spør på tvers av alle saker. Isolert modus er treg; ikke bruk den når en sak-scoped test holder.
+- **Deterministiske, sekvensielle id-generatorer i tester.** Bruk delte generatorer for `saksnummer`, `fnr` og `journalpostId` (sekvensielle og trådsikre) i stedet for tilfeldige verdier som `Fnr.random()`. Tilfeldige 11-sifrede fnr kolliderer sjelden i én kjøring, men i et delt test-skjema gir bursdagsparadokset reell flaky-risiko over mange CI-kjøringer. Generatorene holdes på **ett høyt nivå** (én delt instans i test-db-manageren, jf. `idGeneratorsFactory`) og injiseres ned i test-konteksten — **ikke** legg prosessglobal tilstand dypt inne i selve generatoren.
+
 ## Bygg, lint og statisk analyse
 
 Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.

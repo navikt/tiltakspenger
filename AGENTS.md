@@ -24,6 +24,7 @@ Denne filen dokumenterer **tverrgående regler** som gjelder for alle sub-repoer
 - Hvis en endring ser ut til å kreve en muterende git-operasjon utover unntakene over, beskriv hva som bør gjøres og la brukeren kjøre det.
 - **Foretrekk innebygde shell-/CLI-kommandoer framfor å opprette nye script-filer** (`.sh`, `.py`, …). Engangsoppgaver løses i terminalen med `bash`, `rg`, `find`, `jq`, `python3 -c "…"` osv. Opprett nye script kun når noe er ment å gjenbrukes, og legg det da i et passende sub-repo.
 - **Bruk `python3`, ikke `python`.** På utvikler-Macene ligger `python3` på PATH mens `python` ofte ikke gjør det — ikke bruk tid på å lete etter en `python`-binær.
+- **Delte agent-skills legges i `skills/`, ikke i verktøy-spesifikke kataloger.** Gjenbrukbare arbeidsflyter skrives som en verktøy-uavhengig `SKILL.md` (åpent «Agent Skills»-format) under `skills/<navn>/` — den kanoniske kopien hele teamet deler. Ikke lag verktøy-spesifikke ting (f.eks. filer som bare bor i `~/.copilot/skills/`, Claude-only-oppsett e.l.) som varig kilde; la heller verktøyet peke hit via symlink (se [`skills/README.md`](skills/README.md)). Oppdater `skills/README.md`-tabellen når du legger til en ny skill.
 - **Verifiser Markdown-filer etter endring.** Når du oppretter eller endrer `.md`-filer (særlig tabeller), kjør et tilgjengelig verktøy for å sjekke formatteringen — f.eks. `markdownlint`/`markdownlint-cli2`, `prettier --check`, eller `npx` av disse — og rett opp feil. Tabeller må være gyldig GitHub-flavored Markdown (justerte kolonner / korrekt antall `|`), siden bl.a. IntelliJ flagger feilformaterte tabeller. Finnes ingen verktøy, kontroller formatteringen manuelt.
 
 ## Personlig task-tracking (`TASKS.md`)
@@ -33,6 +34,18 @@ Personlige/lokale oppgaver og backlog som ikke (ennå) hører hjemme i en issue-
 - **Agentens egen sesjons-backlog er ikke varig.** Verktøy som holder tasks i en per-sesjon-database mister dem for nye sesjoner. Skriv derfor gjenstående oppgaver til `TASKS.md` slik at de overlever på tvers av sesjoner, og les `TASKS.md` ved oppstart for å gjenoppta kontekst.
 - **Kun gjenstående oppgaver listes.** Når noe er ferdig, fjern det (eller flytt til en kort «Ferdig»-logg nederst om ønskelig).
 - Bruk Markdown-checkbokser (`- [ ]`) gruppert per tema/repo, med nok kontekst (fil, linje, PR-nummer) til at oppgaven kan utføres uten å lete.
+
+## GitHub-issues og epics
+
+`TASKS.md` er for det personlige/uformelle. Når arbeid skal deles med teamet og spores over tid, hører det hjemme som GitHub-issues. Regler:
+
+- **Tverrgående arbeid = epic i monorepoet.** Oppgaver som berører flere sub-repoer (f.eks. en felles migrering, en delt konvensjon eller et bibliotekbytte) skal ha en **epic-issue i monorepoet (`navikt/tiltakspenger`)**. Epicen eier det generelle: mål, mønster, konvensjoner og en sporingsliste (checkbokser) over de repo-spesifikke issuene.
+- **Repo-spesifikke issues i hvert sub-repo.** Det som er konkret for ett sub-repo (hvilke filer/klienter, rekkefølge, verifisering) ligger i en issue i **det** sub-repoet, og lenker opp til epicen. Ikke dupliser det generelle inn i hvert child-issue — pek til epicen i stedet.
+- **Kryss-lenk begge veier.** Epicen lister child-issuene (som avkrysningsliste), og hvert child-issue starter med «Del av epic navikt/tiltakspenger#N».
+- **Hold epicen som fasit.** Når noe fullføres eller endres, oppdater epicens sporingsliste og flytt/fjern tilsvarende punkter i `TASKS.md` slik at de ikke divergerer. `TASKS.md` bør peke til epicen framfor å gjenta detaljene.
+- **`gh` CLI mot riktig repo.** Bruk `gh issue create/edit --repo navikt/<sub-repo>`. `gh issue edit` tar rent issue-nummer (ikke `owner/repo#num`). For å bevare backticks/kodeblokker, bruk `--body-file` framfor `--body`.
+- **Labels.** Merk issues med relevante labels (f.eks. `enhancement`, `bug`, `documentation`) slik at de kan filtreres på tvers. Bruk det eksisterende label-settet i repoet framfor å finne på nye ad-hoc; trenger du en ny felles label, opprett den likt i alle repoene (jf. konvergens-tankegangen for CI).
+- **Lenk PR til issue.** PR-er som løser en issue skal referere den i beskrivelsen med `Fixes #N` / `Closes #N` (samme repo) eller `Fixes navikt/<repo>#N` (kryss-repo) slik at issuen lukkes automatisk ved merge. For deloppgaver under en epic: lenk til epicen, men la epicen stå åpen til alle child-issues er ferdige.
 
 ## Repostruktur
 

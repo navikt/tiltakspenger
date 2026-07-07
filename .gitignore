@@ -1,4 +1,4 @@
-tiltakspenger-*/
+/tiltakspenger-*/
 .gradle/
 .DS_Store
 
@@ -10,25 +10,6 @@ tiltakspenger-*/
 
 .idea/**
 .vscode/**
-/tiltakspenger-soknad-api/
-/tiltakspenger-soknad-mock-api/
-/tiltakspenger-pdfgen/
-/tiltakspenger-pdfgenrs/
-/tiltakspenger-arena/
-/tiltakspenger-iac/
-/tiltakspenger-libs/
-/tiltakspenger-mottak/
-/tiltakspenger-testmeldinger/
-/tiltakspenger-saksbehandling/
-/tiltakspenger-saksbehandling-api/
-/tiltakspenger-tiltak/
-/tiltakspenger-soknad/
-/tiltakspenger-dokument/
-/tiltakspenger-datadeling/
-/tiltakspenger-meldekort/
-/tiltakspenger-meldekort-api/
-/tiltakspenger-meldekort-microfrontend/
-/tiltakspenger-journalposthendelser/
 
 
 # Lokal task-tracking (ikke commit)

@@ -138,3 +138,19 @@ pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP bru
 ```
 pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --clean --no-owner --no-privileges <path til dump>
 ```
+
+## Team-board (GitHub Project)
+
+Teamet bruker GitHub-projectet [**Team tiltakspenger** (`navikt/projects/227`)](https://github.com/orgs/navikt/projects/227) som felles oversikt på tvers av alle `tiltakspenger*`-repoene. Projectet eies av organisasjonen `navikt` og er lenket til teamet `navikt/tpts`.
+
+Nye åpne issues og PR-er legges inn automatisk via projectets **Auto-add**-workflows (per repo). Innholdet deles opp i tre views med hvert sitt filter:
+
+| View           | Filter                              |
+| -------------- | ----------------------------------- |
+| Issues         | `is:issue is:open`                  |
+| Dependabot PRs | `is:pr is:open label:dependencies`  |
+| PRs            | `is:pr is:open -label:dependencies` |
+
+Auto-add-workflowene bruker `is:issue is:open` for issues og `is:pr is:open` for PR-er.
+
+> **Merk:** view-filtre og Auto-add-workflows kan i dag kun konfigureres i GitHub-UI-et — det finnes ingen API/CLI for å opprette eller endre dem. Nye repoer må derfor legges til i Auto-add-workflowene manuelt.

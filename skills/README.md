@@ -9,6 +9,7 @@ Hver skill er en mappe med en `SKILL.md` i det åpne [Agent Skills](https://code
 | Skill | Hva den gjør |
 |---|---|
 | [`backend-dependency-update`](./backend-dependency-update/SKILL.md) | Finn Dependabot-PR-er, ta dem gruppevis med changelog-/migreringsgjennomgang, verifiser bygg + test, og gjør en vurdering per gruppe. |
+| [`tiltakspenger-testdata`](./tiltakspenger-testdata/SKILL.md) | Lag testdata lokalt (sak med innvilget vedtak, meldekortbehandling, klagebehandling) via de ferdige scriptene — digital eller papirsøknad som inngang. |
 
 ## Hvordan ta dem i bruk
 

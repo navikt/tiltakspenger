@@ -68,6 +68,7 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 
 - Bruk `Sikkerlogg` fra `tiltakspenger-libs:logging` for sensitive data / personopplysninger
 - Standardlogging bruker `kotlin-logging` (`io.github.oshai`)
+- **Logg aldri kun til sikkerlogg.** En sikkerlogg-innføring skal alltid ha en parallell linje i vanlig logg på samme nivå, med en nøytral (ikke-sensitiv) beskrivelse av hendelsen og en eksplisitt henvisning til sikkerlogg (f.eks. «Se sikkerlogg for detaljer»). Uten den finner ingen hendelsen i vanlig logg, og sporet til detaljene mangler.
 - Overstyr `toString()` på typer som inneholder sensitive data for å unngå utilsiktede lekkasjer
 
 ## Testing

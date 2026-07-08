@@ -1,6 +1,6 @@
 ---
 name: tiltakspenger-testdata
-description: Lag testdata lokalt for tiltakspenger-saksbehandling — en sak med innvilget vedtak, meldekortbehandling og/eller klagebehandling, via ferdige scripts. Bruk når en utvikler vil ha en testsak, teste en meldekortbehandling eller klagebehandling lokalt, trenger et iverksatt innvilget vedtak, eller vil seede en digital- eller papirsøknad mot LokalMain.
+description: Lag testdata lokalt for tiltakspenger-saksbehandling — en sak med innvilget vedtak, meldekortbehandling og/eller klagebehandling, via ferdige scripts. Kan også forhåndsvise alle PDF-brevene (vedtaksbrev, meldekortvedtaksbrev, klagebrev) og lagre dem til fil. Bruk når en utvikler vil ha en testsak, teste en meldekortbehandling eller klagebehandling lokalt, trenger et iverksatt innvilget vedtak, vil seede en digital- eller papirsøknad mot LokalMain, eller vil teste/sammenligne PDF-er fra pdfgen og pdfgenrs.
 license: MIT
 metadata:
   domain: backend
@@ -46,8 +46,14 @@ Scriptene er lagdelt (byggekloss → kombo → topp-nivå). Velg minste script s
 | Alt (sak + meldekort + klage) | `opprett-alt-digital.sh` / `opprett-alt-papir.sh` |
 | Bare en sak med innvilget vedtak | `opprett-innvilget-sak-digital.sh` / `opprett-innvilget-sak-papir.sh` |
 | Bare en meldekortbehandling | innvilget sak-script, deretter `opprett-meldekortbehandling.sh SAK_ID KJEDE_ID` |
-| Bare en klagebehandling | `opprett-klage.sh SAK_ID` (på en eksisterende sak) |
+| Bare en klagebehandling | `opprett-klage.sh SAK_ID [VEDTAK_ID]` (på en eksisterende sak) |
+| Alle PDF-brevene som filer | `forhandsvis-alle-pdfer.sh` (krever pdfgen på 8081 + pdfgenrs på 8084 i docker) |
+| Ett enkelt PDF-brev | `forhandsvis-vedtaksbrev.sh` / `forhandsvis-meldekortbrev.sh` / `forhandsvis-klagebrev.sh` |
 | Ett enkelt endepunkt-steg | tilsvarende byggekloss-script (se `scripts/testdata/README.md`) |
+
+PDF-scriptene lagrer til `$PDF_UT_DIR` (default `/tmp/tiltakspenger-pdfer`), med
+både pdfgen- og pdfgenrs-variant av hvert brev (lokal skygge-kjøring) slik at de
+kan sammenlignes. PDF-er som kun genereres av jobber (journalføring) dekkes ikke.
 
 ## Nyttig å vite (så du ikke gjetter)
 

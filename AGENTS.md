@@ -110,6 +110,7 @@ Noen ting gjelder **både** for backend og frontend:
 - **Auth via NAIS Texas** på backend (`tiltakspenger-libs:texas`) og **@navikt/oasis** på frontend.
 - **Alle tjenester kjører på NAIS** — følg NAIS-konvensjoner for konfig og hemmeligheter.
 - **Lokal utvikling** orkestreres via `docker-compose.yml` i monorepo-roten (og `docker-compose-soknad.yml` for søknad).
+- **Port 8085 er reservert for `nais login`** (callback-porten til nais CLI) og skal aldri bindes av lokale tjenester, compose-oppsett eller scripts.
 - **GitHub Actions-workflows skal være så like som mulig på tvers av repoene.** Når du endrer CI i ett repo, vurder om de andre repoene bør endres tilsvarende, slik at oppsettet konvergerer i stedet for å sprike. Konkret:
     - Workflowen som bygger og deployer til prod ved push til `main` heter **`Build and deploy`** i alle repoer (også der det egentlig er en publisering, som `tiltakspenger-libs`, eller en kombinert dev+prod-deploy, som `tiltakspenger-meldekort-microfrontend`). Felles navn gjør at verktøy kan hente «siste utrulling» likt på tvers — se `script/status.sh`.
     - Den manuelle deployen til dev (`workflow_dispatch`) er det bevisste unntaket og trenger ikke følge navnekonvensjonen.

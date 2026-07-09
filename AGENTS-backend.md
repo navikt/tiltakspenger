@@ -23,6 +23,8 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - Funksjonell stil og immutabilitet foretrekkes — unngå `var` og muterbar tilstand
 - Ingen `Optional` eller Arrows `Option` — bruk nullable typer eller `Either`
 - **Aldri baser logikken vår på Kotlins `Result`.** Vi modellerer forventede feil med `Either` (se Feilhåndtering). `Result` skal **ikke** brukes som retur-/flyttype — og helt spesielt ikke returneres innover i domenet. Hvis du møter `Result` i ny kode, skriv det om til `Either` (eller nullable der det passer). Helt unntaksvis kan tredjeparts-API-er tvinge oss til å forholde oss til `Result`; håndtér det da på grensen og oversett umiddelbart til `Either`.
+- **Exhaustive `when` over sealed types og enums — unngå `else`.** List alle varianter eksplisitt (grupper gjerne grener med lik håndtering: `is A, is B -> …`), slik at en ny variant gir kompileringsfeil der den må håndteres i stedet for å forsvinne stille inn i en `else`-gren. `else` er kun greit når subjektet ikke er sealed/enum, eller når en gren genuint har «alle andre»-semantikk over en stabil enum (f.eks. ukedager).
+- **Bakgrunnsjobber navngis `*Jobb`, ikke `*Service`.** Klasser som kjøres av jobb-planleggeren (`Jobber.kt` / tilsvarende) heter `NoeJobb`; `*Service` er forbeholdt tjenester som kalles fra routes eller andre services.
 
 ## Feilhåndtering
 

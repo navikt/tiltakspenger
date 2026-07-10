@@ -195,14 +195,16 @@ services:
       DISABLE_PDF_GET: false
 
   pdfgenrs-service:
-    platform: linux/arm64/v8
+    # Upstream-imaget (ghcr.io/navikt/pdfgenrs) publiseres kun for linux/amd64.
+    platform: linux/amd64
     build:
       context: ./tiltakspenger-pdfgenrs
       dockerfile: Dockerfile
     ports:
       - 8084:8080
     environment:
-      DISABLE_PDF_GET: false
+      # DEV_MODE gir GET-forhåndsvisning av data/tpts-datasettene, likt sub-repoets eget compose.
+      DEV_MODE: "true"
 
   wiremock:
     image: wiremock/wiremock:3.3.1

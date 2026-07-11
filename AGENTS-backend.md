@@ -124,7 +124,7 @@ Standard hjelpeskripter (ett sett per sub-repo):
 ## Auth og infra (backend-spesifikt)
 
 - Autentisering via **NAIS Texas** (`tiltakspenger-libs:texas`) — token-introspeksjon og system-tokens
-- Tjenester containeriseres med multi-stage Dockerfiles
+- **Pakking/Docker-image (felles konvensjon — hold identisk på tvers av repoene):** alle tjenester pakkes med `application`-pluginen (`mainClass.set(...)`) og `installDist` — **ingen fat-jar/shadowJar, ingen `Class-Path`-manifest**. Dockerfilen er ett steg, basert på distroless Java-baseimage (p.t. `gcr.io/distroless/java25-debian13`), kopierer `build/install/<app>/lib/*.jar` til `/app/lib/` med `--chmod=0755` (jars må være lesbare for `USER nobody`; ikke fjern) og starter med wildcard-classpath: `ENTRYPOINT ["java", "-cp", "/app/lib/*", "<mainClass>"]`. mainClass står bevisst to steder (`build.gradle.kts` + `ENTRYPOINT`) fordi distroless ikke har shell og dermed ikke kan kjøre start-scriptet fra `installDist` — hold dem i sync. Endres mønsteret, endre det i alle repoene samtidig.
 - Kafka (Confluent) for hendelsesdrevet kommunikasjon
 - PostgreSQL med Flyway for persistens
 - Prometheus-metrikker via Micrometer (`io.micrometer:micrometer-registry-prometheus`)

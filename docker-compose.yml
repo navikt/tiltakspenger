@@ -191,6 +191,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8081:8080
+    # Volumene monteres over de innbakte filene fra Dockerfile-COPY, slik at
+    # containeren alltid serverer utsjekket kode i stedet for et frosset image
+    # fra forrige `--build` (likt sub-repoets eget compose).
+    volumes:
+      - ./tiltakspenger-pdfgen/templates:/app/templates
+      - ./tiltakspenger-pdfgen/fonts:/app/fonts
+      - ./tiltakspenger-pdfgen/data:/app/data
+      - ./tiltakspenger-pdfgen/resources:/app/resources
     environment:
       DISABLE_PDF_GET: false
 
@@ -202,6 +210,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8084:8080
+    # Volumene monteres over de innbakte filene fra Dockerfile-COPY, slik at
+    # containeren alltid serverer utsjekket kode i stedet for et frosset image
+    # fra forrige `--build` (likt sub-repoets eget compose).
+    volumes:
+      - ./tiltakspenger-pdfgenrs/templates:/app/templates
+      - ./tiltakspenger-pdfgenrs/fonts:/app/fonts
+      - ./tiltakspenger-pdfgenrs/data:/app/data
+      - ./tiltakspenger-pdfgenrs/resources:/app/resources
+      - ./tiltakspenger-pdfgenrs/lib:/app/lib
     environment:
       # DEV_MODE gir GET-forhåndsvisning av data/tpts-datasettene, likt sub-repoets eget compose.
       DEV_MODE: "true"

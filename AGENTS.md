@@ -116,3 +116,20 @@ Noen ting gjelder **både** for backend og frontend:
     - Den manuelle deployen til dev (`workflow_dispatch`) er det bevisste unntaket og trenger ikke følge navnekonvensjonen.
     - Hold også steg, action-versjoner og struktur mest mulig identiske mellom repoene; avvik bør være begrunnet i reelle forskjeller (f.eks. Gradle vs. pnpm, fss vs. gcp).
 
+
+## Observability (Loki, Tempo, Mimir)
+
+Alle appene har OTel-autoinstrumentering via NAIS. `trace_id`/`span_id` injiseres automatisk i loggene og propageres mellom tjenestene (`traceparent`-header) — **ikke** legg på manuell span-instrumentering eller egne korrelasjons-id-er uten god grunn. Hvordan id-ene henger sammen er beskrevet i README-seksjonen «Feilsøking med logger og traces».
+
+Grafana-stacken kan spørres direkte via API (krever naisdevice: `nais device status`, koble til med `nais device connect`). Send alltid header `X-Scope-OrgID: tenant` og en beskrivende `User-Agent`:
+
+- **Loki** (logger): `https://loki.nav.cloud.nais.io/loki/api/v1/query_range`
+- **Tempo** (traces): `https://tempo.<env>.nav.cloud.nais.io/api/search` og `/api/traces/<trace_id>` (env f.eks. `prod-gcp`)
+- **Mimir** (metrikker, PromQL): `https://mimir.nav.cloud.nais.io/prometheus/api/v1/query`
+
+Gotchas og feilsøkingsheuristikker:
+
+- Loki-labelen for cluster er `k8s_cluster_name="prod"` (ikke `prod-gcp`). Appene identifiseres med `service_name`, namespace er `tpts`. Bruk alltid `start`/`end` i spørringene.
+- Tempo-søk uten `kind`-filter treffer gjerne jobb-/DB-spans og kan gi inntrykk av at en app mangler HTTP-server-spans. Filtrer med `{resource.service.name="<app>" && kind=server}` før du konkluderer.
+- Mangler en app sine spans i én konkret trace mens den ellers har server-spans, nådde requesten sannsynligvis aldri appen — sjekk rollout-aktivitet i tidsrommet (flere ReplicaSets samtidig / «Application started» i Loki).
+- macOS: bruk `date -v-1H +%s`, ikke GNU-syntaksen `date -d '1 hour ago'`.

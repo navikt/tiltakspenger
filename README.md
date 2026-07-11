@@ -139,6 +139,21 @@ pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP bru
 pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --clean --no-owner --no-privileges <path til dump>
 ```
 
+## Feilsøking med logger og traces
+
+Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i alle logglinjer — pino på frontendene, logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:
+
+- **`trace_id`** identifiserer **hele kjeden** for én request, ende til ende. Alle tjenestene requesten er innom (ingress → wonderwall → frontend → api → PDL/texas osv.) deler samme trace_id. Dette er nøkkelen for å korrelere logger på tvers av tjenester.
+- **`span_id`** identifiserer **én enkelt operasjon** i kjeden — én server-håndtering, ett utgående HTTP-kall, én DB-spørring. Spans danner et tre med varighet per ledd. På en logglinje forteller span_id hvilken operasjon linjen ble logget inne i.
+
+Slik kobler du en feil i én tjeneste til resten av kjeden (i [Grafana](https://grafana.nav.cloud.nais.io) → Explore):
+
+1. Finn feillinjen i Loki, f.eks. `{service_name="tiltakspenger-soknad"} | json | level="error"`.
+2. Kopier `trace_id` fra linjen.
+3. Søk på trace_id-en i Loki **uten** service-filter for å få logglinjene fra alle tjenestene i kjeden, og/eller slå den opp i Tempo for spantreet med tidsbruk per ledd.
+
+Mangler en tjeneste helt i en trace der den normalt har spans, nådde requesten den sannsynligvis aldri — da er det infrastruktur (f.eks. pågående utrulling), ikke treg kode, som er sporet.
+
 ## Team-board (GitHub Project)
 
 Teamet bruker GitHub-projectet [**Team tiltakspenger** (`navikt/projects/227`)](https://github.com/orgs/navikt/projects/227) som felles oversikt på tvers av alle `tiltakspenger*`-repoene. Projectet eies av organisasjonen `navikt` og er lenket til teamet `navikt/tpts`.

@@ -141,7 +141,7 @@ pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postg
 
 ## Feilsøking med logger og traces
 
-Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i alle logglinjer — pino på frontendene, logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:
+Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i logglinjene — via pino på frontendene (merk: `tiltakspenger-meldekort` logger med `console` og får dem ikke i dag) og logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:
 
 - **`trace_id`** identifiserer **hele kjeden** for én request, ende til ende. Alle tjenestene requesten er innom (ingress → wonderwall → frontend → api → PDL/texas osv.) deler samme trace_id. Dette er nøkkelen for å korrelere logger på tvers av tjenester.
 - **`span_id`** identifiserer **én enkelt operasjon** i kjeden — én server-håndtering, ett utgående HTTP-kall, én DB-spørring. Spans danner et tre med varighet per ledd. På en logglinje forteller span_id hvilken operasjon linjen ble logget inne i.

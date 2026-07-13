@@ -116,7 +116,6 @@ Noen ting gjelder **både** for backend og frontend:
     - Den manuelle deployen til dev (`workflow_dispatch`) er det bevisste unntaket og trenger ikke følge navnekonvensjonen.
     - Hold også steg, action-versjoner og struktur mest mulig identiske mellom repoene; avvik bør være begrunnet i reelle forskjeller (f.eks. Gradle vs. pnpm, fss vs. gcp).
 
-
 ## Observability (Loki, Tempo, Mimir)
 
 Alle appene har OTel-autoinstrumentering via NAIS. `trace_id`/`span_id` injiseres automatisk i loggene og propageres mellom tjenestene (`traceparent`-header) — **ikke** legg på manuell span-instrumentering eller egne korrelasjons-id-er uten god grunn. Hvordan id-ene henger sammen er beskrevet i README-seksjonen «Feilsøking med logger og traces».

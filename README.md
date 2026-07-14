@@ -139,6 +139,29 @@ pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP bru
 pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --clean --no-owner --no-privileges <path til dump>
 ```
 
+## KI-verktøy (Copilot, agents, skills og MCP)
+
+Nav har felles dokumentasjon og verktøy for KI-assistert utvikling:
+
+- [ki-utvikling.nav.no](https://ki-utvikling.nav.no) — Navs dokumentasjonsside for KI-assistert utvikling: kom i gang, god praksis, retningslinjer, [nav-pilot](https://ki-utvikling.nav.no/nav-pilot) og [cplt](https://ki-utvikling.nav.no/cplt) (sandboxing av agenter). [Verktøy-katalogen](https://ki-utvikling.nav.no/verktoy) lister alle agents, skills, instructions, prompts og MCP-servere med installasjonshjelp. (Intern variant: min-copilot.ansatt.nav.no.)
+- [navikt/copilot](https://github.com/navikt/copilot) — kildekoden til alt over: agents, instructions, prompts, skills og MCP-registeret ([apps/mcp-registry](https://github.com/navikt/copilot/tree/main/apps/mcp-registry)).
+- [mcp-registry.nav.no](https://mcp-registry.nav.no) — register over Nav-godkjente MCP-servere (MCP Registry v0.1-API, se `/v0.1/servers`).
+
+Nav-felles agents/skills/instructions installeres med [nav-pilot](https://ki-utvikling.nav.no/nav-pilot):
+
+```
+brew install navikt/tap/nav-pilot
+nav-pilot install --user --all   # til ~/.copilot, gjelder alle repoer
+```
+
+Skillsene er i det åpne Agent Skills-formatet (`SKILL.md`) og kan gjenbrukes av andre
+agentverktøy enn Copilot — f.eks. open source-verktøyet [OpenCode](https://opencode.ai)
+via `nav-pilot export opencode`, eller et hvilket som helst verktøy som leser formatet
+(symlink `~/.copilot/skills` inn i verktøyets skills-katalog). MCP-serverne i registeret
+kan på samme måte legges inn i andre MCP-klienter.
+
+Repoets egne, verktøy-uavhengige skills ligger i [`skills/`](skills/README.md).
+
 ## Feilsøking med logger og traces
 
 Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i logglinjene — via pino på frontendene (merk: `tiltakspenger-meldekort` logger med `console` og får dem ikke i dag) og logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:

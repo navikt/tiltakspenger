@@ -2,7 +2,7 @@
 
 Delte, **verktøy-uavhengige** agent-skills for tiltakspenger-monorepoet.
 
-Hver skill er en mappe med en `SKILL.md` i det åpne [Agent Skills](https://code.visualstudio.com/docs)-formatet: ren markdown med en YAML-frontmatter (`name`, `description`, valgfri `metadata`). Formatet leses av flere agentverktøy (GitHub Copilot CLI, Claude, m.fl.) og kan også bare leses manuelt av et menneske eller en lokal LLM. **Ingenting her er bundet til ett bestemt verktøy.**
+Hver skill er en mappe med en `SKILL.md` i det åpne [Agent Skills](https://code.visualstudio.com/docs)-formatet: ren markdown med en YAML-frontmatter (`name`, `description`, valgfri `metadata`). Formatet leses av flere agentverktøy (GitHub Copilot CLI, open source-verktøy som [OpenCode](https://opencode.ai), m.fl.) og kan også bare leses manuelt av et menneske eller en lokal LLM. **Ingenting her er bundet til ett bestemt verktøy.**
 
 ## Tilgjengelige skills
 
@@ -20,7 +20,7 @@ Skillene er bare markdown, så bruk den måten verktøyet ditt foretrekker:
   ln -s "$PWD/skills/backend-dependency-update" ~/.copilot/skills/backend-dependency-update
   ```
   (Skills indekseres ved oppstart — start en ny sesjon etterpå.)
-- **Claude / claude-code** — symlink inn i `~/.claude/skills/` (samme `SKILL.md`-format).
+- **Andre verktøy med Agent Skills-støtte** (f.eks. open source-verktøyet [OpenCode](https://opencode.ai), se også `nav-pilot export opencode`) — symlink mappa inn i verktøyets skills-katalog (samme `SKILL.md`-format).
 - **Andre / lokale LLM-verktøy** — pek verktøyet til mappa, eller lim inn `SKILL.md` som kontekst/instruksjon. Innholdet er rene steg-for-steg-instruksjoner.
 
-Den kanoniske kopien bor her i repoet slik at hele teamet deler samme arbeidsflyt; verktøy-spesifikke kataloger (`~/.copilot/skills`, `~/.claude/skills`) peker hit via symlink.
+Den kanoniske kopien bor her i repoet slik at hele teamet deler samme arbeidsflyt; verktøy-spesifikke kataloger (`~/.copilot/skills` o.l.) peker hit via symlink.

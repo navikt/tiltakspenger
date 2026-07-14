@@ -13,7 +13,7 @@ Tynn peker til de ferdige scriptene i `tiltakspenger-saksbehandling/scripts/test
 Ikke reimplementer flyten — kjør scriptene.
 Scriptene og full dokumentasjon er fasit; denne skillen er bare en snarvei.
 
-> Denne skillen følger det åpne «Agent Skills»-formatet (`SKILL.md` med YAML-frontmatter) og er **verktøy-uavhengig** — ren markdown-instruksjon som kan brukes av en hvilken som helst agent/LLM-CLI (GitHub Copilot, Claude, lokale open source-verktøy osv.). Se [`../README.md`](../README.md) for hvordan du aktiverer den i ulike verktøy.
+> Denne skillen følger det åpne «Agent Skills»-formatet (`SKILL.md` med YAML-frontmatter) og er **verktøy-uavhengig** — ren markdown-instruksjon som kan brukes av en hvilken som helst agent/LLM-CLI (GitHub Copilot, open source-verktøy som OpenCode, lokale LLM-er osv.). Se [`../README.md`](../README.md) for hvordan du aktiverer den i ulike verktøy.
 
 ## Forutsetninger (sjekk først)
 

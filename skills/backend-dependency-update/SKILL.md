@@ -11,7 +11,7 @@ metadata:
 
 Strukturert arbeidsflyt for å håndtere **Dependabot-PR-er** i tiltakspenger-backendrepoene (Kotlin/JVM, Gradle). Målet er å oppdatere avhengigheter **gruppevis**, lese relevant changelog/migreringsguide, verifisere at det **bygger og tester grønt**, og avslutte med en **vurdering** (merge / hold tilbake / krever oppfølging).
 
-> Denne skillen følger det åpne «Agent Skills»-formatet (`SKILL.md` med YAML-frontmatter) og er **verktøy-uavhengig** — den er ren markdown-instruksjon som kan brukes av en hvilken som helst agent/LLM-CLI (GitHub Copilot, Claude, lokale open source-verktøy osv.). Se [`../README.md`](../README.md) for hvordan du aktiverer den i ulike verktøy.
+> Denne skillen følger det åpne «Agent Skills»-formatet (`SKILL.md` med YAML-frontmatter) og er **verktøy-uavhengig** — den er ren markdown-instruksjon som kan brukes av en hvilken som helst agent/LLM-CLI (GitHub Copilot, open source-verktøy som OpenCode, lokale LLM-er osv.). Se [`../README.md`](../README.md) for hvordan du aktiverer den i ulike verktøy.
 
 Gjelder Gradle-baserte repoer som `tiltakspenger-arena`, `tiltakspenger-datadeling`, `tiltakspenger-journalposthendelser`, `tiltakspenger-meldekort-api`, `tiltakspenger-saksbehandling-api`, `tiltakspenger-soknad-api`, `tiltakspenger-tiltak` og `tiltakspenger-libs`.
 

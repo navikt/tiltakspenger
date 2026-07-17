@@ -24,6 +24,9 @@ Se toppen av hver workflow-fil for hvilke rettigheter, secrets og inputs akkurat
 
 ## Hvilke repoer dekkes
 
+`lint-workflows.yml` (actionlint + zizmor) er språkagnostisk og kan kalles fra alle repoene; metarepoet kaller den selv fra `lint.yml` med lokal sti, slik at PR-er som endrer delte workflows testes med sin egen versjon.
+zizmor kjører ikke-blokkerende inntil unntak er nedfelt i en `zizmor.yml` med begrunnelse; da settes `zizmor-blokkerende: true` i callerne.
+
 `dependabot-auto-merge.yml` er verifisert kompatibel med alle de 8 Kotlin/JVM-backend-repoene (libs, arena, saksbehandling-api, tiltak, soknad-api, datadeling, meldekort-api, journalposthendelser) — per 2026-07-17 kjører alle Java 25, `./gradlew build --configuration-cache`, og har `SLACK_VARSEL_WEBHOOK_URL` som Dependabot-secret.
 Frontend-repoene, pdfgen/pdfgenrs og iac har ingen auto-merge-workflow i dag; byggesteget her er Gradle-spesifikt, så de trenger i så fall en egen delt variant (f.eks. `dependabot-auto-merge-npm.yml`) — ikke flere inputs på denne.
 
@@ -48,6 +51,7 @@ Der vi avviker, er det bevisst:
 - `permissions: {}` på toppnivå i callere; jobbrettigheter settes i calleren, og den delte workflowen kan kun nedgradere dem (aldri utvide) — den delte deklarerer derfor sitt eget eksplisitte behov som cap.
 - Metarepoets `dependabot.yml` holder SHA-pinnene her ferske.
 - Filene her er sikkerhetsreviewet mot GitHubs hardening-guide, zizmor-sjekkene og sikkerhet.nav.no (2026-07-17) — hold nye workflows til samme standard (kontekst via env i run-steg, jq for payload-bygging, aktør- og forfatter-gating for bot-workflows).
+  `lint.yml` håndhever dette maskinelt: actionlint (blokkerende) og zizmor (foreløpig ikke-blokkerende) kjører på alle endringer under `.github/`.
 
 ## Ingen publisering
 

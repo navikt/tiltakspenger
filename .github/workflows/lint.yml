@@ -1,0 +1,20 @@
+name: Lint workflows
+
+on:
+  pull_request:
+    paths:
+      - '.github/**'
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/**'
+
+# Minste privilegium: toppnivået nullstiller alle token-rettigheter, hver jobb deklarerer eksplisitt det den trenger.
+permissions: {}
+
+jobs:
+  lint:
+    # Lokal sti (ikke @main) slik at endringer i den delte workflowen testes med PR-ens egen versjon.
+    permissions:
+      contents: read
+    uses: ./.github/workflows/lint-workflows.yml

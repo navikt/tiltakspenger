@@ -17,11 +17,14 @@ on:
         description: "Webhook for varsler til team-kanalen (sendes eksplisitt fra kalleren)"
         required: true
 
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
 jobs:
   dependabot:
     runs-on: ubuntu-latest
-    # I en reusable workflow arves rettigheter fra callerens jobb og kan kun nedgraderes her - toppnivå `permissions: {}` ville nullstilt tokenet og latt stegene feile.
-    # Eksplisitte jobbrettigheter capper i stedet hva workflowen bruker, selv om en caller skulle gi mer.
+    # Callerens jobb setter taket: rettighetene her kan aldri overstige det calleren gir, bare presisere/nedgradere.
+    # Eksplisitte jobbrettigheter capper dermed hva workflowen bruker, selv om en caller skulle gi mer.
     permissions:
       contents: write
       pull-requests: write

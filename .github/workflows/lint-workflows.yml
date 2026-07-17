@@ -1,0 +1,54 @@
+name: Lint workflows (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Linter repoets GitHub Actions-workflows: actionlint (skjema, uttrykkstypesjekk og shellcheck av run-blokker) og zizmor (sikkerhetsrevisjon).
+# Kalles med `uses: navikt/tiltakspenger/.github/workflows/lint-workflows.yml@main`; metarepoet selv kaller med lokal sti slik at PR-er testes med sin egen versjon.
+# Kalleren må gi jobbene `contents: read`.
+
+on:
+  workflow_call:
+    inputs:
+      zizmor-blokkerende:
+        description: "Om zizmor-funn skal feile jobben - skru på når unntakene er nedfelt i zizmor.yml med begrunnelse"
+        required: false
+        type: boolean
+        default: false
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # Offisielt actionlint-image pinnet på digest (tags kan flyttes, digests er innholdsadresserte); Dependabot bumper docker://-referanser.
+      # Kjører også shellcheck på alle run-blokkene.
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  zizmor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # Sikkerhetsrevisjon av workflowene: template injection, permissions, pinning, bot-gating, cache poisoning m.m.
+      # Bevisst ikke-blokkerende inntil unntak er nedfelt i zizmor.yml - deretter settes `zizmor-blokkerende: true` i callerne.
+      # `annotations` i stedet for `advanced-security` gir funn som PR-annotasjoner uten behov for `security-events: write`.
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
+        continue-on-error: ${{ !inputs.zizmor-blokkerende }}
+        with:
+          version: "1.27.0"
+          persona: regular
+          advanced-security: "false"
+          annotations: "true"

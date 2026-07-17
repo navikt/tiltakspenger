@@ -4,10 +4,10 @@ name: Dependabot auto-merge (delt)
 # Kalles fra repoenes dependabot-auto-merge.yml med `uses: navikt/tiltakspenger/.github/workflows/dependabot-auto-merge.yml@main`.
 # Kalleren må gi jobben `contents: write` (merge av PR-en) og `pull-requests: write` (gh pr merge), og sende secrets eksplisitt - aldri `secrets: inherit`.
 #
-# Sikkerhetsdesign - hvorfor tre jobber og ikke én (jf. sikkerhetsreview-funn F3, navikt/tiltakspenger#31):
+# Sikkerhetsdesign - hvorfor fire jobber og ikke én (jf. sikkerhetsreview-funn F3, navikt/tiltakspenger#31):
 # Byggesteget kjører tredjepartskode: byggeskript og tester fra den bumpede avhengigheten.
 # Untrusted kode og write-token skal aldri eksistere i samme jobb - prosesser på runneren kjører som samme bruker som Runner-prosessen og kan i praksis nå jobbens GITHUB_TOKEN (f.eks. via prosessminne), uavhengig av om tokenet er i env.
-# Derfor: metadata (lese-token) -> bygg (kun contents: read) -> merge (write-token, men ingen checkout og dermed ingen tredjepartskode på runneren).
+# Derfor: metadata (lese-token) -> bygg (kun contents: read) -> merge (write-token, men ingen checkout og dermed ingen tredjepartskode på runneren), pluss varsle-feil (kun webhook-secreten, intet token).
 # Callerens jobb-grant er taket for alle jobbene her; hver jobb nedgraderer individuelt til sitt faktiske behov.
 # Splitten er usynlig for callerne: de gir fortsatt ett samlet grant og trenger aldri endres når jobbstrukturen her endres.
 
@@ -110,8 +110,8 @@ jobs:
       # Merger direkte, uten --auto: main har ingen påkrevde sjekker, og da avviser GitHub auto-merge.
       # Bygget har allerede kjørt grønt i jobben over (needs).
       # --match-head-commit lukker TOCTOU-vinduet mellom bygg og merge: GitHub avviser mergen hvis branch-head har flyttet seg siden commiten vi bygde.
-      # Merge med GITHUB_TOKEN trigger ingen push-workflows på main, så det publiseres ikke artefakter og lages ikke release.
-      # Merger et menneske/agent PR-en selv (GitHub-knappen eller gh CLI), kjører publisering som normalt - da er noen på jobb og kan følge opp.
+      # Merge med GITHUB_TOKEN trigger ingen push-workflows på main - ingen publisering, image-bygg eller deploy, avhengig av hva repoet gjør der.
+      # Merger et menneske/agent PR-en selv (GitHub-knappen eller gh CLI), kjører push-workflowene som normalt - da er noen på jobb og kan følge opp.
       - name: Auto-merge changes from Dependabot
         run: gh pr merge --squash --match-head-commit "$PR_SHA" "$PR_URL"
         env:

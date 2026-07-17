@@ -137,6 +137,7 @@ Noen ting gjelder **både** for backend og frontend:
     - Den manuelle deployen til dev (`workflow_dispatch`) er det bevisste unntaket og trenger ikke følge navnekonvensjonen.
     - Hold også steg, action-versjoner og struktur mest mulig identiske mellom repoene; avvik bør være begrunnet i reelle forskjeller (f.eks. Gradle vs. pnpm, fss vs. gcp).
     - **Delte reusable workflows** bor i metarepoets [`.github/workflows/`](.github/workflows/README.md) og kalles fra repoene med `workflow_call` — les README-en der (caller-eksempel, secrets-/permissions-konvensjoner) før du endrer eller dupliserer CI-logikk, og foretrekk å utvide en delt workflow fremfor å kopiere den inn i et enkelt-repo.
+    - **Caller-filene skal være like på tvers av repoene** — samme filnavn, `name:` og struktur; kun reelle repo-forskjeller (f.eks. java-versjon) får avvike. Endrer du en caller i ett repo, oppdater de andre tilsvarende.
 
 ## Observability (Loki, Tempo, Mimir)
 

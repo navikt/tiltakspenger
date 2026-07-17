@@ -8,6 +8,12 @@ Arbeidet spores i [navikt/tiltakspenger#31](https://github.com/navikt/tiltakspen
 Calleren er en tynn workflow med trigger, rettigheter og et `uses`-kall:
 
 ```yaml
+# Kansellerer utdaterte kjøringer på samme PR (falske feilvarsler ved rebase midt i bygg).
+# Concurrency må stå i calleren - en delt workflow lager ingen egen run.
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   dependabot:
     permissions:

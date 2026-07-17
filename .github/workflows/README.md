@@ -51,7 +51,9 @@ Der vi avviker, er det bevisst:
 - `permissions: {}` på toppnivå i callere; jobbrettigheter settes i calleren, og den delte workflowen kan kun nedgradere dem (aldri utvide) — den delte deklarerer derfor sitt eget eksplisitte behov som cap.
 - Metarepoets `dependabot.yml` holder SHA-pinnene her ferske.
 - Filene her er sikkerhetsreviewet mot GitHubs hardening-guide, zizmor-sjekkene og sikkerhet.nav.no (2026-07-17) — hold nye workflows til samme standard (kontekst via env i run-steg, jq for payload-bygging, aktør- og forfatter-gating for bot-workflows).
-  `lint.yml` håndhever dette maskinelt: actionlint (blokkerende) og zizmor (foreløpig ikke-blokkerende) kjører på alle endringer under `.github/`.
+  `lint.yml` håndhever dette maskinelt: actionlint og zizmor (begge blokkerende) kjører på alle endringer under `.github/`.
+- Repo som kaller delte workflows trenger en `.github/zizmor.yml` med `unpinned-uses`-policyen `"navikt/tiltakspenger/*": ref-pin` (ellers flagges `@main`-referansen) — kopier fra dette repoet eller libs, og behold begrunnelseskommentarene.
+  Zizmor-unntak skal alltid ha en begrunnelse i konfigen; informational-funn rapporteres ikke (`min-severity: low` i den delte workflowen).
 
 ## Ingen publisering
 

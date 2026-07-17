@@ -50,5 +50,7 @@ jobs:
         with:
           version: "1.27.0"
           persona: regular
+          # Informational-funn (f.eks. forslag om å bytte action mot innebygd gh-kommando) skal informere, ikke blokkere.
+          min-severity: low
           advanced-security: "false"
           annotations: "true"

@@ -1,0 +1,19 @@
+# Konfig for zizmor-sikkerhetsrevisjonen (kjøres av lint-workflows.yml).
+# Unntak skal alltid ha en begrunnelse her - se også .github/workflows/README.md.
+
+rules:
+  bot-conditions:
+    ignore:
+      # Audit-en antar at aktør-sjekken `github.actor == 'dependabot[bot]'` står alene (spoofbar via f.eks. `@dependabot rebase`).
+      # Hos oss står den i kombinasjon med forfatter-sjekken `pull_request.user.login` - sammen binder de både hvem som skrev PR-en og hvem som utløste kjøringen.
+      # Se sikkerhetsreview-notatet i workflows-README (funn F1).
+      - dependabot-auto-merge.yml
+  unpinned-uses:
+    config:
+      policies:
+        # Delte workflows i metarepoet refereres bevisst med @main: metarepo-main er en dokumentert tillitsgrense,
+        # og callerne skal plukke opp forbedringer uten PR i hvert repo.
+        # Mønsteret må ha /* for å matche reusable workflow-stier (owner/repo alene matcher ikke subpath).
+        "navikt/tiltakspenger/*": ref-pin
+        # Alt annet krever SHA-pinning (Nav-policy).
+        "*": hash-pin

@@ -109,6 +109,27 @@ Noen ting gjelder **både** for backend og frontend:
 - **Ingen personopplysninger/stedlokaliserende i vanlige logger.** Backend bruker `Sikkerlogg` fra `tiltakspenger-libs:logging`; frontend skal aldri logge personsensitiv/identifiserende informasjon, dette gjelder også fødselsnummer eller lignende til konsoll / observability-verktøy.
 - **Auth via NAIS Texas** på backend (`tiltakspenger-libs:texas`) og **@navikt/oasis** på frontend.
 - **Alle tjenester kjører på NAIS** — følg NAIS-konvensjoner for konfig og hemmeligheter.
+- **Nais-prober følger en felles mal.** Alle apper definerer `startup`, `liveness` og `readiness` med verdiene under — kun probe-stiene er app-spesifikke. Startup-proben gir appen inntil ~5 minutter på å starte (kald autoskalert node, image pull, Flyway/JVM-oppvarming) uten at liveness dreper den; liveness og readiness aktiveres først når startup-proben har lyktes. **Avvik fra malen skal begrunnes med en kommentar ved probe-blokken i appens nais-manifest** (eksempel: `tiltakspenger-soknad`, som mangler helse-endepunkter). Bakgrunn: [Nais-spec for `startup`](https://doc.nais.io/workloads/application/reference/application-spec/#startup) og [Kubernetes-dokumentasjonen om prober](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/).
+
+    ```yaml
+    startup:
+      path: <appens isAlive-sti>
+      initialDelay: 5
+      periodSeconds: 5
+      failureThreshold: 60 # 5 + 60 × 5 s ≈ 5 min oppstartsvindu
+      timeout: 3
+    liveness:
+      path: <appens isAlive-sti>
+      periodSeconds: 10
+      failureThreshold: 3
+      timeout: 3
+    readiness:
+      path: <appens isReady-sti>
+      periodSeconds: 5
+      failureThreshold: 1
+      timeout: 3
+    ```
+
 - **Lokal utvikling** orkestreres via `docker-compose.yml` i monorepo-roten (og `docker-compose-soknad.yml` for søknad).
 - **Port 8085 er reservert for `nais login`** (callback-porten til nais CLI) og skal aldri bindes av lokale tjenester, compose-oppsett eller scripts.
 - **GitHub Actions-workflows skal være så like som mulig på tvers av repoene.** Når du endrer CI i ett repo, vurder om de andre repoene bør endres tilsvarende, slik at oppsettet konvergerer i stedet for å sprike. Konkret:
@@ -135,3 +156,4 @@ Gotchas og feilsøkingsheuristikker:
 - Traces er en uavhengig kontrollkilde når du skal skille «feilene stoppet» fra «loggingen stoppet»: spans lages av OTel-agenten uansett hva appene logger. Finn timeouts uavhengig av loggene med TraceQL `{resource.service.name="<app>" && kind=client && duration>9s}` og sammenlign antall med feillinjene i Loki.
 - Tempo-søke-API-et kan sporadisk svare helt tomt — retry 2–3 ganger med noen sekunders pause før du konkluderer med «ingen treff». `/api/traces/<id>` krever full 32-tegns trace_id (ikke forkortet).
 - macOS: bruk `date -v-1H +%s`, ikke GNU-syntaksen `date -d '1 hour ago'`.
+- Alerts og Slack-varsler: se README-seksjonen «Alarmer og Slack-varsler». Viktigste feller: `ALERTS{namespace="tpts"}` i Mimir blander dev og prod uten filter på `k8s_cluster_name`; dev- og prod-alerts har identisk tekst men går til hhv. `#tp-varsel-dev` og `#tp-varsel-prod`; CI-varslene i `#tp-varsel` bruker en helt annen webhook (GitHub-secret `SLACK_VARSEL_WEBHOOK_URL`) enn Alertmanager.

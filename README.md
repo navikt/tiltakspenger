@@ -179,6 +179,46 @@ Mangler en tjeneste helt i en trace der den normalt har spans, nådde requesten 
 
 Traces er også en uavhengig kontrollkilde, siden spans lages av OTel-agenten uansett hva appene logger. Skal du skille «feilene har stoppet» fra «loggingen har stoppet», søk i Tempo etter lange klient-spans (f.eks. `duration>9s` når timeouten er 10 s) og sammenlign med feillinjene i Loki — tallene skal stemme overens. Trege men vellykkede kall dukker ikke opp som feil, men finnes igjen i frontendens kall-linjer (`GET <url> -> 200 (9042ms)`) med varighet som skal matche spanet.
 
+## Alarmer og Slack-varsler
+
+Teamet har tre varselkanaler i Slack, med to helt uavhengige kilder bak seg:
+
+| Kanal | Avsender | Kilde |
+|---|---|---|
+| `#tp-varsel` | «Tiltakspenger slack notifications» | GitHub Actions (byggfeil på main, feilede dependabot-auto-merges) |
+| `#tp-varsel-dev` | «Alertmanager nav-dev» | Alerts fra dev-clustrene (dev-gcp/dev-fss) |
+| `#tp-varsel-prod` | «Alertmanager nav-prod» | Alerts fra prod-clustrene (prod-gcp/prod-fss) |
+
+Merk avsendernavnet når du leser et varsel: dev- og prod-alertene har identisk tekst (samme alert-regler deployes til begge miljøer), så det er lett å tro at et dev-varsel gjelder prod. Sjekk «nav-dev»/«nav-prod» og kanalnavnet før du feilsøker.
+
+### Hvor alertene er definert
+
+- **Felles alerts** for alle appene ligger i [`tiltakspenger-iac/alerts/felles-alerts.yaml`](https://github.com/navikt/tiltakspenger-iac) («Applikasjon er nede», «Høy feilrate i logger», «Kafka consumer offset lag»). De deployes som `PrometheusRule` til alle fire clustrene av `deploy-alerts.yaml`-workflowen i samme repo ved push til main. «Høy feilrate i logger» teller feillinjer via Lokis recording rule `loki:service:loglevel:count1m` (detected_level=error, per service_name) — terskelen er >5 feil siste time **og** >0 siste 15 min.
+- **App-spesifikke alerts** ligger i `.nais/alerts.yml` i hvert app-repo, f.eks. «Utbetaling har feilet!» i `tiltakspenger-saksbehandling-api` (basert på appens egne metrikker).
+
+### Slack-webhooken og rutingen (Alertmanager)
+
+Rutingen fra alert til Slack-kanal styres **ikke** fra repoene våre. Nais legger en `AlertmanagerConfig` ved navn `slack-config` i `tpts`-namespacet i hvert cluster (eid av `ReplicationConfig monitoring-team-slack-alerts`), som fanger alle alerts med `namespace: tpts` og poster dem til teamets kanal for miljøet. Selve webhook-URL-en ligger i secreten `slack-webhook` i namespacet — hverken secreten eller Alertmanager-loggene er lesbare med vanlig utviklertilgang, så oppsettet endres via team-innstillingene i [Nais Console](https://console.nav.cloud.nais.io) (eller ved å spørre i `#nais`). Nyttige detaljer fra rutingen:
+
+- Varsler grupperes per `alertname`, og en alert som blir stående i firing re-varsles først etter `repeatInterval: 1h`. Stillhet betyr altså ikke at alerten er borte.
+- `[RESOLVED]`-meldinger sendes som standard; en alert kan skru dem av med label `send_resolved: "false"` (slik «Utbetaling har feilet!» gjør).
+- Label `alert_type: custom` unntar en alert fra default-rutingen, for alerts som skal til egne kanaler via egen `AlertmanagerConfig` — se [nais-dokumentasjonen om tilpassede varsler](https://doc.nais.io/observability/alerting/how-to/prometheus-advanced/).
+
+### Feilsøking: «kanalen er stille» eller «kom dette varselet frem?»
+
+Alert-historikken kan rekonstrueres uavhengig av Slack med en range-query mot Mimir på seriene `ALERTS{namespace="tpts", alertstate="firing"}` — husk å skille på `k8s_cluster_name` (dev/prod), ellers blander du miljøene. Recording rule-metrikkene fra Loki (f.eks. `loki:service:loglevel:count1m`) er også spørrbare i Mimir, så du kan regne ut selv om en terskel faktisk ble krysset. Se «Feilsøking med logger og traces» over for API-tilgang og headere. Feiler selve leveransen til Slack, synes det bare i plattformens metrikker (`alertmanager_notifications_failed_total{integration="slack"}` — uten per-team-label) og i Alertmanager-loggene som kun nais-teamet har tilgang til.
+
+### CI-varslene (`#tp-varsel`)
+
+Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligger som secret `SLACK_VARSEL_WEBHOOK_URL` i hvert repo (også som Dependabot-secret, siden Dependabot-kjøringer ikke ser vanlige Actions-secrets). Den brukes av test-og-bygg-workflowene i repoene og av den delte [`dependabot-auto-merge.yml`](.github/workflows/README.md). Denne webhooken har ingenting med Alertmanager-kjeden å gjøre — at CI-varsler kommer frem sier altså ikke noe om alert-varslene, og omvendt.
+
+### Videre lesning
+
+- [Nais: Alerting (konsepter)](https://doc.nais.io/observability/alerting/)
+- [Nais: Opprette alerts med PromQL](https://doc.nais.io/observability/alerting/how-to/prometheus-basic/) og [referanse for PrometheusRule](https://doc.nais.io/observability/alerting/reference/prometheusrule/)
+- [Nais: Tilpassede varsler/kanaler med AlertmanagerConfig](https://doc.nais.io/observability/alerting/how-to/prometheus-advanced/)
+- [Prometheus Alertmanager: notifikasjoner og ruting](https://prometheus.io/docs/alerting/latest/configuration/)
+
 ## Delte GitHub Actions-workflows
 
 Delte workflows for repoene våre bor i [`.github/workflows/`](.github/workflows/) i dette repoet og kalles med `workflow_call` fra tynne caller-workflows i hvert repo.

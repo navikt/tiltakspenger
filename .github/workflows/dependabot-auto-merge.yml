@@ -1,0 +1,91 @@
+name: Dependabot auto-merge (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Kalles fra repoenes dependabot-auto-merge.yml med `uses: navikt/tiltakspenger/.github/workflows/dependabot-auto-merge.yml@main`.
+# Kalleren må gi jobben `contents: write` (merge av PR-en) og `pull-requests: write` (gh pr merge), og sende secrets eksplisitt - aldri `secrets: inherit`.
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: Java-versjon for byggesteget
+        required: false
+        type: string
+        default: '25'
+    secrets:
+      SLACK_VARSEL_WEBHOOK_URL:
+        description: "Webhook for varsler til team-kanalen (sendes eksplisitt fra kalleren)"
+        required: true
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    # I en reusable workflow arves rettigheter fra callerens jobb og kan kun nedgraderes her - toppnivå `permissions: {}` ville nullstilt tokenet og latt stegene feile.
+    # Eksplisitte jobbrettigheter capper i stedet hva workflowen bruker, selv om en caller skulle gi mer.
+    permissions:
+      contents: write
+      pull-requests: write
+    # Begge sjekkene trengs: `user.login` binder PR-forfatteren, `github.actor` binder hvem som utløste kjøringen.
+    # Uten actor-sjekken ville en push fra en annen bruker til dependabot-branchen (synchronize-event) fortsatt passert gaten og blitt auto-merget.
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }}
+    env:
+      PR_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Ikke la tokenet ligge igjen i .git/config - byggesteget kjører kode fra den bumpede avhengigheten.
+          persist-credentials: false
+      - name: Fetch dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
+      # curl -sSf gjør at et avvist webhook-kall (f.eks. rotert URL) feiler steget synlig i stedet for å forsvinne stille.
+      - name: Notify Slack on new major version
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.package-ecosystem != 'github_actions' && github.event.action != 'synchronize'
+        run: |
+          payload=$(jq -n --arg pretext "[$REPO_NAME] Ny major dependency versjon!" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "info", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
+          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DEPENDENCY_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          VERSION_CHANGE: "${{ steps.metadata.outputs.previous-version }} -> ${{ steps.metadata.outputs.new-version }}"
+      - name: Set up Java
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+        if: steps.metadata.outputs.package-ecosystem != 'github_actions'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        if: steps.metadata.outputs.package-ecosystem != 'github_actions'
+      # --configuration-cache matcher dagens praksis i alle backend-repoene; i repo der config cache er på via gradle.properties er flagget harmløst.
+      - name: Build and run tests
+        run: ./gradlew build --configuration-cache
+        if: steps.metadata.outputs.package-ecosystem != 'github_actions'
+      # Merger direkte, uten --auto: main har ingen påkrevde sjekker, og da avviser GitHub auto-merge.
+      # Bygg og test har allerede kjørt grønt i steget over.
+      # Merge med GITHUB_TOKEN trigger ingen push-workflows på main, så det publiseres ikke artefakter og lages ikke release.
+      # Merger et menneske/agent PR-en selv (GitHub-knappen eller gh CLI), kjører publisering som normalt - da er noen på jobb og kan følge opp.
+      # --match-head-commit lukker TOCTOU-vinduet mellom bygg og merge: GitHub avviser mergen hvis branch-head har flyttet seg siden commiten vi bygde.
+      - name: Auto-merge changes from Dependabot
+        run: gh pr merge --squash --match-head-commit "$PR_SHA" "$PR_URL"
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' && steps.metadata.outputs.package-ecosystem != 'github_actions'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Notify Slack in case of merge failure
+        if: failure() && steps.metadata.outputs.update-type != 'version-update:semver-major' && github.event.action != 'synchronize'
+        run: |
+          payload=$(jq -n --arg pretext "[$REPO_NAME] Dependabot auto-merge feilet :cry:" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "danger", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
+          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DEPENDENCY_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          VERSION_CHANGE: "${{ steps.metadata.outputs.previous-version }} -> ${{ steps.metadata.outputs.new-version }}"

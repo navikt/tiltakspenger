@@ -115,6 +115,7 @@ Noen ting gjelder **både** for backend og frontend:
     - Workflowen som bygger og deployer til prod ved push til `main` heter **`Build and deploy`** i alle repoer (også der det egentlig er en publisering, som `tiltakspenger-libs`, eller en kombinert dev+prod-deploy, som `tiltakspenger-meldekort-microfrontend`). Felles navn gjør at verktøy kan hente «siste utrulling» likt på tvers — se `script/status.sh`.
     - Den manuelle deployen til dev (`workflow_dispatch`) er det bevisste unntaket og trenger ikke følge navnekonvensjonen.
     - Hold også steg, action-versjoner og struktur mest mulig identiske mellom repoene; avvik bør være begrunnet i reelle forskjeller (f.eks. Gradle vs. pnpm, fss vs. gcp).
+    - **Delte reusable workflows** bor i metarepoets [`.github/workflows/`](.github/workflows/README.md) og kalles fra repoene med `workflow_call` — les README-en der (caller-eksempel, secrets-/permissions-konvensjoner) før du endrer eller dupliserer CI-logikk, og foretrekk å utvide en delt workflow fremfor å kopiere den inn i et enkelt-repo.
 
 ## Observability (Loki, Tempo, Mimir)
 
@@ -131,4 +132,6 @@ Gotchas og feilsøkingsheuristikker:
 - Loki-labelen for cluster er `k8s_cluster_name="prod"` (ikke `prod-gcp`). Appene identifiseres med `service_name`, namespace er `tpts`. Bruk alltid `start`/`end` i spørringene.
 - Tempo-søk uten `kind`-filter treffer gjerne jobb-/DB-spans og kan gi inntrykk av at en app mangler HTTP-server-spans. Filtrer med `{resource.service.name="<app>" && kind=server}` før du konkluderer.
 - Mangler en app sine spans i én konkret trace mens den ellers har server-spans, nådde requesten sannsynligvis aldri appen — sjekk rollout-aktivitet i tidsrommet (flere ReplicaSets samtidig / «Application started» i Loki).
+- Traces er en uavhengig kontrollkilde når du skal skille «feilene stoppet» fra «loggingen stoppet»: spans lages av OTel-agenten uansett hva appene logger. Finn timeouts uavhengig av loggene med TraceQL `{resource.service.name="<app>" && kind=client && duration>9s}` og sammenlign antall med feillinjene i Loki.
+- Tempo-søke-API-et kan sporadisk svare helt tomt — retry 2–3 ganger med noen sekunders pause før du konkluderer med «ingen treff». `/api/traces/<id>` krever full 32-tegns trace_id (ikke forkortet).
 - macOS: bruk `date -v-1H +%s`, ikke GNU-syntaksen `date -d '1 hour ago'`.

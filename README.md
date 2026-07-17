@@ -177,6 +177,17 @@ Slik kobler du en feil i én tjeneste til resten av kjeden (i [Grafana](https://
 
 Mangler en tjeneste helt i en trace der den normalt har spans, nådde requesten den sannsynligvis aldri — da er det infrastruktur (f.eks. pågående utrulling), ikke treg kode, som er sporet.
 
+Traces er også en uavhengig kontrollkilde, siden spans lages av OTel-agenten uansett hva appene logger. Skal du skille «feilene har stoppet» fra «loggingen har stoppet», søk i Tempo etter lange klient-spans (f.eks. `duration>9s` når timeouten er 10 s) og sammenlign med feillinjene i Loki — tallene skal stemme overens. Trege men vellykkede kall dukker ikke opp som feil, men finnes igjen i frontendens kall-linjer (`GET <url> -> 200 (9042ms)`) med varighet som skal matche spanet.
+
+## Delte GitHub Actions-workflows
+
+Delte workflows for repoene våre bor i [`.github/workflows/`](.github/workflows/) i dette repoet og kalles med `workflow_call` fra tynne caller-workflows i hvert repo.
+Se [README-en i workflow-mappa](.github/workflows/README.md) for caller-eksempel, konvensjoner (secrets, permissions, pinning), hvilke repoer som dekkes og forholdet til Nais-dokumentasjonen/Golden Path — og [#31](https://github.com/navikt/tiltakspenger/issues/31) for utrullingsstatus.
+
+**Hvorfor metarepoet?** Vi vurderte tre plasseringer (kartlagt 2026-07-17). Normen i Nav er et dedikert `<team>-workflows`-repo (20+ team, f.eks. `aap-workflows`), men med en portefølje på et par workflows er et eget repo mest overhead — vi følger heller tilleggsstønader, som bruker metarepoet sitt. `tiltakspenger-libs` ble valgt bort fordi workflow-endringer der ville trigget full maven-publisering, og fordi libs da blir både produsent og konsument av samme CI. Vokser porteføljen, kan workflowene flyttes til et eget `tiltakspenger-workflows`-repo — flyttingen er én endret linje per caller-repo.
+
+Workflowene trenger ingen publisering eller release: callerne henter fila direkte fra `main` ved kjøring, så eneste krav er at endringer er pushet hit.
+
 ## Team-board (GitHub Project)
 
 Teamet bruker GitHub-projectet [**Team tiltakspenger** (`navikt/projects/227`)](https://github.com/orgs/navikt/projects/227) som felles oversikt på tvers av alle `tiltakspenger*`-repoene. Projectet eies av organisasjonen `navikt` og er lenket til teamet `navikt/tpts`.

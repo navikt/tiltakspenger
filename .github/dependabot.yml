@@ -1,0 +1,11 @@
+# Holder SHA-pinnede actions i de delte workflowene ferske.
+# Samme oppsett som github-actions-blokka i de andre repoene (jf. felles Dependabot-konvensjon).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7

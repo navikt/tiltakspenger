@@ -44,6 +44,9 @@ Der vi avviker, er det bevisst:
 
 ## Konvensjoner
 
+- **Caller-filene skal være like på tvers av repoene**: samme filnavn, samme `name:`, samme struktur og kommentarer.
+  Kun det som reelt er repo-spesifikt (f.eks. `java-version`-input) får avvike — en diff mellom to repos callere skal kunne leses som en liste over reelle forskjeller mellom repoene.
+  Navnestandard: calleren heter det samme som funksjonen (`Dependabot auto-merge`, `Lint workflows`), den delte workflowen har `(delt)`-suffiks i `name:`.
 - Callere pinner til `@main` (navikt-eid repo); tredjeparts-actions inne i de delte workflowene SHA-pinnes med `# vX.Y.Z`-kommentar.
   `@main` betyr at metarepoets main er en tillitsgrense: write-tilgang hit gir innflytelse på callernes CI, så endringer i delte workflows skal reviewes deretter.
 - Send secrets eksplisitt fra calleren, aldri `secrets: inherit` — inherit eksponerer alle repoets og org-delte secrets for den delte workflowen.
@@ -52,6 +55,8 @@ Der vi avviker, er det bevisst:
 - Metarepoets `dependabot.yml` holder SHA-pinnene her ferske.
 - Filene her er sikkerhetsreviewet mot GitHubs hardening-guide, zizmor-sjekkene og sikkerhet.nav.no (2026-07-17) — hold nye workflows til samme standard (kontekst via env i run-steg, jq for payload-bygging, aktør- og forfatter-gating for bot-workflows).
   `lint.yml` håndhever dette maskinelt: actionlint og zizmor (begge blokkerende) kjører på alle endringer under `.github/`.
+- Workflows som kjører untrusted kode (f.eks. bygg av en Dependabot-bumpet avhengighet) splittes i jobber slik at write-token og tredjepartskode aldri deler jobb; jobben med write-token skal ikke ha checkout.
+  Se sikkerhetsdesign-kommentaren øverst i `dependabot-auto-merge.yml`.
 - Repo som kaller delte workflows trenger en `.github/zizmor.yml` med `unpinned-uses`-policyen `"navikt/tiltakspenger/*": ref-pin` (ellers flagges `@main`-referansen) — kopier fra dette repoet eller libs, og behold begrunnelseskommentarene.
   Zizmor-unntak skal alltid ha en begrunnelse i konfigen; informational-funn rapporteres ikke (`min-severity: low` i den delte workflowen).
 

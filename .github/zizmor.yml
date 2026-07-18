@@ -6,8 +6,10 @@ rules:
     ignore:
       # Audit-en antar at aktør-sjekken `github.actor == 'dependabot[bot]'` står alene (spoofbar via f.eks. `@dependabot rebase`).
       # Hos oss står den i kombinasjon med forfatter-sjekken `pull_request.user.login` - sammen binder de både hvem som skrev PR-en og hvem som utløste kjøringen.
-      # Se sikkerhetsreview-notatet i workflows-README (funn F1).
+      # Se sikkerhetsreviewens funn F1 i navikt/tiltakspenger#31 (workflows-README beskriver konvensjonen).
       - dependabot-auto-merge.yml
+      # Node-varianten har samme kombinerte gate og samme begrunnelse.
+      - dependabot-auto-merge-node.yml
   unpinned-uses:
     config:
       policies:

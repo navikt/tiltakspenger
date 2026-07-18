@@ -1,0 +1,59 @@
+name: Deploy til nais (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Deployer et ferdig bygget image til nais med nais/deploy.
+# Kalleren må gi jobben `contents: read` (checkout av nais-manifestene) + `id-token: write` (nais/deploy autentiserer med OIDC).
+# Repo-variasjon uttrykkes med inputs: arena setter `cluster-suffiks: fss` (on-prem), soknad overstyrer `nais-ressurs`.
+
+on:
+  workflow_call:
+    inputs:
+      NAIS_ENV:
+        description: "Miljø (dev/prod) - brukes i cluster-navn, GitHub environment og default vars-sti"
+        required: true
+        type: string
+      IMAGE:
+        description: Docker-imaget som skal deployes
+        required: true
+        type: string
+      cluster-suffiks:
+        description: "Cluster-suffiks: gcp (default) eller fss for on-prem"
+        required: false
+        type: string
+        default: gcp
+      nais-ressurs:
+        description: Sti til nais-manifestet
+        required: false
+        type: string
+        default: .nais/nais.yml
+      nais-vars:
+        description: "Sti til vars-fila (tom gir .nais/vars/<NAIS_ENV>.yml)"
+        required: false
+        type: string
+        default: ''
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  deploy:
+    name: Deploy til nais (${{ inputs.NAIS_ENV }})
+    runs-on: ubuntu-latest
+    # GitHub environment gir sporbarhet (deployments-fanen) og evt. miljøregler i repoet.
+    environment: ${{ inputs.NAIS_ENV }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Deploysteget leser kun manifestfiler fra arbeidskatalogen - tokenet trengs ikke videre.
+          persist-credentials: false
+      - name: Deploy til nais
+        uses: nais/deploy/actions/deploy@2d18f050f07b6a007864c6a57070ed915d571beb # v2
+        env:
+          CLUSTER: ${{ inputs.NAIS_ENV }}-${{ inputs.cluster-suffiks }}
+          RESOURCE: ${{ inputs.nais-ressurs }}
+          VAR: image=${{ inputs.IMAGE }}
+          VARS: ${{ inputs.nais-vars != '' && inputs.nais-vars || format('.nais/vars/{0}.yml', inputs.NAIS_ENV) }}

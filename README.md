@@ -226,8 +226,6 @@ Se [README-en i workflow-mappa](.github/workflows/README.md) for caller-eksempel
 
 **Hvorfor metarepoet?** Vi vurderte tre plasseringer (kartlagt 2026-07-17). Normen i Nav er et dedikert `<team>-workflows`-repo (20+ team, f.eks. `aap-workflows`), men med en portefølje på et par workflows er et eget repo mest overhead — vi følger heller tilleggsstønader, som bruker metarepoet sitt. `tiltakspenger-libs` ble valgt bort fordi workflow-endringer der ville trigget full maven-publisering, og fordi libs da blir både produsent og konsument av samme CI. Vokser porteføljen, kan workflowene flyttes til et eget `tiltakspenger-workflows`-repo — flyttingen er én endret linje per caller-repo.
 
-Workflowene trenger ingen publisering eller release: callerne henter fila direkte fra `main` ved kjøring, så eneste krav er at endringer er pushet hit.
-
 ## Team-board (GitHub Project)
 
 Teamet bruker GitHub-projectet [**Team tiltakspenger** (`navikt/projects/227`)](https://github.com/orgs/navikt/projects/227) som felles oversikt på tvers av alle `tiltakspenger*`-repoene. Projectet eies av organisasjonen `navikt` og er lenket til teamet `navikt/tpts`.

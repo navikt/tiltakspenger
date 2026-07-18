@@ -1,0 +1,84 @@
+name: Test og bygg gradle (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Tester og bygger et Kotlin/JVM-repo, og bygger+pusher docker-image til nais-registryet når `bygg-image` er satt.
+# `./gradlew build` kjører testene - byggejobben er dermed også testgaten for PR-er og feature-brancher (kall med `bygg-image: false`).
+# Kalleren må gi jobben `contents: read` + `id-token: write` (nais/docker-build-push autentiserer med OIDC), og sende secrets eksplisitt - aldri `secrets: inherit`.
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: Java-versjon for byggesteget
+        required: false
+        type: string
+        default: '25'
+      gradle-kommando:
+        description: Kommandoen som tester og bygger applikasjonen
+        required: false
+        type: string
+        default: ./gradlew build --info installDist --configuration-cache
+      bygg-image:
+        description: Om docker-image skal bygges og pushes etter grønt bygg
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      IMAGE:
+        description: "Docker-imaget som ble bygget (tomt når bygg-image er false)"
+        value: ${{ jobs.bygg.outputs.IMAGE }}
+    secrets:
+      SLACK_VARSEL_WEBHOOK_URL:
+        description: "Webhook for varsel ved feilet bygg på main (sendes eksplisitt fra kalleren)"
+        required: true
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    # id-token: write er kun for OIDC-føderasjonen i docker-build-push; GITHUB_TOKEN har bare lesetilgang.
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      IMAGE: ${{ steps.docker-push.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Ikke la tokenet ligge igjen i .git/config - test-/byggsteget kjører avhengigheters kode.
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      # Kommandoen går via env og eval, ikke ${{ }} i run - samme injection-hygiene som for all annen kontekst (input-en er repo-styrt, men mønsteret skal være konsekvent).
+      - name: Test og bygg applikasjonen
+        run: eval "$GRADLE_KOMMANDO"
+        env:
+          GRADLE_KOMMANDO: ${{ inputs.gradle-kommando }}
+      - name: Bygg og push docker-image
+        # Versjonsoversikt (tag -> SHA): https://github.com/nais/docker-build-push/tags
+        uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
+        id: docker-push
+        if: inputs.bygg-image == true
+        with:
+          team: tpts
+      # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
+      # curl -sSf gjør at et avvist webhook-kall feiler steget synlig i stedet for å forsvinne stille.
+      - name: Varsle Slack ved feilet bygg på main
+        if: failure() && github.ref == 'refs/heads/main'
+        run: |
+          payload=$(jq -n --arg pretext "[$REPO_NAME] Build failed :cry:" --arg author "$AUTHOR" --arg commit "<https://github.com/$REPO/commit/$COMMIT_SHA|$COMMIT_SHA>" '{attachments: [{pretext: $pretext, color: "danger", fields: [{title: "Author", value: $author, short: false}, {title: "Commit", value: $commit, short: false}]}]}')
+          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          AUTHOR: ${{ github.event.pusher.name }}
+          COMMIT_SHA: ${{ github.sha }}

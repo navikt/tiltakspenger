@@ -1,0 +1,178 @@
+name: Dependabot auto-merge node (delt)
+
+# Delt workflow for frontend-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Node-varianten av dependabot-auto-merge.yml (delt) - hold de to filene tekstlig parallelle, kun byggejobben skiller dem.
+# Pakkehåndterer detekteres automatisk fra lockfila (pnpm-lock.yaml -> pnpm, ellers npm ci), slik at npm->pnpm-migreringen (jf. nais-doc) ikke krever caller-endringer.
+# Kalles fra repoenes dependabot-auto-merge.yml med `uses: navikt/tiltakspenger/.github/workflows/dependabot-auto-merge-node.yml@main`.
+# Kalleren må gi jobben `contents: write` (merge av PR-en) og `pull-requests: write` (gh pr merge), og sende secrets eksplisitt - aldri `secrets: inherit`.
+#
+# Sikkerhetsdesign - hvorfor fire jobber og ikke én (jf. sikkerhetsreview-funn F3, navikt/tiltakspenger#31):
+# Byggesteget kjører tredjepartskode: install-scripts og verktøy fra den bumpede avhengigheten.
+# Untrusted kode og write-token skal aldri eksistere i samme jobb - prosesser på runneren kjører som samme bruker som Runner-prosessen og kan i praksis nå jobbens GITHUB_TOKEN (f.eks. via prosessminne), uavhengig av om tokenet er i env.
+# Derfor: metadata (lese-token) -> bygg (kun contents: read) -> merge (write-token, men ingen checkout og dermed ingen tredjepartskode på runneren), pluss varsle-feil (kun webhook-secreten, intet token).
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node-versjon for byggesteget
+        required: false
+        type: string
+        default: '24'
+      test-kommando:
+        description: "Kommandoen som verifiserer bumpen etter installasjon (typisk lint/tsc/test - repoene har ulike scripts); $PAKKEHANDTERER er npm eller pnpm"
+        required: false
+        type: string
+        default: '"$PAKKEHANDTERER" run lint --if-present'
+    secrets:
+      SLACK_VARSEL_WEBHOOK_URL:
+        description: "Webhook for varsler til team-kanalen (sendes eksplisitt fra kalleren)"
+        required: true
+      READER_TOKEN:
+        description: "Token med read:packages for @navikt-pakker fra GitHub Packages (npm.pkg.github.com)"
+        required: true
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    # Gaten ligger kun på denne jobben: alle andre jobber henger på den via `needs`, så skippes den, skippes alt nedstrøms.
+    # Begge sjekkene trengs: `user.login` binder PR-forfatteren, `github.actor` binder hvem som utløste kjøringen.
+    # Uten actor-sjekken ville en push fra en annen bruker til dependabot-branchen (synchronize-event) fortsatt passert gaten og blitt auto-merget.
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' }}
+    # fetch-metadata leser kun PR-data - jobben trenger ingen skrivetilgang.
+    permissions:
+      pull-requests: read
+    # Outputs er kontrakten til jobbene nedstrøms; alt de trenger av metadata hentes herfra, aldri på nytt.
+    outputs:
+      update-type: ${{ steps.metadata.outputs.update-type }}
+      package-ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}
+      dependency-names: ${{ steps.metadata.outputs.dependency-names }}
+      previous-version: ${{ steps.metadata.outputs.previous-version }}
+      new-version: ${{ steps.metadata.outputs.new-version }}
+    env:
+      PR_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Fetch dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # Major-varselet bor i denne jobben fordi den ikke kjører tredjepartskode - webhook-secreten eksponeres aldri for en jobb som gjør det.
+      # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
+      # curl -sSf gjør at et avvist webhook-kall (f.eks. rotert URL) feiler steget synlig i stedet for å forsvinne stille.
+      - name: Notify Slack on new major version
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.package-ecosystem != 'github_actions' && github.event.action != 'synchronize'
+        run: |
+          payload=$(jq -n --arg pretext "[$REPO_NAME] Ny major dependency versjon!" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "info", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
+          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DEPENDENCY_NAME: ${{ steps.metadata.outputs.dependency-names }}
+          VERSION_CHANGE: "${{ steps.metadata.outputs.previous-version }} -> ${{ steps.metadata.outputs.new-version }}"
+
+  bygg:
+    runs-on: ubuntu-latest
+    needs: metadata
+    # Actions-bumps har ingenting å bygge; npm-verifiseringen gjelder kun kodeavhengigheter.
+    if: ${{ needs.metadata.outputs.package-ecosystem != 'github_actions' }}
+    # Denne jobben kjører untrusted kode (avhengighetens install-scripts/verktøy) og skal derfor aldri ha mer enn lesetilgang.
+    # Utvid ikke rettighetene her - trenger et nytt steg skrivetilgang, hører det hjemme i en egen jobb uten checkout.
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Ikke la tokenet ligge igjen i .git/config - byggesteget kjører kode fra den bumpede avhengigheten.
+          persist-credentials: false
+      # Lockfila er fasit for pakkehåndterer: pnpm-lock.yaml -> pnpm, ellers npm.
+      # Automatisk deteksjon gjør at et repo som migrerer npm->pnpm bare bytter lockfil - calleren er uendret.
+      - name: Detekter pakkehåndterer
+        id: pm
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "manager=pnpm" >> "$GITHUB_OUTPUT"
+          else
+            echo "manager=npm" >> "$GITHUB_OUTPUT"
+          fi
+      # pnpm-versjonen leses fra packageManager-feltet i package.json (konvensjon i pnpm-repoene våre).
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        if: steps.pm.outputs.manager == 'pnpm'
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: https://npm.pkg.github.com
+      # READER_TOKEN trengs for @navikt-pakker fra GitHub Packages; den har kun read:packages og eksponeres bevisst bare for install- og verifiseringsstegene.
+      # setup-node skriver .npmrc med NODE_AUTH_TOKEN - pnpm leser samme fil.
+      - name: Install dependencies
+        run: |
+          if [ "$PAKKEHANDTERER" = pnpm ]; then
+            pnpm install --frozen-lockfile
+          else
+            npm ci
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+          PAKKEHANDTERER: ${{ steps.pm.outputs.manager }}
+      # Kommandoen går via env og eval, ikke ${{ }} i run - samme injection-hygiene som for all annen kontekst (input-en er repo-styrt, men mønsteret skal være konsekvent).
+      - name: Verifiser bumpen
+        run: eval "$TEST_KOMMANDO"
+        env:
+          TEST_KOMMANDO: ${{ inputs.test-kommando }}
+          PAKKEHANDTERER: ${{ steps.pm.outputs.manager }}
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: [ metadata, bygg ]
+    # Kun patch-bumps merges automatisk; minor/major krever menneske.
+    # Implisitt success() på needs gjør at github_actions-økosystemet (der bygg skippes) aldri når hit - samme policy som gradle-varianten.
+    if: ${{ needs.metadata.outputs.update-type == 'version-update:semver-patch' }}
+    # Eneste jobben med write-token - og den har bevisst ingen checkout: ingen kildekode, ingen bygg, ingen tredjepartskode på runneren.
+    # Kun gh CLI mot GitHub-API-et.
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      PR_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # Merger direkte, uten --auto: main har ingen påkrevde sjekker, og da avviser GitHub auto-merge.
+      # Bygget har allerede kjørt grønt i jobben over (needs).
+      # --match-head-commit lukker TOCTOU-vinduet mellom bygg og merge: GitHub avviser mergen hvis branch-head har flyttet seg siden commiten vi bygde.
+      # Merge med GITHUB_TOKEN trigger ingen push-workflows på main - ingen publisering, image-bygg eller deploy, avhengig av hva repoet gjør der.
+      # Merger et menneske/agent PR-en selv (GitHub-knappen eller gh CLI), kjører push-workflowene som normalt - da er noen på jobb og kan følge opp.
+      - name: Auto-merge changes from Dependabot
+        run: gh pr merge --squash --match-head-commit "$PR_SHA" "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  varsle-feil:
+    runs-on: ubuntu-latest
+    needs: [ metadata, bygg, merge ]
+    # failure() er påkrevd: uten en statusfunksjon kjører jobben kun når alle needs lyktes.
+    # Majors varsles allerede av major-steget i metadata-jobben, og synchronize-events skal ikke støye.
+    if: ${{ failure() && needs.metadata.outputs.update-type != 'version-update:semver-major' && github.event.action != 'synchronize' }}
+    # Jobben trenger ikke tokenet i det hele tatt - kun webhook-secreten.
+    permissions: {}
+    env:
+      PR_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # Metadata-outputs kan være tomme hvis metadata-jobben selv feilet - da peker commit-lenken uansett til rett PR.
+      - name: Notify Slack in case of merge failure
+        run: |
+          payload=$(jq -n --arg pretext "[$REPO_NAME] Dependabot auto-merge feilet :cry:" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "danger", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
+          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+        env:
+          WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          DEPENDENCY_NAME: ${{ needs.metadata.outputs.dependency-names }}
+          VERSION_CHANGE: "${{ needs.metadata.outputs.previous-version }} -> ${{ needs.metadata.outputs.new-version }}"

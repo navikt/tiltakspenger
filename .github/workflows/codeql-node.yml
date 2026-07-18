@@ -1,0 +1,42 @@
+name: CodeQL node (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# CodeQL-analyse for TypeScript/JavaScript-repo; tolket språk, så ingen byggesteg (build-mode: none).
+# Kalleren eier trigger (schedule/workflow_dispatch) og concurrency-gruppa - en delt workflow lager ingen egen run.
+# Kalleren må gi jobben `contents: read` + `actions: read` + `security-events: write` (opplasting til code scanning).
+
+on:
+  workflow_call: {}
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-and-quality
+          config: |
+            query-filters:
+              - exclude:
+                  problem.severity:
+                    - recommendation
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          category: "/language:javascript-typescript"

@@ -1,0 +1,13 @@
+# Konfig for zizmor-sikkerhetsrevisjonen (kjøres av den delte lint-workflowen fra metarepoet).
+# Unntak skal alltid ha en begrunnelse her - se .github/workflows/README.md i navikt/tiltakspenger.
+
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Delte workflows i metarepoet refereres bevisst med @main: metarepo-main er en dokumentert tillitsgrense,
+        # og callerne skal plukke opp forbedringer uten PR i hvert repo.
+        # Mønsteret må ha /* for å matche reusable workflow-stier (owner/repo alene matcher ikke subpath).
+        "navikt/tiltakspenger/*": ref-pin
+        # Alt annet krever SHA-pinning (Nav-policy).
+        "*": hash-pin

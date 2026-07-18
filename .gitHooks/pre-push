@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Pre-push-vakt for metarepoet: slipp aldri upinnede actions eller andre lint-/sikkerhetsfunn til main.
+# Callerne i alle repoene refererer delte workflows med @main, så en dårlig push her er live umiddelbart - CI-en rekker bare å farge kjøringen rød i etterkant.
+# Kjører samme sjekker som CI (lint.yml): actionlint (inkl. shellcheck) og zizmor, med samme pinnede verktøyversjoner.
+# Aktiveres per klone med: git config core.hooksPath .gitHooks
+# Bevisst omgåelse i nødstilfelle: git push --no-verify (da er du selv vakten).
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+if ! command -v docker >/dev/null 2>&1; then
+    echo "pre-push: docker kreves for actionlint/zizmor-vakten - installer docker, eller omgå bevisst med 'git push --no-verify'." >&2
+    exit 1
+fi
+
+echo "pre-push: actionlint …"
+docker run --rm -v "$ROOT":/repo --workdir /repo \
+    rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+
+echo "pre-push: zizmor …"
+docker run --rm -v "$ROOT":/repo \
+    ghcr.io/zizmorcore/zizmor@sha256:5800c8d5e83263d68a8874989b0eb3939e177540e9395de48158d24656141ee9 \
+    --offline --min-severity low --config /repo/.github/zizmor.yml /repo/.github
+
+echo "pre-push: grønt - trygt å pushe."

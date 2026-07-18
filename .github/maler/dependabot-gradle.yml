@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "io.ktor:*"
+        versions: [">=3.5.0, <3.6.0"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7

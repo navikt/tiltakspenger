@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: false
+      zizmor-mal-sjekk:
+        description: "Om repoets .github/zizmor.yml skal kreves lik malen i metarepoet (skru av kun ved begrunnet avvik)"
+        required: false
+        type: boolean
+        default: true
 
 # Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
 permissions: {}
@@ -32,6 +37,27 @@ jobs:
         uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
         with:
           args: -color
+
+  # GitHub kan ikke lenke config-filer på tvers av repo (dependabot.yml/zizmor.yml må fysisk finnes per repo, uten include-mekanisme).
+  # Drift-vakten gir lenke-semantikk i stedet: repoets kopi må være lik malen i metarepoet, ellers feiler linten.
+  # Repo med begrunnet avvik setter `zizmor-mal-sjekk: false` i calleren, med kommentar.
+  konfig-drift:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.zizmor-mal-sjekk }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Sammenlign zizmor.yml med malen i metarepoet
+        run: |
+          curl -sSf -o /tmp/mal-zizmor.yml https://raw.githubusercontent.com/navikt/tiltakspenger/main/.github/maler/zizmor.yml
+          if ! diff -u /tmp/mal-zizmor.yml .github/zizmor.yml; then
+            echo "::error::.github/zizmor.yml avviker fra malen i metarepoet (.github/maler/zizmor.yml). Oppdater kopien, eller sett zizmor-mal-sjekk: false i calleren med begrunnelse."
+            exit 1
+          fi
 
   zizmor:
     runs-on: ubuntu-latest

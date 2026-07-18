@@ -46,8 +46,11 @@ Se toppen av hver workflow-fil for hvilke rettigheter, secrets og inputs akkurat
 | `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version` |
 | `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secret `READER_TOKEN` (@navikt-pakker) |
 | `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `bygg-image` |
+| `test-og-bygg-node.yml` | frontend-repoenes test-/verifiseringsgate (PR/branch; image-bygg forblir lokale); npm/pnpm detekteres fra lockfila | `node-version`, `kommando`; secrets `READER_TOKEN`, `SLACK_VARSEL_WEBHOOK_URL` |
+| `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
 | `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `codeql-gradle.yml` | Kotlin/JVM-repoene (caller eier schedule + concurrency) | `java-version` |
+| `codeql-node.yml` | TypeScript/JavaScript-repoene (build-mode none; caller eier schedule + concurrency) | ingen inputs |
 
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.
 
@@ -60,7 +63,33 @@ Testene ligger i byggegatene: gradle-varianten kjører `./gradlew build` (inkl. 
 
 `test-og-bygg-gradle.yml` eksponerer imaget som workflow-output `IMAGE`; deploy-calleren sender den videre til `deploy-nais.yml` via `needs.<jobb>.outputs.IMAGE` — det er komposisjonsmønsteret for bygg-og-deploy-pipelines.
 
-**Bevisst ikke delt** (repo-spesifikk variasjon overstiger gevinsten i dag): frontendenes lokale byggeworkflows (`.build-app.yml` m.fl. — ENV-matrise, env-filer, CDN-opplasting, `image_suffix`), microfrontendens deploy (Astro + CDN), pdfgenrs' `.test.yml` (brevtester i Rust) og iac (rene manifest-deployer — kan adoptere `deploy-nais.yml` ved behov).
+**Bevisst ikke delt** (repo-spesifikk variasjon overstiger gevinsten i dag): frontendenes lokale image-byggeworkflows (`.build-app.yml` m.fl. — ENV-matrise, env-filer, CDN-opplasting, `image_suffix`), microfrontendens deploy (Astro + CDN), pdfgenrs' `.test.yml` (brevtester) og iac (rene manifest-deployer — kan adoptere `deploy-nais.yml` ved behov).
+CDN-opplasting: hele Nav (inkl. nais-doc og dagpenger) bruker `nais/deploy/actions/cdn-upload/v2@master` — vi SHA-pinner den i stedet (`@2d18f050f07b6a007864c6a57070ed915d571beb`-familien; actionen bor i nais/deploy-repoet, versjonen ligger i stien `/v2`).
+
+## Maler for repo-config
+
+Standard `zizmor.yml` og `dependabot.yml`-varianter (gradle/node/kun-actions) ligger i [`../maler/`](../maler/README.md) — kanonisk kilde, kopier derfra ved utrulling (jf. #39: standardene eies i metarepoet).
+GitHub kan ikke lenke config-filer på tvers av repo (ingen include-mekanisme; tilleggsstønader har f.eks. usynkroniserte kopier), så lenke-semantikken håndheves i stedet av **drift-vakten** i `lint-workflows.yml`: repoets `zizmor.yml` må være lik malen, ellers feiler linten.
+Begrunnet avvik = `zizmor-mal-sjekk: false` i calleren med kommentar (metarepoet selv gjør det — dets config er et supersett med unntak for de delte workflowene).
+
+## Vakter mot upinnede actions i metarepoet
+
+Metarepo-main er tillitsgrensen for all CI (`@main`-callere), og CI-lint rekker bare å farge en dårlig push rød *etterpå*.
+Derfor to lag:
+
+1. **Pre-push-hook** (`.gitHooks/pre-push`): kjører samme actionlint + zizmor som CI (pinnede verktøy) før push slipper ut. Aktiveres per klone med `git config core.hooksPath .gitHooks`; bevisst omgåelse er `git push --no-verify`.
+2. **Blokkerende lint i CI** med `unpinned-uses`-policy `"*": hash-pin` — fanger alt hooken ikke så (verifisert: en upinnet action gir exit 14 med eksplisitt funn).
+
+Vurder repo-ruleset med påkrevd lint-sjekk på metarepo-main som tredje lag — metarepoet har ingen auto-merge, så det kolliderer ikke med automerge-designet.
+
+## Standard paths-ignore
+
+Standardlistene eies her (jf. #39); repoene kopierer og avviker kun med begrunnelse.
+
+- **JVM-app** (`Build and deploy` + `Test/build on feature branch push`): `**.md`, `.gitattributes`, `.gitHooks/**`, `.gitignore`, `.idea/**`, `.nais/alerts.yml`, `clean_lint_and_build.sh`, `CODEOWNERS`, `doc/**`, `docker-compose/**`, `docs/**`, `LICENSE`, `lint_and_build.sh`
+- **Frontend**: `**.md`, `.env-template`, `.gitattributes`, `.gitignore`, `.husky/**`, `CODEOWNERS`, `docker-compose/**`, `LICENSE`
+- Alerts-deploy bruker positive `paths` (`.nais/alerts.yml` + workflow-fila selv) — endringer der skal ikke bygge appen.
+- Åpne beslutninger (bl.a. `.github/**` i bygge-/publiserings-workflows) spores i [#39](https://github.com/navikt/tiltakspenger/issues/39).
 
 ## Forholdet til Nais-dokumentasjonen og Golden Path
 

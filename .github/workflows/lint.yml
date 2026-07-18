@@ -21,3 +21,5 @@ jobs:
     with:
       # Unntakene er nedfelt med begrunnelse i .github/zizmor.yml - nye funn skal derfor feile bygget.
       zizmor-blokkerende: true
+      # Metarepoets zizmor.yml er bevisst et supersett av malen (bot-conditions-unntak for de delte workflowene bor her).
+      zizmor-mal-sjekk: false

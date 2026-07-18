@@ -1,0 +1,37 @@
+name: Bygg image (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Bygger og pusher docker-image til nais-registryet for repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs).
+# Repo med eget bygg før imaget (gradle/node) bruker test-og-bygg-workflowene i stedet.
+# Kalleren må gi jobben `contents: read` + `id-token: write` (nais/docker-build-push autentiserer med OIDC).
+
+on:
+  workflow_call:
+    outputs:
+      IMAGE:
+        description: "Docker-imaget som ble bygget"
+        value: ${{ jobs.bygg.outputs.IMAGE }}
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      IMAGE: ${{ steps.docker-push.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Docker-bygget trenger bare filene, aldri tokenet.
+          persist-credentials: false
+      - name: Bygg og push docker-image
+        # Versjonsoversikt (tag -> SHA): https://github.com/nais/docker-build-push/tags
+        uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
+        id: docker-push
+        with:
+          team: tpts

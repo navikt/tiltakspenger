@@ -1,0 +1,11 @@
+# Standard Dependabot-konfig for repo uten kodeavhengigheter Dependabot skal følge (iac, pdfgen; metarepoet bruker denne).
+# Holder SHA-pinnede actions ferske.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7

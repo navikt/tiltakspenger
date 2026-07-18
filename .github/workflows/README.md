@@ -46,7 +46,7 @@ Se toppen av hver workflow-fil for hvilke rettigheter, secrets og inputs akkurat
 | `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version` |
 | `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secret `READER_TOKEN` (@navikt-pakker) |
 | `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `bygg-image` |
-| `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs` |
+| `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `codeql-gradle.yml` | Kotlin/JVM-repoene (caller eier schedule + concurrency) | `java-version` |
 
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.

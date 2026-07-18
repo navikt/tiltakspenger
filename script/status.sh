@@ -109,6 +109,10 @@ for repo in "${repo_list[@]}"; do
             $gh_to gh workflow list --repo "$repo" --json name -q '.[].name' 2>/dev/null \
             | while IFS= read -r wf; do
                 [[ -z "$wf" ]] && continue
+                # Delte reusable workflows (navnekonvensjon: «(delt)»-suffiks, jf. .github/workflows/README.md)
+                # kjører aldri selvstendig - kjøringene tilhører callernes workflows - og ville stått
+                # som evige «ingen kjøringer»-rader her.
+                [[ "$wf" == *"(delt)" ]] && continue
                 run="$($gh_to gh run list --repo "$repo" --branch main \
                     --workflow "$wf" --limit 1 \
                     --json status,conclusion,workflowName,createdAt,url 2>/dev/null)"

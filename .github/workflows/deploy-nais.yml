@@ -4,6 +4,7 @@ name: Deploy til nais (delt)
 # Deployer et ferdig bygget image til nais med nais/deploy.
 # Kalleren må gi jobben `contents: read` (checkout av nais-manifestene) + `id-token: write` (nais/deploy autentiserer med OIDC).
 # Repo-variasjon uttrykkes med inputs: arena setter `cluster-suffiks: fss` (on-prem), soknad overstyrer `nais-ressurs`.
+# Repoer med per-miljø manifest uten vars-filer (tiltak, datadeling, journalposthendelser) setter `nais-ressurs` per miljø og `nais-vars: ingen`.
 
 on:
   workflow_call:
@@ -27,7 +28,7 @@ on:
         type: string
         default: .nais/nais.yml
       nais-vars:
-        description: "Sti til vars-fila (tom gir .nais/vars/<NAIS_ENV>.yml)"
+        description: "Sti til vars-fila (tom gir .nais/vars/<NAIS_ENV>.yml, `ingen` deployer uten vars-fil)"
         required: false
         type: string
         default: ''
@@ -56,4 +57,5 @@ jobs:
           CLUSTER: ${{ inputs.NAIS_ENV }}-${{ inputs.cluster-suffiks }}
           RESOURCE: ${{ inputs.nais-ressurs }}
           VAR: image=${{ inputs.IMAGE }}
-          VARS: ${{ inputs.nais-vars != '' && inputs.nais-vars || format('.nais/vars/{0}.yml', inputs.NAIS_ENV) }}
+          # Tom VARS gjør at nais/deploy hopper over vars-fil-innlasting (deployclient sjekker len > 0).
+          VARS: ${{ inputs.nais-vars != 'ingen' && (inputs.nais-vars != '' && inputs.nais-vars || format('.nais/vars/{0}.yml', inputs.NAIS_ENV)) || '' }}

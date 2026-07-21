@@ -9,15 +9,20 @@ on:
   workflow_call:
     inputs:
       zizmor-blokkerende:
-        description: "Om zizmor-funn skal feile jobben - skru på når unntakene er nedfelt i zizmor.yml med begrunnelse"
+        description: "Om zizmor-funn skal feile jobben - hele flåten kjører blokkerende, så false er unntaket (repo som ennå ikke har nedfelt unntakene sine i zizmor.yml)"
         required: false
         type: boolean
-        default: false
+        default: true
       zizmor-mal-sjekk:
         description: "Om repoets .github/zizmor.yml skal kreves lik malen i metarepoet (skru av kun ved begrunnet avvik)"
         required: false
         type: boolean
         default: true
+      dependabot-mal:
+        description: "Hvilken dependabot-mal repoets .github/dependabot.yml skal kreves lik: auto (detekter fra repo-innhold), gradle, node, actions eller ingen (skru av kun ved begrunnet avvik)"
+        required: false
+        type: string
+        default: 'auto'
 
 # Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
 permissions: {}
@@ -59,6 +64,39 @@ jobs:
             exit 1
           fi
 
+  # Samme lenke-semantikk for dependabot.yml: repoets kopi må være lik riktig mal i metarepoet.
+  # Mal velges automatisk fra repo-innhold (gradle-fil -> gradle, package.json -> node, ellers actions), eller eksplisitt via `dependabot-mal`.
+  # Repo med begrunnet avvik (f.eks. registries-blokk) setter `dependabot-mal: ingen` i calleren, med kommentar.
+  dependabot-drift:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.dependabot-mal != 'ingen' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Sammenlign dependabot.yml med malen i metarepoet
+        run: |
+          mal="$DEPENDABOT_MAL"
+          if [ "$mal" = auto ]; then
+            if [ -f build.gradle.kts ] || [ -f build.gradle ]; then
+              mal=gradle
+            elif [ -f package.json ]; then
+              mal=node
+            else
+              mal=actions
+            fi
+          fi
+          curl -sSf -o /tmp/mal-dependabot.yml "https://raw.githubusercontent.com/navikt/tiltakspenger/main/.github/maler/dependabot-$mal.yml"
+          if ! diff -u /tmp/mal-dependabot.yml .github/dependabot.yml; then
+            echo "::error::.github/dependabot.yml avviker fra malen i metarepoet (.github/maler/dependabot-$mal.yml). Oppdater kopien, eller sett dependabot-mal: ingen i calleren med begrunnelse."
+            exit 1
+          fi
+        env:
+          DEPENDABOT_MAL: ${{ inputs.dependabot-mal }}
+
   zizmor:
     runs-on: ubuntu-latest
     permissions:
@@ -68,7 +106,7 @@ jobs:
         with:
           persist-credentials: false
       # Sikkerhetsrevisjon av workflowene: template injection, permissions, pinning, bot-gating, cache poisoning m.m.
-      # Bevisst ikke-blokkerende inntil unntak er nedfelt i zizmor.yml - deretter settes `zizmor-blokkerende: true` i callerne.
+      # Blokkerende som default (policyen fleet-wide); repo som ennå ikke har nedfelt unntakene sine setter `zizmor-blokkerende: false` midlertidig.
       # `annotations` i stedet for `advanced-security` gir funn som PR-annotasjoner uten behov for `security-events: write`.
       - name: zizmor
         uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0

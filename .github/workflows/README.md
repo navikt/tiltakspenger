@@ -31,18 +31,17 @@ jobs:
     uses: navikt/tiltakspenger/.github/workflows/dependabot-auto-merge.yml@main
     secrets:
       SLACK_VARSEL_WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
-    with:
-      java-version: '25'
 ```
 
 De faktiske callerne i repoene er den kanoniske malen — kopier derfra, ikke herfra.
 Se toppen av hver workflow-fil for hvilke rettigheter, secrets og inputs akkurat den krever.
+Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'`, `node-version: '24'`, blokkerende zizmor osv.) — callerne sender kun inputs ved reelt repo-avvik, slik at en standardendring (f.eks. Java-bump) er én metarepo-endring.
 
 ## Porteføljen
 
 | Delt workflow | For | Nøkkel-inputs/secrets |
 | --- | --- | --- |
-| `lint-workflows.yml` | alle repoer (språkagnostisk) | `zizmor-blokkerende` |
+| `lint-workflows.yml` | alle repoer (språkagnostisk) | `zizmor-blokkerende`, `zizmor-mal-sjekk`, `dependabot-mal` |
 | `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version` |
 | `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secret `READER_TOKEN` (@navikt-pakker) |
 | `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `bygg-image` |
@@ -55,7 +54,10 @@ Se toppen av hver workflow-fil for hvilke rettigheter, secrets og inputs akkurat
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.
 
 `lint-workflows.yml`: metarepoet kaller den selv fra `lint.yml` med lokal sti, slik at PR-er som endrer delte workflows testes med sin egen versjon.
-zizmor kjører ikke-blokkerende i et repo inntil unntak er nedfelt i repoets `zizmor.yml` med begrunnelse; da settes `zizmor-blokkerende: true` i calleren.
+zizmor er blokkerende som default (flåtestandarden); et repo som ennå ikke har nedfelt unntakene sine i `zizmor.yml` setter `zizmor-blokkerende: false` midlertidig i calleren.
+
+**Fork-PR-er** testes av gatene: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger på både `push` og `pull_request`, og guarden i delt workflow slipper kun gjennom fork-PR-events (interne brancher dekkes av push-triggeren — én kjøring per endring, ikke to).
+Fork-kjøringer får read-only token og ingen secrets: Slack-varsling skjer uansett kun på main-ref, og node-gaten faller tilbake på `github.token` for lesing av public @navikt-pakker.
 
 `dependabot-auto-merge.yml` og `-node.yml` er tekstlig parallelle - kun byggejobben (og dens inputs/secrets, bl.a. `READER_TOKEN`) skiller dem; endres den ene, oppdater den andre tilsvarende.
 Node-varianten dekker både npm og pnpm ved å detektere pakkehåndterer fra lockfila (`pnpm-lock.yaml` → pnpm) — npm→pnpm-migreringen (jf. nais-doc) krever dermed ingen caller-endring, bare bytte av lockfil i repoet.
@@ -69,8 +71,8 @@ CDN-opplasting: hele Nav (inkl. nais-doc og dagpenger) bruker `nais/deploy/actio
 ## Maler for repo-config
 
 Standard `zizmor.yml` og `dependabot.yml`-varianter (gradle/node/kun-actions) ligger i [`../maler/`](../maler/README.md) — kanonisk kilde, kopier derfra ved utrulling (jf. #39: standardene eies i metarepoet).
-GitHub kan ikke lenke config-filer på tvers av repo (ingen include-mekanisme; tilleggsstønader har f.eks. usynkroniserte kopier), så lenke-semantikken håndheves i stedet av **drift-vakten** i `lint-workflows.yml`: repoets `zizmor.yml` må være lik malen, ellers feiler linten.
-Begrunnet avvik = `zizmor-mal-sjekk: false` i calleren med kommentar (metarepoet selv gjør det — dets config er et supersett med unntak for de delte workflowene).
+GitHub kan ikke lenke config-filer på tvers av repo (ingen include-mekanisme; tilleggsstønader har f.eks. usynkroniserte kopier), så lenke-semantikken håndheves i stedet av **drift-vaktene** i `lint-workflows.yml`: repoets `zizmor.yml` må være lik malen, og repoets `dependabot.yml` må være lik riktig mal-variant (auto-detektert fra repo-innhold, eller eksplisitt via `dependabot-mal`), ellers feiler linten.
+Begrunnet avvik = `zizmor-mal-sjekk: false` / `dependabot-mal: ingen` i calleren med kommentar (metarepoet gjør begge deler — zizmor-configen er et supersett med unntak for de delte workflowene, og dependabot-fila er bevisst kun github-actions; soknad-api setter `dependabot-mal: ingen` pga. registries-blokka for libs-bumps).
 
 ## Vakter mot upinnede actions i metarepoet
 
@@ -115,7 +117,10 @@ Der vi avviker, er det bevisst:
 - Callere pinner til `@main` (navikt-eid repo); tredjeparts-actions inne i de delte workflowene SHA- eller digest-pinnes med versjonstag/-kommentar (`# vX.Y.Z`, `# v0` for nais-actions, `docker://…:tag@sha256:…` for images).
   `@main` betyr at metarepoets main er en tillitsgrense: write-tilgang hit gir innflytelse på callernes CI, så endringer i delte workflows skal reviewes deretter.
 - Send secrets eksplisitt fra calleren, aldri `secrets: inherit` — inherit eksponerer alle repoets og org-delte secrets for den delte workflowen.
-- Repo-variasjon håndteres med `inputs` (f.eks. `java-version`), ikke ved å forgrene workflowen.
+- Repo-variasjon håndteres med `inputs` (f.eks. `gradle-kommando`), ikke ved å forgrene workflowen.
+  Defaultene i delt workflow er flåtestandarden — callerne sender kun inputs ved reelt avvik (ingen `java-version: '25'`-duplisering i callerne).
+- Gate-callerne trigger på både `push` (interne brancher) og `pull_request` (fork-PR-er); guarden som hindrer dobbeltkjøring bor i delt workflow, siden `github`-konteksten der reflekterer callerens event.
+  Det samme gjelder Dependabot-skippen i gradle-gaten (auto-merge tester de branchene) — triggere må bo i calleren, all guard-logikk bor sentralt.
 - `permissions: {}` på toppnivå i callere; jobbrettigheter settes i calleren, og den delte workflowen kan kun nedgradere dem (aldri utvide) — den delte deklarerer derfor sitt eget eksplisitte behov som cap.
 - Metarepoets `dependabot.yml` holder `uses:`-SHA-ene ferske; zizmor-versjonen (`version:`-input) og actionlint-taggen i `docker://`-referansen er egne, manuelle vedlikeholdspunkter.
 - Workflows her sikkerhetsreviewes mot GitHubs hardening-guide, zizmor-sjekkene og sikkerhet.nav.no før merge — reviewlogg og funn ligger i #31.

@@ -11,5 +11,6 @@ Kopier fila til repoets `.github/`, behold begrunnelseskommentarene, og gjør ku
 | `dependabot-actions.yml` | `.github/dependabot.yml` | repo uten kodeavhengigheter (iac, pdfgen) |
 
 Endres en mal her, oppdater repoene som bruker den (samme regel som for caller-workflows — se [workflows-README](../workflows/README.md)).
-For `zizmor.yml` håndheves dette maskinelt: drift-vakten i den delte lint-workflowen feiler hvis et repos kopi avviker fra malen (lenke-semantikk — GitHub kan ikke lenke config-filer på tvers av repo).
+For `zizmor.yml` og `dependabot.yml` håndheves dette maskinelt: drift-vaktene i den delte lint-workflowen feiler hvis et repos kopi avviker fra malen (lenke-semantikk — GitHub kan ikke lenke config-filer på tvers av repo).
+Dependabot-malen velges automatisk fra repo-innhold (gradle-fil → gradle, `package.json` → node, ellers actions); begrunnet avvik = `dependabot-mal: ingen` i lint-calleren med kommentar.
 Standard `paths-ignore`-lister per repo-type står i workflows-README-ens konvensjonsseksjon.

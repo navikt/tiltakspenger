@@ -38,6 +38,10 @@ permissions: {}
 jobs:
   bygg:
     runs-on: ubuntu-latest
+    # Fork-PR-er: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger også på pull_request.
+    # Guarden her slipper kun gjennom fork-PR-events - interne brancher dekkes av push-triggeren (ellers dobbelkjøres hver PR).
+    # Dependabot-brancher testes av auto-merge-workflowen; push-events derfra skippes (Dependabot pusher aldri main direkte).
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.actor != 'dependabot[bot]')
     # id-token: write er kun for OIDC-føderasjonen i docker-build-push; GITHUB_TOKEN har bare lesetilgang.
     permissions:
       contents: read

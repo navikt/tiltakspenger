@@ -19,7 +19,7 @@ jobs:
       contents: read
     uses: ./.github/workflows/lint-workflows.yml
     with:
-      # Unntakene er nedfelt med begrunnelse i .github/zizmor.yml - nye funn skal derfor feile bygget.
-      zizmor-blokkerende: true
       # Metarepoets zizmor.yml er bevisst et supersett av malen (bot-conditions-unntak for de delte workflowene bor her).
       zizmor-mal-sjekk: false
+      # Malene bor her, og metarepoets dependabot.yml er bevisst kun github-actions (auto ville krevd gradle-malen pga. rot-gradlefila).
+      dependabot-mal: ingen

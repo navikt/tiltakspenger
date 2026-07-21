@@ -33,6 +33,9 @@ permissions: {}
 jobs:
   bygg:
     runs-on: ubuntu-latest
+    # Fork-PR-er: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger også på pull_request.
+    # Guarden her slipper kun gjennom fork-PR-events - interne brancher (også Dependabots) dekkes av push-triggeren.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork
     permissions:
       contents: read
     steps:
@@ -60,6 +63,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
           registry-url: https://npm.pkg.github.com
       # READER_TOKEN trengs for @navikt-pakker fra GitHub Packages; setup-node skriver .npmrc, som pnpm leser samme sted.
+      # Fork-PR-kjøringer får ingen secrets - da faller vi tilbake på github.token (read-only), som kan lese public pakker.
       - name: Install dependencies
         run: |
           if [ "$PAKKEHANDTERER" = pnpm ]; then
@@ -68,7 +72,7 @@ jobs:
             npm ci
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN || github.token }}
           PAKKEHANDTERER: ${{ steps.pm.outputs.manager }}
       # Kommandoen går via env og eval, ikke ${{ }} i run - samme injection-hygiene som for all annen kontekst (input-en er repo-styrt, men mønsteret skal være konsekvent).
       - name: Kjør sjekkene
@@ -76,7 +80,7 @@ jobs:
         env:
           KOMMANDO: ${{ inputs.kommando }}
           PAKKEHANDTERER: ${{ steps.pm.outputs.manager }}
-          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN || github.token }}
       # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
       # curl -sSf gjør at et avvist webhook-kall feiler steget synlig i stedet for å forsvinne stille.
       - name: Varsle Slack ved feil på main

@@ -55,11 +55,12 @@ jobs:
       # Major-varselet bor i denne jobben fordi den ikke kjører tredjepartskode - webhook-secreten eksponeres aldri for en jobb som gjør det.
       # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
       # curl -sSf gjør at et avvist webhook-kall (f.eks. rotert URL) feiler steget synlig i stedet for å forsvinne stille.
+      # Webhooken er en app-basert Slack-webhook: den krever JSON-body med Content-Type: application/json (legacy payload=-form ga HTTP 422).
       - name: Notify Slack on new major version
         if: steps.metadata.outputs.update-type == 'version-update:semver-major' && steps.metadata.outputs.package-ecosystem != 'github_actions' && github.event.action != 'synchronize'
         run: |
-          payload=$(jq -n --arg pretext "[$REPO_NAME] Ny major dependency versjon!" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "info", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
-          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+          payload=$(jq -n --arg text "[$REPO_NAME] Ny major dependency versjon! $DEPENDENCY_NAME $VERSION_CHANGE - <https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" '{text: $text}')
+          curl -sSf -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK_URL"
         env:
           WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
           REPO: ${{ github.repository }}
@@ -132,8 +133,8 @@ jobs:
       # Metadata-outputs kan være tomme hvis metadata-jobben selv feilet - da peker commit-lenken uansett til rett PR.
       - name: Notify Slack in case of merge failure
         run: |
-          payload=$(jq -n --arg pretext "[$REPO_NAME] Dependabot auto-merge feilet :cry:" --arg commit "<https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" --arg dep "$DEPENDENCY_NAME $VERSION_CHANGE" '{attachments: [{pretext: $pretext, color: "danger", fields: [{title: "Commit", value: $commit, short: false}, {title: "Dependency", value: $dep, short: false}]}]}')
-          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+          payload=$(jq -n --arg text "[$REPO_NAME] Dependabot auto-merge feilet :cry: $DEPENDENCY_NAME $VERSION_CHANGE - <https://github.com/$REPO/commit/$PR_SHA|$PR_SHA>" '{text: $text}')
+          curl -sSf -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK_URL"
         env:
           WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
           REPO: ${{ github.repository }}

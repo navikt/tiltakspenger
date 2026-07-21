@@ -83,11 +83,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.READER_TOKEN || github.token }}
       # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
       # curl -sSf gjør at et avvist webhook-kall feiler steget synlig i stedet for å forsvinne stille.
+      # Webhooken er en app-basert Slack-webhook: den krever JSON-body med Content-Type: application/json (legacy payload=-form ga HTTP 422).
       - name: Varsle Slack ved feil på main
         if: failure() && github.ref == 'refs/heads/main'
         run: |
-          payload=$(jq -n --arg pretext "[$REPO_NAME] Build failed :cry:" --arg author "$AUTHOR" --arg commit "<https://github.com/$REPO/commit/$COMMIT_SHA|$COMMIT_SHA>" '{attachments: [{pretext: $pretext, color: "danger", fields: [{title: "Author", value: $author, short: false}, {title: "Commit", value: $commit, short: false}]}]}')
-          curl -sSf -X POST --data-urlencode "payload=$payload" "$WEBHOOK_URL"
+          payload=$(jq -n --arg text "[$REPO_NAME] Build failed :cry: $AUTHOR - <https://github.com/$REPO/commit/$COMMIT_SHA|$COMMIT_SHA>" '{text: $text}')
+          curl -sSf -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK_URL"
         env:
           WEBHOOK_URL: ${{ secrets.SLACK_VARSEL_WEBHOOK_URL }}
           REPO: ${{ github.repository }}

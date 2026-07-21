@@ -1,6 +1,6 @@
 ---
 name: tiltakspenger-testdata
-description: Lag testdata lokalt for tiltakspenger-saksbehandling — en sak med innvilget vedtak, meldekortbehandling og/eller klagebehandling, via ferdige scripts. Kan også forhåndsvise alle PDF-brevene (vedtaksbrev, meldekortvedtaksbrev, klagebrev) og lagre dem til fil. Bruk når en utvikler vil ha en testsak, teste en meldekortbehandling eller klagebehandling lokalt, trenger et iverksatt innvilget vedtak, vil seede en digital- eller papirsøknad mot LokalMain, eller vil teste/sammenligne PDF-er fra pdfgen og pdfgenrs.
+description: Lag testdata lokalt for tiltakspenger-saksbehandling via ferdige scripts — testsak med innvilget vedtak, meldekortbehandling, klagebehandling, eller digital-/papirsøknad seedet mot LokalMain. Kan også forhåndsvise og lagre PDF-brevene fra pdfgen og pdfgenrs.
 license: MIT
 metadata:
   domain: backend

@@ -1,6 +1,6 @@
 ---
 name: backend-dependency-update
-description: Oppdater backend-avhengigheter i tiltakspenger-repoene ved å finne Dependabot-PR-er, gruppere dem, lese changelog/migreringsguider, verifisere bygg + test, og gjøre en vurdering per gruppe. Bruk for å «ta Dependabot-PR-ene», bumpe dependencies, rydde i avhengighetsoppdateringer eller gå gjennom utdaterte biblioteker i et Kotlin/JVM-repo.
+description: Ta Dependabot-PR-ene i tiltakspenger-repoene — finn og grupper dem, les changelog/migreringsguider, verifiser bygg og test, og vurder per gruppe. Bruk for å bumpe dependencies eller rydde i utdaterte biblioteker i et Kotlin/JVM-repo.
 license: MIT
 metadata:
   domain: backend

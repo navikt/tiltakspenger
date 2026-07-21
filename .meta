@@ -1,19 +1,19 @@
 {
   "projects": {
-    "tiltakspenger-iac": "git@github.com:navikt/tiltakspenger-iac",
-    "tiltakspenger-libs": "git@github.com:navikt/tiltakspenger-libs",
-    "tiltakspenger-arena": "git@github.com:navikt/tiltakspenger-arena",
-    "tiltakspenger-saksbehandling-api": "git@github.com:navikt/tiltakspenger-saksbehandling-api",
-    "tiltakspenger-tiltak": "git@github.com:navikt/tiltakspenger-tiltak",
-    "tiltakspenger-saksbehandling": "git@github.com:navikt/tiltakspenger-saksbehandling",
-    "tiltakspenger-soknad-api": "git@github.com:navikt/tiltakspenger-soknad-api",
-    "tiltakspenger-pdfgen": "git@github.com:navikt/tiltakspenger-pdfgen",
-    "tiltakspenger-soknad": "git@github.com:navikt/tiltakspenger-soknad",
-    "tiltakspenger-datadeling": "git@github.com:navikt/tiltakspenger-datadeling",
-    "tiltakspenger-meldekort": "git@github.com:navikt/tiltakspenger-meldekort.git",
-    "tiltakspenger-meldekort-api": "git@github.com:navikt/tiltakspenger-meldekort-api.git",
-    "tiltakspenger-meldekort-microfrontend": "git@github.com:navikt/tiltakspenger-meldekort-microfrontend",
-    "tiltakspenger-journalposthendelser": "git@github.com:navikt/tiltakspenger-journalposthendelser",
-    "tiltakspenger-pdfgenrs": "git@github.com:navikt/tiltakspenger-pdfgenrs"
+    "tiltakspenger-iac": "https://github.com/navikt/tiltakspenger-iac",
+    "tiltakspenger-libs": "https://github.com/navikt/tiltakspenger-libs",
+    "tiltakspenger-arena": "https://github.com/navikt/tiltakspenger-arena",
+    "tiltakspenger-saksbehandling-api": "https://github.com/navikt/tiltakspenger-saksbehandling-api",
+    "tiltakspenger-tiltak": "https://github.com/navikt/tiltakspenger-tiltak",
+    "tiltakspenger-saksbehandling": "https://github.com/navikt/tiltakspenger-saksbehandling",
+    "tiltakspenger-soknad-api": "https://github.com/navikt/tiltakspenger-soknad-api",
+    "tiltakspenger-pdfgen": "https://github.com/navikt/tiltakspenger-pdfgen",
+    "tiltakspenger-soknad": "https://github.com/navikt/tiltakspenger-soknad",
+    "tiltakspenger-datadeling": "https://github.com/navikt/tiltakspenger-datadeling",
+    "tiltakspenger-meldekort": "https://github.com/navikt/tiltakspenger-meldekort",
+    "tiltakspenger-meldekort-api": "https://github.com/navikt/tiltakspenger-meldekort-api",
+    "tiltakspenger-meldekort-microfrontend": "https://github.com/navikt/tiltakspenger-meldekort-microfrontend",
+    "tiltakspenger-journalposthendelser": "https://github.com/navikt/tiltakspenger-journalposthendelser",
+    "tiltakspenger-pdfgenrs": "https://github.com/navikt/tiltakspenger-pdfgenrs"
   }
 }

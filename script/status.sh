@@ -45,6 +45,41 @@ fi
 
 header() { printf '\n%s━━━ %s ━━━%s\n' "$BOLD$BLUE" "$1" "$RESET"; }
 
+# printf sin %-Ns teller BYTES, ikke tegn — multibyte-tegn (✓, ✗, —) gjør at
+# kolonnene forskyves. pad fyller til ønsket antall tegn i stedet.
+pad() {
+    local s="$1" w="$2"
+    local fill=$(( w - ${#s} ))
+    (( fill < 0 )) && fill=0
+    printf '%s%*s' "$s" "$fill" ''
+}
+
+# --- tid: GitHub gir ISO-8601 i UTC; vis lokal tid + alder -----------------
+# BSD- (macOS) og GNU-date har ulik syntaks for parsing — sjekk én gang.
+if date -j >/dev/null 2>&1; then
+    iso_to_epoch()   { date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$1" +%s 2>/dev/null; }
+    epoch_to_local() { date -r "$1" "+%Y-%m-%d %H:%M"; }
+else
+    iso_to_epoch()   { date -d "$1" +%s 2>/dev/null; }
+    epoch_to_local() { date -d "@$1" "+%Y-%m-%d %H:%M"; }
+fi
+
+NOW_EPOCH="$(date +%s)"
+
+fmt_when() {  # "2026-07-22T13:36:01Z" → "2026-07-22 15:36 (2 t)"
+    local iso="$1" epoch diff age
+    [[ -z "$iso" ]] && return 0
+    epoch="$(iso_to_epoch "$iso")"
+    if [[ -z "$epoch" ]]; then printf '%s' "$iso"; return 0; fi
+    diff=$(( NOW_EPOCH - epoch ))
+    if   (( diff < 90 ));     then age="nå"
+    elif (( diff < 5400 ));   then age="$(( (diff + 30) / 60 )) min"
+    elif (( diff < 129600 )); then age="$(( (diff + 1800) / 3600 )) t"
+    else                           age="$(( (diff + 43200) / 86400 )) d"
+    fi
+    printf '%s (%s)' "$(epoch_to_local "$epoch")" "$age"
+}
+
 # --- verktøysjekk ----------------------------------------------------------
 for tool in gh kubectl jq; do
     command -v "$tool" >/dev/null 2>&1 || {
@@ -74,16 +109,11 @@ fi
 # 1) Byggstatus på main
 # ==========================================================================
 header "Siste bygg på main (${#repo_list[@]} repoer)"
-printf '%s%-44s %-12s %-18s %-22s %s%s\n' "$DIM" "REPO" "STATUS" "WORKFLOW" "NÅR" "LENKE" "$RESET"
+printf '%s%-44s %-14s %-22s %-26s %s%s\n' "$DIM" "REPO" "STATUS" "WORKFLOW" "NÅR" "LENKE" "$RESET"
 
-# Hent alle repoer parallelt — gh-kallene er uavhengige, så vi slipper å vente
-# sekvensielt på de tregeste. Resultatet skrives til en temp-fil per repo og
-# rendres etterpå i opprinnelig (sortert) rekkefølge.
-#
-# Vi filtrerer på selve deploy-workflowen (alle repoer kaller den "Build and
-# deploy") slik at vi får SISTE UTRULLING — ikke siste CodeQL/Dependabot-kjøring.
-# Repoer uten en slik workflow (f.eks. tiltakspenger-iac) faller tilbake til
-# "siste kjøring uansett workflow".
+# Vi vil vise SISTE UTRULLING (alle repoer kaller deploy-workflowen "Build and
+# deploy") — ikke siste CodeQL/Dependabot-kjøring. Repoer uten en slik workflow
+# (metarepoet, tiltakspenger-iac) faller tilbake til én rad per workflow.
 DEPLOY_WORKFLOW="${DEPLOY_WORKFLOW:-Build and deploy}"
 GH_TIMEOUT="${GH_TIMEOUT:-20}"
 tmpdir="$(mktemp -d)"
@@ -93,37 +123,71 @@ gh_to=""
 command -v timeout  >/dev/null 2>&1 && gh_to="timeout $GH_TIMEOUT"
 [[ -z "$gh_to" ]] && command -v gtimeout >/dev/null 2>&1 && gh_to="gtimeout $GH_TIMEOUT"
 
+# Henter status for ett repo; skriver en JSON-array til stdout (én rad per
+# workflow som skal vises).
+#
+# NB: vi henter de siste kjøringene UFILTRERT og velger ut deploy-workflowen
+# selv. GitHubs filtrerte endepunkter (--workflow/--branch) går via en
+# søkeindeks som kan henge etter og servere en gammel kjøring som «siste»,
+# mens den ufiltrerte lista leses ferskt. (Observert i praksis: en to uker
+# gammel kjøring rapportert som siste, minutter etter en deploy.)
+fetch_repo() {
+    local repo="$1" runs deploy row
+    runs="$($gh_to gh run list --repo "$repo" --limit 100 \
+        --json status,conclusion,workflowName,createdAt,url,headBranch 2>/dev/null)"
+    [[ -z "$runs" ]] && runs="[]"
+
+    deploy="$(jq -c --arg wf "$DEPLOY_WORKFLOW" \
+        '[.[] | select(.headBranch == "main" and .workflowName == $wf)][:1]' \
+        <<<"$runs" 2>/dev/null)"
+    if [[ -n "$deploy" && "$deploy" != "[]" ]]; then
+        printf '%s\n' "$deploy"
+        return
+    fi
+
+    # Ingen deploy blant de 100 ferskeste kjøringene — spør målrettet i
+    # tilfelle siste deploy bare er eldre enn vinduet. (Dette kallet kan gi
+    # foreldet svar pga. søkeindeksen, men da er deployen uansett gammel.)
+    deploy="$($gh_to gh run list --repo "$repo" --branch main \
+        --workflow "$DEPLOY_WORKFLOW" --limit 1 \
+        --json status,conclusion,workflowName,createdAt,url 2>/dev/null)"
+    if [[ -n "$deploy" && "$deploy" != "[]" ]]; then
+        printf '%s\n' "$deploy"
+        return
+    fi
+
+    # Repoer uten én samlende deploy-workflow har flere selvstendige workflows.
+    # Enumerer de definerte og vis siste kjøring av HVER (også aldri kjørte).
+    #  - dynamic/-workflows (Dependabot Updates, Copilot, …) er GitHub-interne
+    #    og ikke bygg — hopp over.
+    #  - Delte reusable workflows («(delt)»-suffiks, jf. .github/workflows/
+    #    README.md) kjører aldri selvstendig og ville stått som evige
+    #    «ingen kjøringer»-rader.
+    $gh_to gh workflow list --repo "$repo" --json name,path \
+        -q '.[] | select(.path | startswith("dynamic/") | not) | .name' 2>/dev/null \
+    | while IFS= read -r wf; do
+        [[ -z "$wf" || "$wf" == *"(delt)" ]] && continue
+        row="$(jq -c --arg wf "$wf" \
+            'first(.[] | select(.headBranch == "main" and .workflowName == $wf)) // empty' \
+            <<<"$runs" 2>/dev/null)"
+        if [[ -z "$row" ]]; then
+            row="$($gh_to gh run list --repo "$repo" --branch main \
+                --workflow "$wf" --limit 1 \
+                --json status,conclusion,workflowName,createdAt,url 2>/dev/null \
+                | jq -c '.[0] // empty')"
+        fi
+        [[ -z "$row" ]] && row="$(jq -nc --arg w "$wf" \
+            '{status:"", conclusion:"", workflowName:$w, createdAt:"", url:""}')"
+        printf '%s\n' "$row"
+    done | jq -s 'sort_by(.workflowName)'
+}
+
+# Hent alle repoer parallelt — gh-kallene er uavhengige, så vi slipper å vente
+# sekvensielt på de tregeste. Resultatet skrives til en temp-fil per repo og
+# rendres etterpå i opprinnelig (sortert) rekkefølge.
 i=0
 for repo in "${repo_list[@]}"; do
-    (
-        # Først: siste kjøring av deploy-workflowen. Hvis repoet ikke har den,
-        # gir kallet et tomt resultat, og vi faller tilbake til siste kjøring.
-        $gh_to gh run list --repo "$repo" --branch main \
-            --workflow "$DEPLOY_WORKFLOW" --limit 1 \
-            --json status,conclusion,workflowName,createdAt,url \
-            > "$tmpdir/$i.json" 2>/dev/null
-        if [[ ! -s "$tmpdir/$i.json" || "$(cat "$tmpdir/$i.json")" == "[]" ]]; then
-            # Repoer uten én samlende deploy-workflow (f.eks. tiltakspenger-iac)
-            # har flere selvstendige workflows. Enumerer de definerte workflowene
-            # og vis siste kjøring av HVER av dem (også de som aldri har kjørt).
-            $gh_to gh workflow list --repo "$repo" --json name -q '.[].name' 2>/dev/null \
-            | while IFS= read -r wf; do
-                [[ -z "$wf" ]] && continue
-                # Delte reusable workflows (navnekonvensjon: «(delt)»-suffiks, jf. .github/workflows/README.md)
-                # kjører aldri selvstendig - kjøringene tilhører callernes workflows - og ville stått
-                # som evige «ingen kjøringer»-rader her.
-                [[ "$wf" == *"(delt)" ]] && continue
-                run="$($gh_to gh run list --repo "$repo" --branch main \
-                    --workflow "$wf" --limit 1 \
-                    --json status,conclusion,workflowName,createdAt,url 2>/dev/null)"
-                if [[ -z "$run" || "$run" == "[]" ]]; then
-                    jq -n --arg w "$wf" '{status:"", conclusion:"", workflowName:$w, createdAt:"", url:""}'
-                else
-                    echo "$run" | jq '.[0]'
-                fi
-            done | jq -s 'sort_by(.workflowName)' > "$tmpdir/$i.json" 2>/dev/null
-        fi
-    ) &
+    fetch_repo "$repo" > "$tmpdir/$i.json" &
     i=$((i + 1))
 done
 wait
@@ -134,7 +198,7 @@ for repo in "${repo_list[@]}"; do
     i=$((i + 1))
 
     if [[ -z "$run_json" || "$run_json" == "[]" ]]; then
-        printf '%-44s %s%-10s%s %s\n' "$repo" "$DIM" "—" "$RESET" "${DIM}ingen kjøringer / utilgjengelig$RESET"
+        printf '%-44s %s%s %s%s\n' "$repo" "$DIM" "$(pad "—" 14)" "ingen kjøringer / utilgjengelig" "$RESET"
         continue
     fi
 
@@ -166,14 +230,14 @@ for repo in "${repo_list[@]}"; do
 
         # Workflow definert, men aldri kjørt på main
         if [[ -z "$status" && -z "$created" ]]; then
-            printf '%-44s %s%-12s%s %-18s %singen kjøringer%s\n' \
-                "$label" "$DIM" "—" "$RESET" "$workflow" "$DIM" "$RESET"
+            printf '%-44s %s%s%s %-22s %singen kjøringer%s\n' \
+                "$label" "$DIM" "$(pad "—" 14)" "$RESET" "$workflow" "$DIM" "$RESET"
             continue
         fi
 
-        printf '%-44s %s%-12s%s %-18s %s%s  %s%s\n' \
-            "$label" "$color" "$icon $state" "$RESET" \
-            "$workflow" "$DIM" "$created" "$url" "$RESET"
+        printf '%-44s %s%s%s %-22s %s%s %s%s\n' \
+            "$label" "$color" "$(pad "$icon $state" 14)" "$RESET" \
+            "$workflow" "$DIM" "$(pad "$(fmt_when "$created")" 26)" "$url" "$RESET"
     done
 done
 

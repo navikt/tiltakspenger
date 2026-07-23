@@ -45,6 +45,7 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 | `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version` |
 | `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secret `READER_TOKEN` (@navikt-pakker) |
 | `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `bygg-image` |
+| `dependency-submission-gradle.yml` | JVM-app-repoene (Dependabot-synlighet for transitive avhengigheter; libs sender inn fra publiseringsbygget sitt) | `java-version` |
 | `test-og-bygg-node.yml` | frontend-repoenes test-/verifiseringsgate (PR/branch; image-bygg forblir lokale); npm/pnpm detekteres fra lockfila | `node-version`, `kommando`; secrets `READER_TOKEN`, `SLACK_VARSEL_WEBHOOK_URL` |
 | `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
 | `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |

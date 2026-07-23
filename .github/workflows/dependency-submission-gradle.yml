@@ -1,0 +1,43 @@
+name: Dependency submission gradle (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Sender den resolvede avhengighetsgrafen til GitHubs dependency submission-API, slik at Dependabot også ser transitive avhengigheter.
+# Uten innsending er Gradle-repoer i praksis blinde for transitive sårbarheter - Dependabot parser bare deklarerte avhengigheter, og lager uansett aldri security-fix-PR-er for Gradle (kun alerts).
+# Kalleren må gi jobben `contents: write` og bør trigge på push til main - grafen og alertene følger default-branchen.
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: Java-versjon for resolvering av avhengighetsgrafen
+        required: false
+        type: string
+        default: '25'
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-latest
+    # contents: write er for dependency submission-API-et; jobben pusher aldri kode.
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Ikke la tokenet ligge igjen i .git/config - graf-genereringen kjører byggets kode.
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+      - name: Generer og send inn avhengighetsgraf
+        uses: gradle/actions/dependency-submission@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        env:
+          # Byggeverktøy (f.eks. Spotless/ktlint) resolver via detached configurations; de hører ikke hjemme i grafen og ga falske alerts (logback 1.3.x fra ktlint-cli).
+          DEPENDENCY_GRAPH_EXCLUDE_CONFIGURATIONS: 'detachedConfiguration.*'
+          # Kun modulenes runtimeClasspath scopes som runtime; test- og verktøyavhengigheter får scope development, som kan filtreres i Dependabot-alerts.
+          DEPENDENCY_GRAPH_RUNTIME_INCLUDE_CONFIGURATIONS: '^runtimeClasspath$'

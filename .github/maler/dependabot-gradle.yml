@@ -8,6 +8,10 @@ updates:
     cooldown:
       default-days: 7
     ignore:
+      # Ktor er bevisst låst til 3.4-linja: 3.5.x introduserte en alvorlig bug i ktor-klienten som blokkerte alle kall like lenge som max timeout.
+      # Buggen tok ned søknaden i over 1,5 time og rammet mange andre Nav-tjenester.
+      # Vi migrerer gradvis vekk fra ktor-klienten (til httpklient); låsen oppheves når klientbruken er borte.
+      # Netty-sikkerhetsfikser tas i mellomtiden via netty-bom (pinnet i byggoppsettet og propagert fra libs' ktor-common), ikke via ktor-bump.
       - dependency-name: "io.ktor:*"
         versions: [">=3.5.0, <3.6.0"]
   - package-ecosystem: github-actions

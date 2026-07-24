@@ -50,7 +50,6 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 | `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
 | `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `codeql-gradle.yml` | Kotlin/JVM-repoene (caller eier schedule + concurrency) | `java-version` |
-| `codeql-node.yml` | TypeScript/JavaScript-repoene (build-mode none; caller eier schedule + concurrency) | ingen inputs |
 
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.
 
@@ -96,6 +95,19 @@ Standardlistene eies her (jf. #39); repoene kopierer og avviker kun med begrunne
 
 **Beslutningen om `.github/**`** (jf. [#39](https://github.com/navikt/tiltakspenger/issues/39)): workflow-endringer verifiseres av branch-gaten (som bevisst IKKE ignorerer `.github/**`), metarepoets lint og callernes statiske sjekk — main-workflowene trenger dem derfor ikke som røykvarsel, og kostnaden (unødig prod-deploy/publisering per CI-endring) var reell.
 Avveiningen: en endring i selve deploy-/publiseringsworkflowen får første reelle kjøring ved neste innholdsendring — akseptert, siden logikken bor i delte workflows som testes i metarepoet.
+
+## CodeQL: advanced på JVM, default setup på frontend
+
+Modellen er delt med vilje, etter hva som gir mest security-verdi per repo-type:
+
+- **JVM-backendene (8): advanced setup** via delt `codeql-gradle.yml`-caller. Her har `security-and-quality`-suiten (kode­kvalitets-queries: ressurslekkasjer, null-deref, død kode) **ingen lokal erstatning** — Spotless/ktlint er formattering, Konsist er arkitektur, Kover er dekning. Advanced gir da unik verdi, og code-as-config/drift-vakt/SHA-pinning følger med.
+  Dette er den eneste språktypen som bruker en delt CodeQL-caller; en tilsvarende `codeql-node.yml` fantes, men ble fjernet som ubrukt da frontendene landet på default setup (hent den fra git-historikk om et framtidig TS/JS-repo skulle trenge advanced).
+- **Frontendene (4): GitHub default setup.** For JS/TS dekker ESLint + `tsc` allerede kvalitetsqueriene, så advanced sitt eneste egentlige fortrinn forsvinner. Da vinner default setup: security-SAST ved **push + PR + ukentlig** (bedre timing enn callernes schedule-only), null vedlikehold, GitHub-styrt versjon, ingen fork-PR-floke (`security-events: write` mangler på fork-token).
+- **pdfgenrs: default setup** (auto-detektert Python/JS). **pdfgen** (Handlebars + shell) og **iac** (manifester) har ingen CodeQL-analyserbar kode — korrekt at de står uten.
+
+Konsekvens: frontend-callerne (`codeql.yml`) er bevisst IKKE innført, og den delte `codeql-node.yml` ble fjernet som ubrukt (kan hentes fra git-historikk om et framtidig TS/JS-repo trenger advanced).
+Advanced og default setup kan ikke stå på samtidig — opplasting fra advanced feiler mens default setup er på. Bytt derfor default AV (`gh api -X PATCH repos/navikt/<repo>/code-scanning/default-setup -f state=not-configured`) *før* en codeql-caller pushes, eller default PÅ (`-X PUT ... -f state=configured`) etter at en caller er fjernet.
+Det er ikke et generelt «default er best»: frontend-valget hviler spesifikt på at ESLint dekker kvalitets­queriene — den begrunnelsen overføres ikke til JVM eller andre språk uten tilsvarende lokal analyse.
 
 ## Forholdet til Nais-dokumentasjonen og Golden Path
 

@@ -162,6 +162,36 @@ kan på samme måte legges inn i andre MCP-klienter.
 
 Repoets egne, verktøy-uavhengige skills ligger i [`skills/`](skills/README.md).
 
+## Designsystem, skjemaer og datoer (Aksel)
+
+Alle frontendene bruker Navs designsystem [Aksel](https://aksel.nav.no). Les «Retningslinjer» på komponentsiden, ikke bare props-tabellen — flere av de viktige valgene står bare i prosateksten og fremgår ikke av typene.
+
+**Datoer** er området der vi har truffet flest fallgruver, og der kildene faktisk gir litt ulike råd:
+
+- [Aksel: DatePicker](https://aksel.nav.no/komponenter/core/datepicker) — under «Retningslinjer»: ved datoer langt fram eller tilbake i tid skal `dropdownCaption` brukes sammen med `fromDate`/`toDate`, ellers må brukeren bla én måned av gangen. Seksjonen «Vurder om Datepicker er den rette løsningen for deg» tar opp at et rent tekstfelt ofte er bedre for datoer brukeren kan utenat.
+- [Aksel: TextField](https://aksel.nav.no/komponenter/core/textfield) og [Aksel: MonthPicker](https://aksel.nav.no/komponenter/core/monthpicker) — alternativene Aksel peker på.
+- [Aksel: Mønster for skjemavalidering](https://aksel.nav.no/monster-maler/soknadsdialog/monster-for-skjemavalidering) — anbefaler blant annet å akseptere flere formater på datoer for å redusere feil.
+- [Uutilsynet: Skjema](https://uutilsynet.no/wcag-standarden/skjema/38) — normativ i Norge (forskrift om universell utforming av ikt): «Dersom brukeren skal legge inn dato, for eksempel fødselsdato eller avreisedato, bør det være et tekstfelt, gjerne supplert med en datovelger.» Datoformatet beskrives «i ledeteksten eller i tilknytning til skjemaelementet» — begge deler er altså greit.
+- [Uutilsynet: 1.3.5 Identifiser formål med inndata](https://www.uutilsynet.no/wcag-standarden/135-identifiser-formal-med-inndata-niva-aa/142) — autofyll-kravet gjelder bare felt som samler informasjon om brukeren selv, «og ikke til en annen person». Derfor er `autoComplete="off"` riktig på f.eks. barnets fødselsdato (Aksel setter det uansett selv på `DatePicker.Input`).
+- [Uutilsynet: Løsningsforslag per krav](https://www.uutilsynet.no/veiledning/losningsforslag-krav/1366)
+- [Digdir/Designsystemet: Ask users for date and time](https://designsystemet.no/en/patterns/date-and-time/) — går lenger enn Aksel: «Custom-built date pickers often result in lower accessibility and more friction than simple text fields.» Foreløpig bare publisert på engelsk, og mønsteret diskuteres fortsatt i [digdir/designsystemet#1681](https://github.com/digdir/designsystemet/discussions/1681).
+- [GOV.UK: Dates](https://design-system.service.gov.uk/patterns/dates/) — primærkilden både Aksel og Digdir viser til.
+
+### Slik gjør vi det
+
+Vi beholder Aksels datovelger, men tekstfeltet er hovedveien inn — det skal alltid gå raskt å skrive datoen rett inn:
+
+- **Ingen forhåndsutfylt dato.** Feltet er tomt til brukeren fyller det ut selv.
+- **Formatet står i `description`** (`Format: dd.mm.åååå`), ikke i selve labelen.
+- **Ikke lag egen parsing.** Aksel godtar allerede `dd.mm.åååå`, `ddmmåååå`, `dd/mm/åååå`, `dd-mm-åååå` og tosifret år (`allowTwoDigitYear`, på som standard). Det dekker uutilsynets råd om å akseptere flere formater uten at vi skriver noe eget.
+- **`dropdownCaption` når feltet har både `fromDate` og `toDate`**, slik at bruker kan hoppe direkte til år og måned. Nedtrekket krever begge grensene for å vises i det hele tatt.
+- **Grensene er ekte validering, ikke bare navigasjon.** Aksel avviser datoer utenfor `fromDate`/`toDate` også når de skrives inn, så sett dem romslig nok til at legitime svar ikke blokkeres.
+- **Dekk hele valideringsobjektet fra `onValidate`.** Ved ugyldig inndata nullstiller `useDatepicker` skjemaverdien; håndterer du bare `isAfter`, står brukeren igjen med tekst i feltet og «du må oppgi dato» ved innsending.
+- **`useDatepicker` leser `defaultSelected` kun ved montering.** Skal feltet nullstilles eller vise en annen verdi senere (f.eks. i en modal som blir stående montert), må komponenten monteres på nytt via `key`.
+- **Send `id` til `DatePicker.Input`, aldri til `DatePicker`.** Rot-komponenten bruker `id` som aria-id for popoveren, så samme id begge steder gir duplikat-id i DOM og en `aria-controls` som peker på seg selv.
+
+Referanseimplementasjonen er `Datovelger`/`Periodevelger` i [`tiltakspenger-soknad`](https://github.com/navikt/tiltakspenger-soknad) (`src/components/datovelger/`).
+
 ## Feilsøking med logger og traces
 
 Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i logglinjene — via pino på frontendene (merk: `tiltakspenger-meldekort` logger med `console` og får dem ikke i dag) og logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:

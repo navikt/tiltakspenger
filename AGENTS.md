@@ -130,7 +130,7 @@ Noen ting gjelder **både** for backend og frontend:
       timeout: 3
     ```
 
-- **Lokal utvikling** orkestreres via `docker-compose.yml` i monorepo-roten (og `docker-compose-soknad.yml` for søknad).
+- **Lokal utvikling** orkestreres via `docker-compose.yml` i monorepo-roten (og `docker-compose-soknad.yml` for søknad). Backend-appenes `LokalMain` starter selv databasetjenesten sin fra denne fila hvis den ikke allerede kjører, via `startLokalPostgres` i `tiltakspenger-libs:lokal-oppstart` — så `./up.sh` er ikke lenger et forkrav for å kjøre en enkelt app. Foreløpig er det `tiltakspenger-meldekort-api` og `tiltakspenger-soknad-api` som gjør dette; resten av flåten kan ta det i bruk med samme kall. Ligger tjenesten i en annen compose-fil enn `docker-compose.yml`, sier du fra med `composefilnavn` (søknad peker på `docker-compose-soknad.yml`). Rømningsluke for de som ikke vil ha compose-containerne: `LOKAL_DB_MODUS=testcontainers`.
 - **Port 8085 er reservert for `nais login`** (callback-porten til nais CLI) og skal aldri bindes av lokale tjenester, compose-oppsett eller scripts.
 - **GitHub Actions-workflows skal være så like som mulig på tvers av repoene.** Når du endrer CI i ett repo, vurder om de andre repoene bør endres tilsvarende, slik at oppsettet konvergerer i stedet for å sprike. Konkret:
     - Workflowen som bygger og deployer til prod ved push til `main` heter **`Build and deploy`** i alle repoer (også der det egentlig er en publisering, som `tiltakspenger-libs`, eller en kombinert dev+prod-deploy, som `tiltakspenger-meldekort-microfrontend`). Felles navn gjør at verktøy kan hente «siste utrulling» likt på tvers — se `script/status.sh`.

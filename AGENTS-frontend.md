@@ -47,5 +47,6 @@ Testoppsettet varierer per repo — sjekk det aktuelle repoet:
 
 - **`tiltakspenger-saksbehandling`** — Jest med `jest-environment-jsdom` + `@testing-library/dom` / `@testing-library/jest-dom`.
 - **`tiltakspenger-meldekort`** — Playwright (`@playwright/test`), inkl. tilgjengelighetssjekk med `@axe-core/playwright`.
-- **`tiltakspenger-soknad`** og **`tiltakspenger-meldekort-microfrontend`** har foreløpig ikke et eget test-script.
+- **`tiltakspenger-soknad`** — Jest med `jest-environment-jsdom` + `@testing-library/react` (`jest.config.mjs`). Kjøres i CI via `kommando`-inputen til den delte node-gaten.
+- **`tiltakspenger-meldekort-microfrontend`** har foreløpig ikke et eget test-script.
 

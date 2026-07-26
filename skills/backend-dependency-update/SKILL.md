@@ -111,7 +111,7 @@ Vanlige steder:
 - `build.gradle.kts` — `val xVersion = "..."` eller inline i `dependencies { }`.
 - `gradle/libs.versions.toml` — version catalog (`[versions]`).
 - `gradle.properties` — globale versjonsproperties.
-- Felles intern lib bumpes ofte via én variabel, f.eks. `val felleslibVersion = "0.0.842"`.
+- Felles intern lib bumpes ofte via én variabel, f.eks. `val felleslibVersion = "0.0.20260726211232"`.
 
 Rediger versjonsstrengen til måltversjonen fra PR-tittelen. Ikke endre urelaterte ting.
 

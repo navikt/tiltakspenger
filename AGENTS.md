@@ -153,10 +153,14 @@ Grafana-stacken kan spørres direkte via API (krever naisdevice: `nais device st
 
 Gotchas og feilsøkingsheuristikker:
 
-- Loki-labelen for cluster er `k8s_cluster_name="prod"` (ikke `prod-gcp`). Appene identifiseres med `service_name`, namespace er `tpts`. Bruk alltid `start`/`end` i spørringene.
-- Tempo-søk uten `kind`-filter treffer gjerne jobb-/DB-spans og kan gi inntrykk av at en app mangler HTTP-server-spans. Filtrer med `{resource.service.name="<app>" && kind=server}` før du konkluderer.
+- Cluster-labelen er `k8s_cluster_name="prod"` (ikke `prod-gcp`), appen er `service_name`, namespace `tpts`. Gjelder både Loki og Mimir. Bruk alltid `start`/`end`.
+- **Tempo-søk er et utvalg, ikke en telling.** `/api/search` gir maks 3 spans per trace (juster med `spss`), og ferske spans mangler ofte i attributtfiltrerte søk selv om de finnes. Trenger du fasit, hent hele tracen: `/api/traces/<id>` med full 32-tegns trace_id. Én hel trace er også raskeste verifisering etter en deploy — den viser rekkefølge, varighet og status gjennom hele kjeden.
+- Filtrer alltid på `kind`. Uten `{resource.service.name="<app>" && kind=server}` treffer søket jobb- og DB-spans, og det ser ut som appen mangler HTTP-spans.
 - Mangler en app sine spans i én konkret trace mens den ellers har server-spans, nådde requesten sannsynligvis aldri appen — sjekk rollout-aktivitet i tidsrommet (flere ReplicaSets samtidig / «Application started» i Loki).
-- Traces er en uavhengig kontrollkilde når du skal skille «feilene stoppet» fra «loggingen stoppet»: spans lages av OTel-agenten uansett hva appene logger. Finn timeouts uavhengig av loggene med TraceQL `{resource.service.name="<app>" && kind=client && duration>9s}` og sammenlign antall med feillinjene i Loki.
-- Tempo-søke-API-et kan sporadisk svare helt tomt — retry 2–3 ganger med noen sekunders pause før du konkluderer med «ingen treff». `/api/traces/<id>` krever full 32-tegns trace_id (ikke forkortet).
+- Traces er en uavhengig kontrollkilde når du skal skille «feilene stoppet» fra «loggingen stoppet»: spans lages av OTel-agenten uansett hva appene logger. Finn timeouts uavhengig av loggene med `{resource.service.name="<app>" && kind=client && duration>5s}` og sammenlign antall med feillinjene i Loki.
+- **Persentiler:** Tempos `/api/metrics/query_range` (`| quantile_over_time(duration, .5, .9, .99)`) tar **maks 3 timer** per spørring. For dager/uker: `traces_spanmetrics_latency_*` i Mimir. `le`-bøttene der er i sekunder og stopper på 5 s, så en p99 over det kommer ut som `+Inf` — suppler med andel over terskel: `1 - (increase(...bucket{le="5"}[30d]) / increase(...count[30d]))`.
+- **Spanmetrics skiller ikke utgående kall.** Alle klient-spans havner under `span_name="POST"`, så nedstrømstjenester og Texas-sidecaren (millisekunder) blandes og drar p50 kunstig ned. Splitt per mål må hentes fra Tempo med `span.url.full`-filter.
+- Dimensjonerer du timeouts, er **server-spanet på appens egen rute** tallet som teller — det er det konsumenten venter på, og det inkluderer haleoverhead (GC, kald pod, kø) som ikke finnes i noen utgående p99.
 - macOS: bruk `date -v-1H +%s`, ikke GNU-syntaksen `date -d '1 hour ago'`.
+- `gcloud`-tokenet utløper og må fornyes interaktivt, så `kubectl` kan falle bort midt i en økt. Loki/Tempo/Mimir over API virker uansett — bruk dem til logg- og trafikkoppfølging etter deploy.
 - Alerts og Slack-varsler: se README-seksjonen «Alarmer og Slack-varsler». Viktigste feller: `ALERTS{namespace="tpts"}` i Mimir blander dev og prod uten filter på `k8s_cluster_name`; dev- og prod-alerts har identisk tekst men går til hhv. `#tp-varsel-dev` og `#tp-varsel-prod`; CI-varslene i `#tp-varsel` bruker en helt annen webhook (GitHub-secret `SLACK_VARSEL_WEBHOOK_URL`) enn Alertmanager.

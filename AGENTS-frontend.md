@@ -20,6 +20,9 @@ Datofelter har egne regler hos oss, og de er lette å bomme på. **Les [«Design
 - Formatet hører hjemme i `description` (`Format: dd.mm.åååå`), ikke i labelen.
 - Ikke skriv egen dato-parsing — Aksel godtar allerede flere formater.
 - `dropdownCaption` når feltet har både `fromDate` og `toDate`, så bruker slipper å bla måned for måned.
+- `fromDate` styrer både hva som godtas og hvor langt tilbake årsnedtrekket lister — skill dem når godkjenningsvinduet er vidt.
+- Vent med feilmeldingen til feltet er forlatt, men vis den straks skjemaet har meldt fra om feil.
+- I periodefelt: bare feltet som faktisk er feil skal markeres, og fra/til hører sammen i et `Fieldset`.
 - `id` skal på `DatePicker.Input`, aldri på `DatePicker` — ellers får du duplikat-id i DOM.
 
 Referanseimplementasjon: `src/components/datovelger/` i `tiltakspenger-soknad`.

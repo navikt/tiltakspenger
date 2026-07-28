@@ -47,6 +47,8 @@ Scriptene er lagdelt (byggekloss → kombo → topp-nivå). Velg minste script s
 | Bare en sak med innvilget vedtak | `opprett-innvilget-sak-digital.sh` / `opprett-innvilget-sak-papir.sh` |
 | Bare en meldekortbehandling | innvilget sak-script, deretter `opprett-meldekortbehandling.sh SAK_ID KJEDE_ID` |
 | Bare en klagebehandling | `opprett-klage.sh SAK_ID [VEDTAK_ID]` (på en eksisterende sak) |
+| Simuleringer å teste (ytelse, feilutbetaling, justering en-/flerdags, sperre-scenarioer på tvers av meldeperioder/måneder, trekk m/reversering, månedsskifte-splitt) | `opprett-simuleringsscenarioer.sh` |
+| Iverksatt meldekort / åpen korrigering med egne dagstatuser | `fyll-og-iverksett-meldekort.sh` / `opprett-meldekort-korrigering.sh` `SAKSNUMMER [DATO=STATUS ...]` |
 | Alle PDF-brevene som filer | `forhandsvis-alle-pdfer.sh` (krever pdfgen på 8081 + pdfgenrs på 8084 i docker) |
 | Ett enkelt PDF-brev | `forhandsvis-vedtaksbrev.sh` / `forhandsvis-meldekortbrev.sh` / `forhandsvis-klagebrev.sh` |
 | Ett enkelt endepunkt-steg | tilsvarende byggekloss-script (se `scripts/testdata/README.md`) |

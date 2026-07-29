@@ -89,12 +89,13 @@ Vurder repo-ruleset med påkrevd lint-sjekk på metarepo-main som tredje lag —
 Standardlistene eies her (jf. #39); repoene kopierer og avviker kun med begrunnelse.
 
 - **JVM-app, branch-gate** (`Test/build on feature branch push`): `**.md`, `.gitattributes`, `.gitHooks/**`, `.gitignore`, `.idea/**`, `.nais/alerts.yml`, `clean_lint_and_build.sh`, `CODEOWNERS`, `doc/**`, `docker-compose/**`, `docs/**`, `LICENSE`, `lint_and_build.sh`
-- **JVM-app, main** (`Build and deploy`) og **libs-publisering** (`push.yml`): gate-lista + `.github/**` — en ren CI-endring skal ikke deploye prod eller publisere nye artefaktversjoner.
+- **JVM-app, main** (`Build and deploy`) og **libs-publisering** (`push.yml`): samme liste som gaten — ingen egen `.github/**`-ignorering.
 - **Frontend**: `**.md`, `.env-template`, `.gitattributes`, `.gitignore`, `.husky/**`, `CODEOWNERS`, `docker-compose/**`, `LICENSE` — synkroniseres mot backend-listene i [#40](https://github.com/navikt/tiltakspenger/issues/40)-utrullingen.
 - Positive `paths` er standardmønsteret for «kjør kun når X endres»: alerts-deploy (`.nais/alerts.yml` + workflow-fila selv) og dependency submission (gradle-filene + workflow-fila selv).
 
-**Beslutningen om `.github/**`** (jf. [#39](https://github.com/navikt/tiltakspenger/issues/39)): workflow-endringer verifiseres av branch-gaten (som bevisst IKKE ignorerer `.github/**`), metarepoets lint og callernes statiske sjekk — main-workflowene trenger dem derfor ikke som røykvarsel, og kostnaden (unødig prod-deploy/publisering per CI-endring) var reell.
-Avveiningen: en endring i selve deploy-/publiseringsworkflowen får første reelle kjøring ved neste innholdsendring — akseptert, siden logikken bor i delte workflows som testes i metarepoet.
+**Beslutningen om `.github/**`** (jf. [#39](https://github.com/navikt/tiltakspenger/issues/39)): main-workflowene ignorerer IKKE `.github/**`.
+En endring i selve deploy-/publiseringsworkflowen skal få en ekte kjøring med én gang — branch-gaten og linten er statiske sjekker og fanger ikke feil som først viser seg i en reell deploy/publisering.
+Kostnaden (en «unødig» prod-deploy eller artefaktversjon per ren CI-endring) er akseptert; dette omgjør den tidligere beslutningen om å ignorere `.github/**` i main-workflowene.
 
 ## CodeQL: advanced på JVM, default setup på frontend
 

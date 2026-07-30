@@ -6,7 +6,7 @@ name: Test og bygg gradle (delt)
 # Rød test stopper altså fortsatt deploy - men imaget kan ligge utestet i registryet (det deployes aldri, og det er akseptert kostnad for kortere main-pipeline).
 # `./gradlew build` kjører testene - testjobben er dermed også testgaten for PR-er og feature-brancher (kall med `bygg-image: false`).
 # Kalleren må gi workflow-kallet `contents: read`, pluss `id-token: write` for image-jobben (nais/docker-build-push autentiserer med OIDC), og sende secrets eksplisitt - aldri `secrets: inherit`.
-# Gatene (`bygg-image: false`) sender i dag også id-token: write - å droppe grant-en når image-jobben skippes er ikke verifisert mot GitHubs permissions-sjekk ennå (se kommentaren i gate-callerne).
+# Også gatene (`bygg-image: false`) må gi id-token: write: GitHub validerer deklarerte jobb-permissions mot callerens grant ved oppstart, før skip-betingelser evalueres - uten grant-en får kallet startup_failure (verifisert 2026-07-30).
 
 on:
   workflow_call:

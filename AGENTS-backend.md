@@ -107,6 +107,40 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
   - **Isolert:** tømmer DB før testen og kjører sekvensielt. Reserver dette for **aggregerte / på-tvers-av-sak**-tester — typisk jobber som spør på tvers av alle saker. Isolert modus er treg; ikke bruk den når en sak-scoped test holder.
 - **Deterministiske, sekvensielle id-generatorer i tester.** Bruk delte generatorer for `saksnummer`, `fnr` og `journalpostId` (sekvensielle og trådsikre) i stedet for tilfeldige verdier som `Fnr.random()`. Tilfeldige 11-sifrede fnr kolliderer sjelden i én kjøring, men i et delt test-skjema gir bursdagsparadokset reell flaky-risiko over mange CI-kjøringer. Generatorene holdes på **ett høyt nivå** (én delt instans i test-db-manageren, jf. `idGeneratorsFactory`) og injiseres ned i test-konteksten — **ikke** legg prosessglobal tilstand dypt inne i selve generatoren.
 
+### Testtaksonomi: prodstier og aggregat-disiplin
+
+Kongstanken: all testtilstand bygges gjennom prodstiene.
+Da kan en test ikke jukse seg til en tilstand prod aldri når, og vi slipper å holde et parallelt univers av tilstandskonstruksjon i synk med prodflytene for hånd.
+
+1. **Ende-til-ende innenfor én sak er standarden.**
+   Bygg tilstanden med route-testkonteksten og route-byggerne, ikke ved å persistere ObjectMother-objekter rett gjennom repoene.
+   Rundturen («kan lagre og hente») dekkes av disse testene.
+   Egne round-trip-tester per repo skal ikke skrives.
+
+2. **Aggregat-tester er få, spesialiserte og isolerte.**
+   De finnes kun for det per-sak-testene ikke kan treffe: spørringer som velger ut på tvers av saker, typisk jobbkøer.
+   Én fil per spørringsgruppe, navngitt `*AggregatTest`, og kjørt isolert.
+   Fila bygger 2–3 saker gjennom prodstiene og asserter spørringens faktiske kontrakt: utvalgskriteriene, at `limit` respekteres, og sorteringen spørringen faktisk har.
+
+3. **Ingen andre tester kaller `hent*(limit)`-metodene på repo-portene.**
+   Kaller du en slik metode utenfor en `*AggregatTest`, er testen enten feilplassert eller så tester den noe en e2e-test allerede dekker.
+
+4. **Unntak merkes eksplisitt med en kommentar i testfilen.**
+   To kategorier er legitime: historiske dataformer (gamle JSON-blobs eller migrert data som prodkoden ikke lenger produserer, der syntetisk konstruksjon er selve poenget), og rene db-typer uten domeneflyt.
+
+**Motbildet er filter-krykka:**
+
+```kotlin
+// Ikke gjør dette:
+repo.hentDeSomSkalJournalføres(limit = Int.MAX_VALUE)
+    .filter { it.sakId == sak.id } shouldBe forventet
+```
+
+Mønsteret bruker en aggregatspørring som lesekanal for én sak, og slår i samme slengen av begge tingene spørringen finnes for.
+`limit = Int.MAX_VALUE` gjør at grensen aldri testes, og `.filter { it.sakId == ... }` gjør at utvalget på tvers av saker aldri testes.
+Testen består selv om spørringen plukker feil rader for alle andre saker enn sin egen.
+Skal du teste rundturen, gjør det med en e2e-test; skal du teste spørringen, skriv en `*AggregatTest` uten filter.
+
 ## Bygg, lint og statisk analyse
 
 Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.
@@ -118,7 +152,18 @@ Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.
   - `ktlint_code_style` = `ktlint_official`
   - `ktlint_experimental` = enabled
 - **Detekt** for statisk analyse (`config/detekt.yml`); navnemønstrene tillater norske tegn (`æøå`)
-- **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert. `koverVerify` håndhever en streng linjedekningsterskel (i `tiltakspenger-libs` er kravet **100 %**), og kjøres som en del av `build`/CI. Den kjøres **ikke** av `:<modul>:test` alene, så det er lett å overse: kjør `./gradlew :<modul>:koverVerify` (eller full `build`) etter kodeendringer, og legg til tester for ny/endret kode. Unngå å skrive uoppnåelig defensiv kode (f.eks. `?: error(...)` på en gren som aldri kan nås) på egne linjer — kover teller dem som udekket og feiler bygget.
+- **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert.
+  `koverVerify` håndhever en streng linjedekningsterskel (i `tiltakspenger-libs` er kravet **100 %**), og kjøres som en del av `build`/CI.
+  Den kjøres **ikke** av `:<modul>:test` alene, så det er lett å overse.
+  Kjør `./gradlew :<modul>:koverVerify` (eller full `build`) etter kodeendringer, og legg til tester for ny/endret kode.
+  Unngå å skrive uoppnåelig defensiv kode (f.eks. `?: error(...)` på en gren som aldri kan nås) på egne linjer.
+  Kover teller dem som udekket og feiler bygget.
+  Ikke generer HTML/XML-rapporter automatisk på `check`.
+  De som vil se en rapport kjører `./gradlew koverHtmlReport` eller `./gradlew koverXmlReport`.
+  Når dekningsgaten kun måler et utvalg klasser, bruk `currentProject { instrumentation { includedClasses.addAll(...) } }`.
+  Da instrumenterer vi bare klassene som telles, i stedet for hele kodebasen.
+  Legg til en `tasks.named("koverXmlReport")`-sjekk som feiler hvis rapporten er tom.
+  En tom rapport består terskelen uten å måle noe.
 - **Gradle version catalog** i `gradle/libs.versions.toml` der den finnes
 - **`com.github.ben-manes.versions`**-plugin for sjekk av oppdateringer på avhengigheter
 

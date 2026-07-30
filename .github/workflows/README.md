@@ -42,9 +42,9 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 | Delt workflow | For | Nøkkel-inputs/secrets |
 | --- | --- | --- |
 | `lint-workflows.yml` | alle repoer (språkagnostisk) | `zizmor-blokkerende`, `zizmor-mal-sjekk`, `dependabot-mal` |
-| `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version` |
-| `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secret `READER_TOKEN` (@navikt-pakker) |
-| `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `bygg-image` |
+| `dependabot-auto-merge.yml` | Kotlin/JVM-repoene | `java-version`; secret `SLACK_VARSEL_WEBHOOK_URL` |
+| `dependabot-auto-merge-node.yml` | frontend-repoene (saksbehandling, soknad, meldekort, meldekort-microfrontend); npm/pnpm detekteres fra lockfila | `node-version`, `test-kommando`; secrets `READER_TOKEN` (@navikt-pakker), `SLACK_VARSEL_WEBHOOK_URL` |
+| `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `image-gradle-kommando`, `bygg-image`; secrets `SLACK_VARSEL_WEBHOOK_URL`, `GRADLE_ENCRYPTION_KEY` (valgfri) |
 | `dependency-submission-gradle.yml` | JVM-app-repoene (Dependabot-synlighet for transitive avhengigheter; libs sender inn fra publiseringsbygget sitt) | `java-version` |
 | `test-og-bygg-node.yml` | frontend-repoenes test-/verifiseringsgate (PR/branch; image-bygg forblir lokale); npm/pnpm detekteres fra lockfila | `node-version`, `kommando`; secrets `READER_TOKEN`, `SLACK_VARSEL_WEBHOOK_URL` |
 | `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
@@ -64,6 +64,16 @@ Node-varianten dekker både npm og pnpm ved å detektere pakkehåndterer fra loc
 Testene ligger i byggegatene: gradle-varianten kjører `./gradlew build` (inkl. tester), node-varianten kjører `npm ci`/`pnpm install --frozen-lockfile` + `test-kommando` (lint/tsc/test etter hva repoet har; `$PAKKEHANDTERER` er tilgjengelig i kommandoen).
 
 `test-og-bygg-gradle.yml` eksponerer imaget som workflow-output `IMAGE`; deploy-calleren sender den videre til `deploy-nais.yml` via `needs.<jobb>.outputs.IMAGE` — det er komposisjonsmønsteret for bygg-og-deploy-pipelines.
+Test og image-bygg er parallelle jobber i den delte workflowen: image-jobben bygger kun distribusjonen (`installDist -x check`) og pusher, mens testjobben kjører hele `build` pluss `installDist` — gatene fanger dermed dist-brekkasje før main (selve Dockerfile-bygget dekkes som før først av main-kjøringen).
+Callerens `needs` på workflow-kallet venter på begge, så deploy er fortsatt gatet på grønn test — men imaget kan ligge utestet i registryet uten å bli deployet (akseptert kostnad for ~1 min kortere main-pipeline).
+Slack-varselet ved feil på main bor i en egen jobb som dekker begge byggejobbene.
+
+**`GRADLE_ENCRYPTION_KEY`**: setup-gradle lagrer aldri Gradle configuration-cache i GHA-cachen uten en krypteringsnøkkel (`cache-encryption-key`) — uten den betaler hvert CI-bygg full konfigurasjon (~10 s).
+Secreten er valgfri (tom verdi gir samme oppførsel som før) og settes som repo-secret med samme verdi i alle JVM-repoene (org-secret krever org-admin i navikt):
+`key=$(openssl rand -base64 16); for r in arena datadeling journalposthendelser libs meldekort-api saksbehandling-api soknad-api tiltak; do gh secret set GRADLE_ENCRYPTION_KEY -R "navikt/tiltakspenger-$r" --body "$key"; done`
+Rotasjon er samme kommando med ny verdi — eneste kostnad er én kald configuration-cache per repo etterpå.
+Callerne sender den eksplisitt som `GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}` (jf. konvensjonen om aldri `secrets: inherit`).
+Dependabot-auto-merge-byggene får den ikke: Dependabot-events leser fra et eget secrets-lager, så det ville krevd et parallelt sett Dependabot-secrets for en liten gevinst.
 
 **Bevisst ikke delt** (repo-spesifikk variasjon overstiger gevinsten i dag): frontendenes lokale image-byggeworkflows (`.build-app.yml` m.fl. — ENV-matrise, env-filer, CDN-opplasting, `image_suffix`), microfrontendens deploy (Astro + CDN), pdfgenrs' `.test.yml` (brevtester) og iac (rene manifest-deployer — kan adoptere `deploy-nais.yml` ved behov).
 CDN-opplasting: hele Nav (inkl. nais-doc og dagpenger) bruker `nais/deploy/actions/cdn-upload/v2@master` — vi SHA-pinner den i stedet (`@2d18f050f07b6a007864c6a57070ed915d571beb`-familien; actionen bor i nais/deploy-repoet, versjonen ligger i stien `/v2`).

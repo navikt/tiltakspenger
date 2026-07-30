@@ -2,8 +2,11 @@ name: Test og bygg gradle (delt)
 
 # Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
 # Tester og bygger et Kotlin/JVM-repo, og bygger+pusher docker-image til nais-registryet når `bygg-image` er satt.
-# `./gradlew build` kjører testene - byggejobben er dermed også testgaten for PR-er og feature-brancher (kall med `bygg-image: false`).
-# Kalleren må gi jobben `contents: read` + `id-token: write` (nais/docker-build-push autentiserer med OIDC), og sende secrets eksplisitt - aldri `secrets: inherit`.
+# Test og image-bygg kjører som parallelle jobber, så image-pushen ikke venter på testene: deploy-callere `needs`-er workflow-kallet og venter dermed på begge jobbene.
+# Rød test stopper altså fortsatt deploy - men imaget kan ligge utestet i registryet (det deployes aldri, og det er akseptert kostnad for kortere main-pipeline).
+# `./gradlew build` kjører testene - testjobben er dermed også testgaten for PR-er og feature-brancher (kall med `bygg-image: false`).
+# Kalleren må gi workflow-kallet `contents: read`, pluss `id-token: write` for image-jobben (nais/docker-build-push autentiserer med OIDC), og sende secrets eksplisitt - aldri `secrets: inherit`.
+# Gatene (`bygg-image: false`) sender i dag også id-token: write - å droppe grant-en når image-jobben skippes er ikke verifisert mot GitHubs permissions-sjekk ennå (se kommentaren i gate-callerne).
 
 on:
   workflow_call:
@@ -13,41 +16,50 @@ on:
         required: false
         type: string
         default: '25'
+      # Uten --info: det ga titusenvis av logglinjer per bygg, som koster I/O og gjør loggene ubrukelige til feilsøking - legg heller på flagget midlertidig ved behov.
+      # -x distTar -x distZip: application-pluginens build ville ellers pakket hele runtime-classpathen som tar+zip - arkiver ingen konsumerer (imaget bruker installDist).
+      # installDist står her slik at gatene (bygg-image: false) fanger dist-brekkasje før main; på main gjør image-jobben det reelle dist-bygget parallelt (sekunder i duplikat, ingen wall-clock-kostnad).
       gradle-kommando:
         description: Kommandoen som tester og bygger applikasjonen
         required: false
         type: string
-        default: ./gradlew build --info installDist --configuration-cache
+        default: ./gradlew build installDist --configuration-cache -x distTar -x distZip
+      # installDist bygger kun distribusjonen Dockerfilen kopierer inn; -x check er en eksplisitt vakt mot at verifisering snikes inn i image-jobben (testjobben er gaten).
+      image-gradle-kommando:
+        description: Kommandoen som bygger distribusjonen docker-imaget pakker inn (kjøres uten tester/verifisering)
+        required: false
+        type: string
+        default: ./gradlew installDist -x check --configuration-cache
       bygg-image:
-        description: Om docker-image skal bygges og pushes etter grønt bygg
+        description: Om docker-image skal bygges og pushes parallelt med testjobben
         required: false
         type: boolean
         default: true
     outputs:
       IMAGE:
         description: "Docker-imaget som ble bygget (tomt når bygg-image er false)"
-        value: ${{ jobs.bygg.outputs.IMAGE }}
+        value: ${{ jobs.image.outputs.IMAGE }}
     secrets:
       SLACK_VARSEL_WEBHOOK_URL:
         description: "Webhook for varsel ved feilet bygg på main (sendes eksplisitt fra kalleren)"
         required: true
+      GRADLE_ENCRYPTION_KEY:
+        description: "Krypteringsnøkkel for Gradle configuration-cache i GHA-cachen - uten den lagres aldri config-cache, og hvert bygg betaler full konfigurasjon (valgfri; tom verdi gir samme oppførsel som før)"
+        required: false
 
 # Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
 permissions: {}
 
 jobs:
-  bygg:
+  test:
     runs-on: ubuntu-latest
     # Fork-PR-er: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger også på pull_request.
     # Guarden her slipper kun gjennom fork-PR-events - interne brancher dekkes av push-triggeren (ellers dobbelkjøres hver PR).
     # Dependabot-brancher testes av auto-merge-workflowen; push-events derfra skippes (Dependabot pusher aldri main direkte).
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.actor != 'dependabot[bot]')
-    # id-token: write er kun for OIDC-føderasjonen i docker-build-push; GITHUB_TOKEN har bare lesetilgang.
+    # Testjobben trenger aldri OIDC - id-token: write bor kun i image-jobben.
     permissions:
       contents: read
-      id-token: write
-    outputs:
-      IMAGE: ${{ steps.docker-push.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -61,23 +73,67 @@ jobs:
           java-version: ${{ inputs.java-version }}
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          # setup-gradle lagrer kun configuration-cache-data når nøkkelen er satt (dataene kan inneholde hemmeligheter og krypteres derfor i GHA-cachen).
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
       # Kommandoen går via env og eval, ikke ${{ }} i run - samme injection-hygiene som for all annen kontekst (input-en er repo-styrt, men mønsteret skal være konsekvent).
       - name: Test og bygg applikasjonen
         run: eval "$GRADLE_KOMMANDO"
         env:
           GRADLE_KOMMANDO: ${{ inputs.gradle-kommando }}
+
+  image:
+    runs-on: ubuntu-latest
+    # Samme guard som testjobben, pluss bygg-image-bryteren (PR-/branchgatene kaller med false og får dermed ingen image-jobb).
+    if: inputs.bygg-image == true && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.actor != 'dependabot[bot]')
+    # id-token: write er kun for OIDC-føderasjonen i docker-build-push; GITHUB_TOKEN har bare lesetilgang.
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      IMAGE: ${{ steps.docker-push.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Ikke la tokenet ligge igjen i .git/config - byggsteget kjører avhengigheters kode.
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+        with:
+          # setup-gradle lagrer kun configuration-cache-data når nøkkelen er satt (dataene kan inneholde hemmeligheter og krypteres derfor i GHA-cachen).
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+      # Kommandoen går via env og eval, ikke ${{ }} i run - samme injection-hygiene som for all annen kontekst (input-en er repo-styrt, men mønsteret skal være konsekvent).
+      - name: Bygg distribusjonen
+        run: eval "$IMAGE_GRADLE_KOMMANDO"
+        env:
+          IMAGE_GRADLE_KOMMANDO: ${{ inputs.image-gradle-kommando }}
       - name: Bygg og push docker-image
         # Versjonsoversikt (tag -> SHA): https://github.com/nais/docker-build-push/tags
         uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
         id: docker-push
-        if: inputs.bygg-image == true
         with:
           team: tpts
+
+  # Egen jobb slik at ett varsel dekker begge byggejobbene: failure() er sann når minst én av needs-jobbene feilet.
+  # Statusfunksjonen gjør at if-en evalueres selv om en needs-jobb er skippet (skip-propagering gjelder kun implisitt success()) - feiler testjobben, varsles det også om image-jobben er skippet.
+  # I praksis kjører image-jobben alltid på main (deploy-callerne bruker bygg-image: true); gatene kjører aldri på main-ref, så main-guarden under skipper dem uansett.
+  varsle:
+    runs-on: ubuntu-latest
+    needs: [test, image]
+    if: failure() && github.ref == 'refs/heads/main'
+    # Jobben bruker kun webhooken - GITHUB_TOKEN trengs ikke.
+    permissions: {}
+    steps:
       # All kontekst går via env (aldri ${{ }} direkte i run), og payloaden bygges med jq så verdier med spesialtegn ikke kan knekke/injisere JSON-en.
       # curl -sSf gjør at et avvist webhook-kall feiler steget synlig i stedet for å forsvinne stille.
       # Webhooken er en app-basert Slack-webhook: den krever JSON-body med Content-Type: application/json (legacy payload=-form ga HTTP 422).
       - name: Varsle Slack ved feilet bygg på main
-        if: failure() && github.ref == 'refs/heads/main'
         run: |
           payload=$(jq -n --arg text "[$REPO_NAME] Build failed :cry: $AUTHOR - <https://github.com/$REPO/commit/$COMMIT_SHA|$COMMIT_SHA>" '{text: $text}')
           curl -sSf -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK_URL"

@@ -107,6 +107,67 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
   - **Isolert:** tømmer DB før testen og kjører sekvensielt. Reserver dette for **aggregerte / på-tvers-av-sak**-tester — typisk jobber som spør på tvers av alle saker. Isolert modus er treg; ikke bruk den når en sak-scoped test holder.
 - **Deterministiske, sekvensielle id-generatorer i tester.** Bruk delte generatorer for `saksnummer`, `fnr` og `journalpostId` (sekvensielle og trådsikre) i stedet for tilfeldige verdier som `Fnr.random()`. Tilfeldige 11-sifrede fnr kolliderer sjelden i én kjøring, men i et delt test-skjema gir bursdagsparadokset reell flaky-risiko over mange CI-kjøringer. Generatorene holdes på **ett høyt nivå** (én delt instans i test-db-manageren, jf. `idGeneratorsFactory`) og injiseres ned i test-konteksten — **ikke** legg prosessglobal tilstand dypt inne i selve generatoren.
 
+### Testtaksonomi: prodstier og aggregat-disiplin
+
+Kongstanken: all testtilstand bygges gjennom prodstiene.
+Da kan en test ikke jukse seg til en tilstand prod aldri når, og vi slipper å holde et parallelt univers av tilstandskonstruksjon i synk med prodflytene for hånd.
+
+1. **Ende-til-ende innenfor én sak er standarden.**
+   Bygg tilstanden med route-testkonteksten og route-byggerne, ikke ved å persistere ObjectMother-objekter rett gjennom repoene.
+   Rundturen («kan lagre og hente») dekkes av disse testene.
+   Egne round-trip-tester per repo skal ikke skrives.
+
+2. **Aggregat-tester er få, spesialiserte og isolerte.**
+   De finnes kun for det per-sak-testene ikke kan treffe: spørringer som velger ut på tvers av saker, typisk jobbkøer.
+   Én fil per spørringsgruppe, navngitt `*AggregatTest`, og kjørt isolert.
+   Fila bygger 2–3 saker gjennom prodstiene og asserter spørringens faktiske kontrakt: utvalgskriteriene, at `limit` respekteres, og sorteringen spørringen faktisk har.
+   Har spørringen ingen `order by`, er rekkefølgen udefinert — assert på innhold og antall, ikke på sortering.
+
+3. **Ingen andre tester kaller `hent*(limit)`-metodene på repo-portene.**
+   Kaller du en slik metode utenfor en `*AggregatTest`, er testen enten feilplassert eller så tester den noe en e2e-test allerede dekker.
+
+4. **Unntak merkes eksplisitt med en kommentar i testfilen.**
+   To kategorier er legitime: historiske eller korrupte dataformer (se «Negative databasetester» under), og rene db-typer uten domeneflyt.
+
+**Motbildet er filter-krykka:**
+
+```kotlin
+// Ikke gjør dette:
+repo.hentDeSomSkalJournalføres(limit = Int.MAX_VALUE)
+    .filter { it.sakId == sak.id } shouldBe forventet
+```
+
+Mønsteret bruker en aggregatspørring som lesekanal for én sak, og slår i samme slengen av begge tingene spørringen finnes for.
+`limit = Int.MAX_VALUE` gjør at grensen aldri testes, og `.filter { it.sakId == ... }` gjør at utvalget på tvers av saker aldri testes.
+Testen består selv om spørringen plukker feil rader for alle andre saker enn sin egen.
+Skal du teste rundturen, gjør det med en e2e-test; skal du teste spørringen, skriv en `*AggregatTest` uten filter.
+
+#### Fakes er per test, jobber sveiper over hele skjemaet
+
+Den vanligste kilden til flaky DB-tester: en fake-klient hører til én test-kontekst, mens jobbene henter på tvers av alle saker i skjemaet.
+
+Styrer testen din en verdi på en fake (`var`-felt), **og** er den avhengig av utfallet av en jobb som sveiper på tvers, må testen kjøre isolert.
+Ellers vil en annen test som kjører samme jobb parallelt plukke opp dine rader, spørre *sin* fake, og skrive et annet resultat enn det du satte opp.
+Symptomet er en assertion som viser fakens defaultverdi i stedet for den du satte — og som passerer når testen kjøres alene.
+
+Merk at det å bygge tilstand med en fake ikke i seg selv krever isolering.
+Det er kombinasjonen av styrt fake-verdi og sveipende jobb som gjør det.
+
+#### Full dekning på postgres-repoene
+
+Målet er **100 % linjedekning på repo-klassene, tatt med route-testene som grunnsett.**
+Tester utover grunnsettet kan bruke fakes.
+Når et repo er brakt til full dekning, låses det i dekningsgaten (`postgresRepoerMedDekningskrav` i `build.gradle.kts`) slik at dekningen ikke kan falle tilbake.
+
+Rekkefølgen når en `throw`/`require` i et repo står udekket:
+
+1. **Nå den med en route-test** hvis tilstanden kan oppstå gjennom prodstiene.
+2. **Ellers: skriv en negativ databasetest.** Muter databasen direkte til den ugyldige tilstanden og verifiser at repoet kaster. Det er helt greit — det er selve poenget med testen, og den hører i unntakskategorien over. Legg dem i en egen `*NegativTest`-fil med KDoc som sier hvorfor databasen muteres.
+3. **Klarer vi ikke å trigge den heller, er `!!` på sin plass.** Typisk når en foreign key garanterer at raden finnes. En `requireNotNull` med melding ville da bare stått igjen som permanent udekket kode. Skriv en kommentar som sier hvilken garanti som gjør `!!` trygt.
+
+Vurder også om domenelogikk i repoet kan flyttes inn i domenet.
+Invarianter som håndheves på domenemodellen trenger ingen databasetest for å dekkes.
+
 ## Bygg, lint og statisk analyse
 
 Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.

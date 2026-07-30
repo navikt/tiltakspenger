@@ -111,9 +111,20 @@ Oppførsel kan justeres med miljøvariabler, bl.a. `NAMESPACE`, `DEV_CLUSTERS`,
 
 ### Import av data til lokale databaser
 
-Det kan være praktisk å populere lokale databaser med data fra dev-miljøet. Du trenger `pg_dump` og `pg_restore` fra [Postgres binaries](https://www.postgresql.org/download/).
+Det kan være praktisk å populere lokale databaser med data fra dev-miljøet. Du trenger `pg_dump` og `pg_restore` versjon 17 eller nyere fra [Postgres binaries](https://www.postgresql.org/download/).
 
-#### Fremgangsmåte
+#### Med script (anbefalt)
+
+`script/import-dev-db-*.sh` gjør hele jobben under: starter den lokale databasen, setter opp proxy mot dev, dumper til en midlertidig mappe under `/tmp`, tømmer den lokale databasen og importerer. Argumentet er GCP-brukernavnet ditt (`gcloud config get-value account`):
+
+```
+./script/import-dev-db-saksbehandling.sh <GCP brukernavn>
+./script/import-dev-db-meldekort.sh <GCP brukernavn>
+```
+
+> **NB:** scriptet dropper og oppretter den lokale databasen på nytt. Alt du har lokalt går tapt, og appen må ikke holde tilkoblinger åpne mens det kjører.
+
+#### Fremgangsmåte manuelt
 Eksempel for saksbehandling-api, se docker-compose for parametre for andre apper.
 
 - Start den lokale databasen:
@@ -121,22 +132,25 @@ Eksempel for saksbehandling-api, se docker-compose for parametre for andre apper
 docker compose up -d postgresSaksbehandling
 ```
 
-Hvis du allerede har en lokal database, slett den (inkludert volume) og kjør opp på nytt.
-
 - Start en lokal proxy til dev-databasen du skal importere fra, med [nais cli](https://docs.nais.io/persistence/postgres/how-to/personal-access/). Se doc'en for førstegangsoppsett, senere kan du kjøre disse kommandoene:
 ```
 kubectl config use-context dev-gcp
-nais postgres proxy -p 5444 tiltakspenger-saksbehandling-api
+nais postgres proxy -p 5444 tiltakspenger-saksbehandling-api -t tpts -e dev-gcp --reason lols
 ```
 
 - Kjør `pg_dump` for å dumpe dev-databasen:
 ```
-pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP brukernavn> --schema=public --format=directory --file=<path til dump>
+pg_dump --host=localhost --port=5444 --dbname=saksbehandling --username=<GCP brukernavn> --format=directory --no-owner --no-privileges --exclude-extension='*' --file=<path til dump>
 ```
 
-- Kjør `pg_restore` for å gjenopprette databasen lokalt (se docker-compose for passord, antagelig `test`)
+- Tøm den lokale databasen før import (se docker-compose for passord, antagelig `test`). Alternativt kan du slette containeren inkludert volume og kjøre opp på nytt.
 ```
-pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --clean --no-owner --no-privileges <path til dump>
+psql --host=localhost --port=5433 --username=postgres --dbname=postgres -c 'DROP DATABASE IF EXISTS saksbehandling WITH (FORCE);' -c 'CREATE DATABASE saksbehandling;'
+```
+
+- Kjør `pg_restore` for å gjenopprette databasen lokalt:
+```
+pg_restore --host=localhost --port=5433 --dbname=saksbehandling --username=postgres --single-transaction --no-owner --no-privileges <path til dump>
 ```
 
 ## KI-verktøy (Copilot, agents, skills og MCP)

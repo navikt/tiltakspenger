@@ -69,13 +69,14 @@ på siden av øvrige apper for å kunne teste frontend lokalt.
 For enkel bruk av docker-compose-oppsett er det skrevet noen bash-script som ligger på
 rot av dette repositoryet.
 
-| script          | beskrivelse                                                                                                                                                |
-|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options) |
-| ./down.sh       | Script for å stoppe alle apper i docker-compose (se i [down.sh](https://github.com/navikt/tiltakspenger/blob/main/down.sh) for tilgjengelige options)      |
-| ./dkill.sh      | Script for å kjøre docker compose down, stopper og fjerner alle containere som eventuelt fortsatt kjører, og fjerner det tilhørende nettverket             |
-| ./slettAlt.sh   | Kjører "docker compose down --rmi all --volumes", i.e. sletter alt.                                                                                        |
-| ./slettBaser.sh | Kjører "docker compose down --volumes", i.e. sletter basene.                                                                                               |
+| script          | beskrivelse                                                                                                                                                                                                                                                        |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options)                                                                                                         |
+| ./up-min.sh     | Starter kun databasene for saksbehandling og meldekort, pdfgen-tjenestene og wiremock — kan benyttes når backend-appene kjøres separat og med mock auth (se i [up-min.sh](https://github.com/navikt/tiltakspenger/blob/main/up-min.sh) for tilgjengelige options) |
+| ./down.sh       | Script for å stoppe alle apper i docker-compose (se i [down.sh](https://github.com/navikt/tiltakspenger/blob/main/down.sh) for tilgjengelige options)                                                                                                              |
+| ./dkill.sh      | Script for å kjøre docker compose down, stopper og fjerner alle containere som eventuelt fortsatt kjører, og fjerner det tilhørende nettverket                                                                                                                     |
+| ./slettAlt.sh   | Kjører "docker compose down --rmi all --volumes", i.e. sletter alt.                                                                                                                                                                                                |
+| ./slettBaser.sh | Kjører "docker compose down --volumes", i.e. sletter basene.                                                                                                                                                                                                       |
 
 #### Bruk av docker-compose oppsett for søknad
 

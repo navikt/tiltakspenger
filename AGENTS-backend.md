@@ -120,13 +120,19 @@ Da kan en test ikke jukse seg til en tilstand prod aldri når, og vi slipper å 
    Egne round-trip-tester per repo skal ikke skrives.
 
 2. **Aggregat-tester er få, spesialiserte og isolerte.**
-   De finnes kun for det per-sak-testene ikke kan treffe: spørringer som velger ut på tvers av saker, typisk jobbkøer.
+   De dekker det per-sak-testene ikke kan treffe: spørringer som velger ut på tvers av saker, typisk jobbkøer.
    Én fil per spørringsgruppe, navngitt `*AggregatTest`, og kjørt isolert.
    Fila bygger 2–3 saker gjennom prodstiene og asserter spørringens faktiske kontrakt: utvalgskriteriene, at `limit` respekteres, og sorteringen spørringen faktisk har.
    Har spørringen ingen `order by`, er rekkefølgen udefinert — assert på innhold og antall, ikke på sortering.
 
+   Aggregat-testen erstatter ikke testen av per-sak-funksjonen.
+   Jobber og consumere er naturlige black-box-innganger, og både jobben som sveiper på tvers og funksjonen som gjør arbeidet for én sak fortjener egen dekning.
+   Det som skiller dem er lesekanalen, ikke om de får finnes: aggregat-testen leser køen, per-sak-testen leser tilstanden for sin egen sak.
+
 3. **Ingen andre tester kaller `hent*(limit)`-metodene på repo-portene.**
-   Kaller du en slik metode utenfor en `*AggregatTest`, er testen enten feilplassert eller så tester den noe en e2e-test allerede dekker.
+   Kaller du en slik metode utenfor en `*AggregatTest`, er testen enten feilplassert, eller så tester den noe en e2e-test allerede dekker — eller så mangler den en lesekanal for én rad.
+   I det siste tilfellet: les tilstanden gjennom domenemodellen hvis den er der, ellers med egen SQL (se «Data som skrives, men aldri leses ut i domenet»).
+   Køspørringen er aldri riktig lesekanal for én sak.
 
 4. **Unntak merkes eksplisitt med en kommentar i testfilen.**
    To kategorier er legitime: historiske eller korrupte dataformer (se «Negative databasetester» under), og rene db-typer uten domeneflyt.
@@ -165,10 +171,26 @@ Rekkefølgen når en `throw`/`require` i et repo står udekket:
 
 1. **Nå den med en route-test** hvis tilstanden kan oppstå gjennom prodstiene.
 2. **Ellers: skriv en negativ databasetest.** Muter databasen direkte til den ugyldige tilstanden og verifiser at repoet kaster. Det er helt greit — det er selve poenget med testen, og den hører i unntakskategorien over. Legg dem i en egen `*NegativTest`-fil med KDoc som sier hvorfor databasen muteres.
-3. **Klarer vi ikke å trigge den heller, er `!!` på sin plass.** Typisk når en foreign key garanterer at raden finnes. En `requireNotNull` med melding ville da bare stått igjen som permanent udekket kode. Skriv en kommentar som sier hvilken garanti som gjør `!!` trygt.
+3. **Klarer vi ikke å trigge den heller, er `!!` på sin plass.** Typisk når en foreign key eller en unik indeks garanterer at raden finnes. En `requireNotNull` med melding ville da bare stått igjen som permanent udekket kode. Skriv en kommentar som sier hvilken garanti som gjør `!!` trygt.
+   **Hviler `!!` på en constraint, skriv en test som verifiserer at constrainten finnes.** En insert eller update som skal feile, er nok. Garantien er ikke sterkere enn migreringen som holder den i live, og en droppet kolonne tar med seg både constrainten og gyldigheten til `!!`-et uten at noe annet slår ut.
 
 Vurder også om domenelogikk i repoet kan flyttes inn i domenet.
 Invarianter som håndheves på domenemodellen trenger ingen databasetest for å dekkes.
+
+#### Data som skrives, men aldri leses ut i domenet
+
+Noen felter finnes kun for å styre en jobb eller en spørring: de skrives inn, brukes i en `where`-klausul, og kommer aldri ut igjen på domenemodellen.
+Køflagg er det typiske tilfellet.
+
+**Det er en villet asymmetri, og domenemodellen skal ikke utvides for å gjøre slike felter observerbare.**
+Å legge feltet på domenetypen kun for at en test skal kunne lese det, er å forurense modellen med noe prod ikke bruker.
+
+Trenger en test å verifisere tilstanden, **skriv egen SQL i testen** og les kolonnen direkte.
+Det er samme unntakskategori som de negative databasetestene: du går utenom domenemodellen med vitende og vilje, og KDoc-en i testen sier hvorfor.
+Merk at dette er en *lesekanal for én rad* — det er noe annet enn å bruke jobbens køspørring som lesekanal, som fortsatt er filter-krykka.
+
+Dekningen blir sjelden et problem: skrivestien kalles av prodflyten og lesestien av jobben, så repo-linjene dekkes uansett.
+Er det likevel en linje som kun finnes for en spørring ingen prodsti kaller, er det dødt og skal slettes, ikke dekkes.
 
 ## Bygg, lint og statisk analyse
 

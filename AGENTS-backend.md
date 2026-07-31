@@ -12,6 +12,8 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
   - `service/` *(eldre form, under utfasing)* — et orkestreringslag skilt ut fra domenet «fra gammelt av». Flere repoer har fortsatt dette. Når du jobber i et slikt repo, behold den lokale strukturen i stedet for å flytte alt på én gang.
 - **Pakkerot**: `no.nav.tiltakspenger.<modul>`
 - **DDD**: domenelogikk hører hjemme på domenemodellen som er nærmest dataene; `init`/`require`-blokker håndhever invarianter.
+- **`*Ex.kt`-filer er en del av domenetypen, ikke et lag utenfor den.** Extension-funksjoner på en domenetype samlet i egen fil (`RammebehandlingGjenopptaEx.kt`, `RammebehandlingLeggTilbakeEx.kt`, …) er bare filorganisering for å holde hovedfila lesbar. De regnes som typens egne metoder, og samme regler gjelder der: de skal håndheve invariantene og oppdatere typens metadatafelter. En operasjon som muterer domenetypen hører hjemme på typen — enten i hovedfila eller i en slik `*Ex.kt` — ikke i en service.
+- **Bare typen selv skal kalle `copy()` på seg selv.** `copy()` omgår all validering i navngitte operasjoner og lar en kaller sette et felt uten å oppdatere de andre som hører sammen med det — typisk metadata som `sistEndret`, eller et resultat som må følge saksopplysningene. Kaller du `copy()` utenfra, har du laget en muterende operasjon på feil sted; lag i stedet en navngitt funksjon på typen (eller i dens `*Ex.kt`) som håndhever invariantene. Kotlin kan i prinsippet håndheve dette med privat konstruktør og `@ConsistentCopyVisibility`, men det er tungvint nok til at vi holder det som en konvensjon inntil videre.
 
 ## Språk og stil
 

@@ -144,6 +144,9 @@ Der vi avviker, er det bevisst:
 - Callere pinner til `@main` (navikt-eid repo); tredjeparts-actions inne i de delte workflowene SHA- eller digest-pinnes med versjonstag/-kommentar (`# vX.Y.Z`, `# v0` for nais-actions, `docker://…:tag@sha256:…` for images).
   `@main` betyr at metarepoets main er en tillitsgrense: write-tilgang hit gir innflytelse på callernes CI, så endringer i delte workflows skal reviewes deretter.
 - Send secrets eksplisitt fra calleren, aldri `secrets: inherit` — inherit eksponerer alle repoets og org-delte secrets for den delte workflowen.
+  **Forutsetningen er at den kalte workflowen deklarerer secretsene sine under `on.workflow_call.secrets`.** Gjør den ikke det, er `inherit` eneste form som virker: GitHub avviser hele kjøringen ved oppstart (`startup_failure`, «Secret … is not defined in the referenced workflow») når calleren sender en secret callee ikke deklarerer.
+  Våre egne delte workflows deklarerer sine, så regelen gjelder uten unntak her. For tredjeparts-workflows må du sjekke callee før du konverterer — `navikt/tms-deploy/.github/workflows/oppdater-mikrofrontend-manifest-v3.yaml` deklarerer f.eks. kun `inputs` og leser `secrets.PRIVATE_KEY`/`secrets.APP_ID` rett fra konteksten.
+  En slik konvertering drepte deployen i `tiltakspenger-meldekort-microfrontend` i fem dager (kjøring 30463460189); den ligger nå på `inherit` med begrunnelse i fila. Verken actionlint eller zizmor fanger dette — de validerer ikke inputs/secrets mot en ekstern reusable workflow.
 - Repo-variasjon håndteres med `inputs` (f.eks. `gradle-kommando`), ikke ved å forgrene workflowen.
   Defaultene i delt workflow er flåtestandarden — callerne sender kun inputs ved reelt avvik (ingen `java-version: '25'`-duplisering i callerne).
 - Gate-callerne trigger på både `push` (interne brancher) og `pull_request` (fork-PR-er); guarden som hindrer dobbeltkjøring bor i delt workflow, siden `github`-konteksten der reflekterer callerens event.
@@ -157,6 +160,7 @@ Der vi avviker, er det bevisst:
   Se sikkerhetsdesign-kommentaren øverst i `dependabot-auto-merge.yml`.
 - Repo som kaller delte workflows trenger en `.github/zizmor.yml` med `unpinned-uses`-policyen `"navikt/tiltakspenger/*": ref-pin` (ellers flagges `@main`-referansen) — kopier fra dette repoet eller libs, og behold begrunnelseskommentarene.
   Zizmor-unntak skal alltid ha en begrunnelse i konfigen; informational-funn rapporteres ikke (`min-severity: low` i den delte workflowen).
+  Gjelder unntaket ett enkelt funn og hører begrunnelsen hjemme ved siden av koden, bruk i stedet en `# zizmor: ignore[regel]`-kommentar på linja funnet peker på (tåler trailing tekst, så SHA-/versjonskommentaren kan stå i samme kommentar) — den treffer kun det funnet, mens et konfig-unntak per fil også dekker framtidige funn i fila. Begrunnelsen skal da stå i fila, ikke i konfigen. Presedens: `secrets-inherit` på tms-deploy-kallene i `tiltakspenger-meldekort-microfrontend`.
 
 ## Ingen publisering
 

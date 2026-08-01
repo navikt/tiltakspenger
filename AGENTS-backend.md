@@ -79,6 +79,7 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - **Skriv SQL-en inline i funksjonen som bruker den** — ikke trekk den ut til en top-level konstant. Vi ønsker ikke å være DRY her.
 - Repositories: interface ender på `Repo`, Postgres-implementasjon på `PostgresRepo` (`SøknadRepo` / `SøknadPostgresRepo`)
 - Lag fakes for alle repos, både til testing og til lokal kjøring
+- **En domenetype skal aldri brukes til å lese fra eller skrive til databasen.** Hver app eier sine egne Db-typer og mapper til og fra dem (`TiltakstypeSomGirRettDb`, `TiltakDeltakerstatusDb` i saksbehandling-api er mønsteret). Eneste unntak er `java.time`-typer og liknende fra plattformen — aldri noe vi har laget selv, og **aldri en type fra `tiltakspenger-libs`**: da er libs i praksis skjemaet til en tabell i en annen app, og kan ikke endres uten migrering der. Det gjelder også felt inne i JSON-kolonner, som er lette å overse fordi de ikke er egne kolonner. Samme prinsipp gjelder ut mot API-er: en DTO skal ha sine egne verdier, ikke arve domenets `name`.
 
 ## JSON
 
@@ -91,6 +92,17 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - Standardlogging bruker `kotlin-logging` (`io.github.oshai`)
 - **Logg aldri kun til sikkerlogg.** En sikkerlogg-innføring skal alltid ha en parallell linje i vanlig logg på samme nivå, med en nøytral (ikke-sensitiv) beskrivelse av hendelsen og en eksplisitt henvisning til sikkerlogg (f.eks. «Se sikkerlogg for detaljer»). Uten den finner ingen hendelsen i vanlig logg, og sporet til detaljene mangler.
 - Overstyr `toString()` på typer som inneholder sensitive data for å unngå utilsiktede lekkasjer
+
+## Personopplysninger
+
+Verdier som er personopplysninger markeres med **typen**, ikke med en kommentar eller en annotasjon: `Personopplysning` i `tiltakspenger-libs:common`, med kategorier under seg (`Stedsinformasjon`) og konkrete value classes (`Virksomhetsnavn`, `Tilknytningstittel`, `Fnr`).
+
+- **Kompilatoren håndhever maskeringen.** Interfacet redeklarerer `toString()` som abstrakt, så enhver implementasjon *må* skrive sin egen. Man kan ikke glemme den.
+- **Maskeringen arves.** En `data class` med en `Personopplysning`-property maskerer automatisk i sin genererte `toString()`. Klasser som inneholder slike felt skal derfor **ikke** ha håndskrevne `toString()`-overstyringer — la typen gjøre jobben.
+- **Det ene hullet er `data class`,** som tilfredsstiller kompilatorkravet med sin genererte `toString()` og lekker alle feltene. Konsistregelen `PersonopplysningMaskererToString` krever at en `data class` som markerer seg deklarerer sin egen `toString()`.
+- **Maskeringen gjelder kun `toString`.** Verdien hentes eksplisitt fra typens felt, slik at sikkerlogg, visning og lagring må be om den.
+- **Hierarkiet er `sealed`** slik at settet av personopplysningstyper er opptellbart. Hver type har en `begrunnelse` som sier hva den utleverer om personen — grunnlaget for å avstemme mot personvernkonsekvensvurderingene (PVK). En ny personopplysningstype hører derfor hjemme i `common`, ikke lokalt i en app.
+- **Husk stedsinformasjon.** Ikke bare fødselsnummer er sensitivt: for personer med adressebeskyttelse er *hvor de møter opp* ofte den mest sensitive opplysningen vi har. Arrangørnavn og sammensatte titler («Oppfølging hos Arrangør AS avd Strandveien») er adresser i praksis.
 
 ## Testing
 
@@ -108,6 +120,47 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
   - **Ikke-isolert (standard, parallelt skjema):** tester deler skjema og lever side om side. Gi hver test sin egen sak/person (unike `sakId`/`saksnummer`/`fnr`) slik at de ikke kolliderer.
   - **Isolert:** tømmer DB før testen og kjører sekvensielt. Reserver dette for **aggregerte / på-tvers-av-sak**-tester — typisk jobber som spør på tvers av alle saker. Isolert modus er treg; ikke bruk den når en sak-scoped test holder.
 - **Deterministiske, sekvensielle id-generatorer i tester.** Bruk delte generatorer for `saksnummer`, `fnr` og `journalpostId` (sekvensielle og trådsikre) i stedet for tilfeldige verdier som `Fnr.random()`. Tilfeldige 11-sifrede fnr kolliderer sjelden i én kjøring, men i et delt test-skjema gir bursdagsparadokset reell flaky-risiko over mange CI-kjøringer. Generatorene holdes på **ett høyt nivå** (én delt instans i test-db-manageren, jf. `idGeneratorsFactory`) og injiseres ned i test-konteksten — **ikke** legg prosessglobal tilstand dypt inne i selve generatoren.
+
+### Miljøflagg injiseres, slås aldri opp statisk
+
+Målet er å kunne parallellisere tester i det uendelige.
+Det forutsetter at ingen klasse endrer oppførsel basert på prosessglobal tilstand, for den tilstanden er felles for alle tester i samme JVM og kan ikke varieres per test.
+
+- **`Configuration.isDev()` / `isProd()` / `isNais()` skal kun leses i komposisjonsroten** — `App.kt` og `ApplicationContext`/`*Context`-klassene der objektgrafen wires.
+  Alt under dem tar flagget som en vanlig konstruktørparameter.
+- **Aldri som defaultverdi i en klasse som deles mellom nais, test og lokalt.**
+  `private val erDev: Boolean = Configuration.isDev()` er det verste tilfellet: oppslaget er usynlig på kallstedet, det skjer ved hver konstruksjon, og en test som ikke sender inn verdien arver stille miljøet til JVM-en den tilfeldigvis kjører i.
+  Skriv `private val erDev: Boolean` uten default, så tvinges kallstedet til å ta stilling.
+- **Mønsteret finnes allerede:** `SendMeldekortbehandlingTilBeslutterService(erProd: Boolean)` får flagget inn fra `MeldekortContext`, og `ApplicationContext(erDev = ...)` får sitt fra `App.kt`.
+  En ren konstant som default (`erDev: Boolean = false`) er greit der det bare styrer loggnivå — det er ingen global tilstand, og defaulten skal da være den høylytte prod-oppførselen.
+
+Samme resonnement gjelder all annen JVM-global tilstand: `System.setProperty`, statiske registre og `mockkStatic` hører ikke hjemme i testbar kode.
+
+### Ingen defaults i prod for testenes skyld
+
+**Prodsignaturer skal aldri ha en defaultverdi som bare finnes for at en test skal slippe å sende inn noe.**
+Testene kan ha så mange buildere, hjelpefunksjoner og defaults de trenger for å være DRY — men den bekvemmeligheten skal ligge i testkoden, ikke klusse til produksjonskoden.
+
+- Er argumentet obligatorisk for at prod skal oppføre seg riktig, er det obligatorisk i signaturen.
+  «Femten testkallsteder bryr seg ikke» er et argument for en testhjelper, ikke for en default.
+- Lag i stedet en tynn wrapper i `src/test`, med defaulten der.
+  `konsumerTilbakekrevingshendelse(...)` rundt `TilbakekrevingConsumer.consume(...)` er mønsterfila: prodsignaturen krever `erDev`, testhjelperen defaulter den til `false`, og testene som faktisk bryr seg sender inn verdien selv.
+- En default hvor **prod** er den som trenger verdien er selvsagt fortsatt i orden (`log: KLogger? = logger` gir prod den ekte loggeren, og testen overstyrer).
+  Retningen er poenget: prod skal ha den riktige verdien uten hjelp fra testen.
+
+**Hvorfor:** En default som er satt for testens skyld gjør at kallstedene i prod slutter å ta stilling til noe de burde ta stilling til, og feilen dukker opp som stille gal oppførsel i ett miljø i stedet for som en kompileringsfeil.
+
+#### `@TestOnly` er samme lukt, og skal så godt som alltid unngås
+
+Annotasjonen løser ingenting — den dokumenterer bare at testkode har lagt seg i en prodsignatur.
+Sjekk alltid kallstedene først: flere `@TestOnly`-medlemmer viser seg å ikke ha noen brukere i det hele tatt, og skal da bare slettes.
+Ellers dekker tre kurer praktisk talt alt:
+
+- **Bekvemmelighetskonstruktører** (`Begrunnelse.createOrThrow` = `create(...)!!`) flyttes til testlaget som extension på companion-objektet, i en `*TestEx.kt` ved siden av typen.
+  Kallstedene beholder `Type.metode(...)` og trenger kun en ny import.
+- **Lesemetoder kun tester bruker** flyttes til testlaget med egen SQL.
+  La mappingen bli i prod hvis prodspørringene bruker den — det er spørringen som er test-only, ikke mappingen.
+- **Skrive-wrappere** som bare åpner en transaksjon rundt en companion-metode blir extensions på `PostgresSessionFactory` i testlaget.
 
 ### Testtaksonomi: prodstier og aggregat-disiplin
 
@@ -191,6 +244,27 @@ Merk at dette er en *lesekanal for én rad* — det er noe annet enn å bruke jo
 
 Dekningen blir sjelden et problem: skrivestien kalles av prodflyten og lesestien av jobben, så repo-linjene dekkes uansett.
 Er det likevel en linje som kun finnes for en spørring ingen prodsti kaller, er det dødt og skal slettes, ikke dekkes.
+
+Skriver vi til en tabell ingen av våre lesestier rører — statistikktabellene leses kun av DVH — må insert-SQLen likevel testes.
+Kjør skrivingen gjennom prodstien og les radene tilbake med egen SQL i testen.
+Uten det ville en feil kolonnebinding aldri slått ut hos oss; den ville dukket opp som feil tall i datavarehuset.
+
+#### Row hører i databasetesten, ren mapping i enhetstesten
+
+Databaselaget har to slags kode, og de skal testes ulikt:
+
+- **Alt som rører `Row`** — spørringer, radmapping, transaksjoner — skal gjennom en ekte databasetest.
+- **Ren mapping** — jsonb-varianter, enum-oversettelser og felter med avansert mapping — skal ha enhetstester.
+  Ligger mappingen i samme fil som postgres-koden, trekk den ut i en egen db-hjelpefil, så skillet blir synlig i filstrukturen.
+
+**Enhetstesten skal pinne den faktiske strengen eller json-en, ikke bare rundturen.**
+`x.toDb().toDomain() shouldBe x` er symmetrisk og passerer selv om en variant omdøpes i *begge* `when`-ene samtidig — og da er dataen som allerede ligger i databasen ulesbar uten at noe slår ut.
+Skriv `Enum.entries.associateWith { it.toDb() } shouldBe mapOf(...)` med verdiene skrevet ut, eller assert hele json-strengen, og behold rundturen som en egen test for lesestien.
+Navnet på disk er kontrakten mot data som allerede er lagret; dekningstall alene sier ingenting om at den holder.
+
+**Tar du en snarvei av ytelseshensyn, skriv det i testen:** at dette er enhetstest framfor e2e, og hvorfor.
+Typisk fordi hver enum-variant ville krevd sin egen flyt gjennom prodstien — en statusenum med nitten utfall koster nitten konstruerte feilsituasjoner — mens mappingen ikke rører postgres i det hele tatt.
+Noter samtidig hva testen *ikke* sier: at varianten kan nås. En variant ingen prodsti produserer er død kode, og skal slettes framfor å dekkes.
 
 ## Bygg, lint og statisk analyse
 

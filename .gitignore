@@ -16,3 +16,6 @@
 TASKS.md
 .worktrees
 .worktree
+
+# Console- og sidedumper fra lokal nettleserautomatisering
+.playwright-mcp/

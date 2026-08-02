@@ -259,7 +259,7 @@ Alert-historikken kan rekonstrueres uavhengig av Slack med en range-query mot Mi
 
 ### CI-varslene (`#tp-varsel`)
 
-Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligger som secret `SLACK_VARSEL_WEBHOOK_URL` i hvert repo (også som Dependabot-secret, siden Dependabot-kjøringer ikke ser vanlige Actions-secrets). Den brukes av test-og-bygg-workflowene i repoene og av den delte [`dependabot-auto-merge.yml`](.github/workflows/README.md). Denne webhooken har ingenting med Alertmanager-kjeden å gjøre — at CI-varsler kommer frem sier altså ikke noe om alert-varslene, og omvendt.
+Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligger som secret `SLACK_VARSEL_WEBHOOK_URL` i hvert repo (også som Dependabot-secret, siden Dependabot-kjøringer ikke ser vanlige Actions-secrets). Den brukes av test-og-bygg-workflowene i repoene og av den delte [`dependabot-auto-merge.yml`](.github/workflows/README.md). Webhook-verdien administreres i Slack-appen [«Tiltakspenger slack notifications»](https://api.slack.com/apps/A080BJA5P34/incoming-webhooks) under *Incoming Webhooks* (krever collaborator-tilgang på appen) — GitHub-secrets kan ikke leses tilbake, så det er dit man går for å hente verdien når et nytt repo skal ha secreten. Denne webhooken har ingenting med Alertmanager-kjeden å gjøre — at CI-varsler kommer frem sier altså ikke noe om alert-varslene, og omvendt.
 
 ### Videre lesning
 

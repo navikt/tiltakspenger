@@ -214,11 +214,18 @@ Symptomet er en assertion som viser fakens defaultverdi i stedet for den du satt
 Merk at det å bygge tilstand med en fake ikke i seg selv krever isolering.
 Det er kombinasjonen av styrt fake-verdi og sveipende jobb som gjør det.
 
-#### Full dekning på postgres-repoene
+#### Full dekning på databaselaget
 
-Målet er **100 % linjedekning på repo-klassene, tatt med route-testene som grunnsett.**
+Målet er **100 % både linje- og grendekning (`CoverageUnit.LINE` og `CoverageUnit.BRANCH`) på hele databaselaget, tatt med route-testene som grunnsett.**
+De to gatene står side om side fordi de fanger ulike hull: full grendekning sier ingenting om en linje uten grener, og full linjedekning sier ingenting om hvilken vei et vilkår ble tatt.
 Tester utover grunnsettet kan bruke fakes.
-Når et repo er brakt til full dekning, låses det i dekningsgaten (`postgresRepoerMedDekningskrav` i `build.gradle.kts`) slik at dekningen ikke kan falle tilbake.
+Dekningen låses i en gate i `build.gradle.kts` slik at den ikke kan falle tilbake.
+
+**Gaten skal være mønsterbasert, ikke en navneliste.**
+I saksbehandling-api er den to mønstre: alt under en `infra/repo`-pakke (som dekker `*DbJson`-filene) pluss alt som heter `*Repo`, uansett hvor det ligger.
+Kover matcher på fullt klassenavn, og `*` dekker også punktum — det finnes ingen `**`, og ett `*` spenner derfor over vilkårlig mange pakkenivåer.
+Da er ny kode i databaselaget dekket som standard, og en pakke- eller navneendring kan ikke la dekningen forsvinne stille slik en includes-liste ville gjort.
+Bootstrap som tilfeldigvis ligger i `infra/repo` (oppkobling og Flyway-oppsett) hører ikke til databaselaget, og settes i en kort, navngitt excludes-liste med begrunnelse.
 
 Rekkefølgen når en `throw`/`require` i et repo står udekket:
 

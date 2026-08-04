@@ -14,6 +14,7 @@
     "tiltakspenger-meldekort-api": "https://github.com/navikt/tiltakspenger-meldekort-api",
     "tiltakspenger-meldekort-microfrontend": "https://github.com/navikt/tiltakspenger-meldekort-microfrontend",
     "tiltakspenger-journalposthendelser": "https://github.com/navikt/tiltakspenger-journalposthendelser",
-    "tiltakspenger-pdfgenrs": "https://github.com/navikt/tiltakspenger-pdfgenrs"
+    "tiltakspenger-pdfgenrs": "https://github.com/navikt/tiltakspenger-pdfgenrs",
+    "tiltakspenger-interndokumentasjon": "https://github.com/navikt/tiltakspenger-interndokumentasjon"
   }
 }

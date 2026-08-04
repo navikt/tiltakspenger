@@ -93,6 +93,15 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - **Logg aldri kun til sikkerlogg.** En sikkerlogg-innføring skal alltid ha en parallell linje i vanlig logg på samme nivå, med en nøytral (ikke-sensitiv) beskrivelse av hendelsen og en eksplisitt henvisning til sikkerlogg (f.eks. «Se sikkerlogg for detaljer»). Uten den finner ingen hendelsen i vanlig logg, og sporet til detaljene mangler.
 - Overstyr `toString()` på typer som inneholder sensitive data for å unngå utilsiktede lekkasjer
 
+### Logging av HTTP-kall
+
+Regelen er **én debug/info-linje når kallet går bra, og én feillinje per feil — begge fra laget som har domenekonteksten.**
+
+- **Klienten logger ikke.** Den vet hvilket endepunkt kallet gikk mot, men ikke hvilken sak, behandling eller saksbehandler det gjaldt, så linja blir uunngåelig generisk. Klienten mapper i stedet `HttpKlientError` til en domenefeil som **bærer feilen videre** (`KanIkkeHenteKontorhistorikk.KallFeilet(error)` er mønsteret), og servicen logger én gang med `HttpKlientError.loggFeil(logger, operasjon, kontekst)` / `HttpKlientResponse.loggSuksess(logger, melding)`.
+- **Skriv aldri en dummy-exception for å få en stacktrace.** `RuntimeException("Trigger stacktrace for debug.")` var et forsøk på å bøte på at feil fra `java.net.http` oppstår asynkront på klientens I/O-tråd — men den ekte throwable-en havnet da bare i sikkerlogg, og dummy-stacktracen sier ingenting. Send den ekte feilen til `logger.error(throwable)`; den er PII-fri.
+- **Stacktracen kan aldri fortelle hvor kallet gikk.** En `HttpConnectTimeoutException` lages på JDK-ens `SelectorManager`-tråd og har null applikasjonsframes. Alt som skal hjelpe deg i prod må stå i selve meldingen — det er derfor `loggFeil` skriver feilart, endepunkt, antall forsøk og varighet.
+- **Ta stilling til `UriSynlighet` når du lager en klient.** Default er `KunSikkerlogg`, som gir `POST https://host/<skjult>` i vanlig logg. Har klienten faste stier uten personopplysninger i path eller query — identen ligger typisk i request-bodyen — sett `UriSynlighet.VanligLogg` i `HttpKlientConfig`, så navngir feilloggene endepunktet i klartekst.
+
 ## Personopplysninger
 
 Verdier som er personopplysninger markeres med **typen**, ikke med en kommentar eller en annotasjon: `Personopplysning` i `tiltakspenger-libs:common`, med kategorier under seg (`Stedsinformasjon`) og konkrete value classes (`Virksomhetsnavn`, `Tilknytningstittel`, `Fnr`).

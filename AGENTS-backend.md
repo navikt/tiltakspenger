@@ -101,6 +101,8 @@ Regelen er **én debug/info-linje når kallet går bra, og én feillinje per fei
 - **Skriv aldri en dummy-exception for å få en stacktrace.** `RuntimeException("Trigger stacktrace for debug.")` var et forsøk på å bøte på at feil fra `java.net.http` oppstår asynkront på klientens I/O-tråd — men den ekte throwable-en havnet da bare i sikkerlogg, og dummy-stacktracen sier ingenting. Send den ekte feilen til `logger.error(throwable)`; den er PII-fri.
 - **Stacktracen kan aldri fortelle hvor kallet gikk.** En `HttpConnectTimeoutException` lages på JDK-ens `SelectorManager`-tråd og har null applikasjonsframes. Alt som skal hjelpe deg i prod må stå i selve meldingen — det er derfor `loggFeil` skriver feilart, endepunkt, antall forsøk og varighet.
 - **Ta stilling til `UriSynlighet` når du lager en klient.** Default er `KunSikkerlogg`, som gir `POST https://host/<skjult>` i vanlig logg. Har klienten faste stier uten personopplysninger i path eller query — identen ligger typisk i request-bodyen — sett `UriSynlighet.VanligLogg` i `HttpKlientConfig`, så navngir feilloggene endepunktet i klartekst.
+- **Logg varigheten sammen med grensa.** `brukt: 1.003s` er ikke til å tolke alene — det kan være en klient som akkurat brøt 1 s, eller en som brukte en brøkdel av 30 s. `HttpKlientMetadata.tidsgrenser` bærer begge grensene, timeout-feil navngir den som brøt, og `loggSuksess` skriver `brukt: 4.8s av 5s per forsøk` som tidlig varsling.
+- **Klassifiser ved grensa, ikke etterpå.** Når du oversetter en fremmed type (en JDK-exception, et wire-format) til vår egen, skal skillet avgjøres der og bæres videre. Utleder du det på nytt lenger ut i kjeden — spesialisert → generalisert → spesialisert — har mellomtypen kastet informasjon den fikk inn, og gjetningen kan divergere fra den opprinnelige klassifiseringen.
 
 ## Personopplysninger
 
@@ -306,7 +308,7 @@ Standard hjelpeskripter (ett sett per sub-repo):
 ./clean_lint_and_build.sh            # clean (uten cache) + spotless + bygg + test
 ```
 
-> `tiltakspenger-libs` er unntaket: det deployes ikke til NAIS og bruker en delt **convention-plugin** (`tiltakspenger-lib-conventions`) i stedet for å duplisere build-oppsettet i hver submodul. Se [`tiltakspenger-libs/AGENTS.md`](tiltakspenger-libs/AGENTS.md).
+> `tiltakspenger-libs` er unntaket: det deployes ikke til NAIS og bruker delte **convention-plugins** fra det inkluderte bygget `build-logic/` (`tiltakspenger.kotlin`, `tiltakspenger.bibliotek`, `tiltakspenger.dekning`, `tiltakspenger.githooks`) i stedet for å duplisere build-oppsettet i hver submodul. Se [`tiltakspenger-libs/AGENTS.md`](tiltakspenger-libs/AGENTS.md).
 
 ## Avhengigheter
 

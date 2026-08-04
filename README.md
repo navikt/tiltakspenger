@@ -47,7 +47,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-tiltak](https://github.com/navikt/tiltakspenger-tiltak)
 - [tiltakspenger-saksbehandling](https://github.com/navikt/tiltakspenger-saksbehandling)
 - [tiltakspenger-soknad-api](https://github.com/navikt/tiltakspenger-soknad-api)
-- [tiltakspenger-soknad-mock-api](https://github.com/navikt/tiltakspenger-soknad-mock-api)
 - [tiltakspenger-pdfgen](https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-pdfgenrs](https://github.com/navikt/tiltakspenger-pdfgenrs)
 - [tiltakspenger-soknad](https://github.com/navikt/tiltakspenger-soknad)
@@ -56,6 +55,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-meldekort-api](https://github.com/navikt/tiltakspenger-meldekort-api)
 - [tiltakspenger-meldekort-microfrontend](https://github.com/navikt/tiltakspenger-meldekort-microfrontend)
 - [tiltakspenger-journalposthendelser](https://github.com/navikt/tiltakspenger-journalposthendelser)
+- [tiltakspenger-interndokumentasjon](https://github.com/navikt/tiltakspenger-interndokumentasjon) (privat — intern dokumentasjon, ingen kode)
 
 ### Lokal kjøring av verdikjeden
 
@@ -81,13 +81,13 @@ rot av dette repositoryet.
 #### Bruk av docker-compose oppsett for søknad
 
 For kjøring av utviklingsmiljø for å jobbe med søknaden er det lagd et eget bash-script på
-rot av dette repositoryet. Det kan kjøres opp med eller uten søknads-api'et, hvis man eksempelvis
-skulle ønske å kjøre opp api'et fra IntelliJ.
+rot av dette repositoryet. Oppsettet dekker støttetjenestene rundt søknaden; selve søknads-api'et
+kjøres fra IntelliJ, med `main()` i `LokalMain.kt`.
 
 | script           | beskrivelse                                                                                                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ./up-soknad.sh   | Script for å bygge og starte alle apper i docker-compose-soknad (se i [up-soknad.sh](https://github.com/navikt/tiltakspenger/blob/main/up-soknad.sh) for tilgjengelige options) |
-| ./down-soknad.sh | Script for å stoppe alle apper i docker-compose (se i [down-søknad.sh](https://github.com/navikt/tiltakspenger/blob/main/down-soknad.sh) for tilgjengelige options)             |
+| ./down-soknad.sh | Script for å stoppe alle apper i docker-compose-soknad. Tar ingen options                                                                                                        |
 
 ### Status på bygg og pods
 

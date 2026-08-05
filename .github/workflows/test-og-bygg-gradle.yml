@@ -109,13 +109,22 @@ jobs:
           while IFS= read -r jar; do
             [ -n "$jar" ] || continue
             antall=$((antall+1))
+            # </dev/null: gh ville ellers kunne lese fra samme stdin som løkka og spise linjer.
             if ! gh attestation verify "$jar" \
                  --repo navikt/tiltakspenger-libs \
-                 --signer-workflow navikt/tiltakspenger-libs/.github/workflows/push.yml >/dev/null 2>&1; then
+                 --signer-workflow navikt/tiltakspenger-libs/.github/workflows/push.yml \
+                 >"$RUNNER_TEMP/gh-ut.txt" 2>&1 </dev/null; then
               echo "::error::Ikke verifisert mot libs sin publiseringsworkflow: $jar"
+              # Uten utskriften ser manglende attestasjon, manglende tilgang og nettverksfeil helt like ut.
+              sed 's/^/    /' "$RUNNER_TEMP/gh-ut.txt" >&2
               feil=1
             fi
           done < build/reports/libs-artefakter.txt
+          # En tom liste er ikke et grønt resultat: da har gaten ikke sett på noe, og et brudd ville passert.
+          if [ "$antall" -eq 0 ]; then
+            echo "::error::Fant ingen libs-artefakter å verifisere - gaten målte ingenting."
+            exit 1
+          fi
           echo "Verifiserte $antall libs-artefakter."
           exit $feil
 

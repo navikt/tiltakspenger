@@ -81,6 +81,43 @@ jobs:
         run: eval "$GRADLE_KOMMANDO"
         env:
           GRADLE_KOMMANDO: ${{ inputs.gradle-kommando }}
+      # Verifiser at libs-artefaktene på classpathen faktisk kommer fra libs' publiseringsworkflow.
+      # Uten dette er attestasjonen bare dokumentasjon: hvem som helst med write:packages kan publisere fra
+      # en laptop, og et slikt artefakt ville blitt bygget inn uten at noe slo ut. `--signer-workflow` gjør at
+      # det ikke holder å ha *en* attestasjon - den må komme fra nettopp push.yml i libs.
+      #
+      # Gradle peker ut artefaktene, ikke et `find` i cachen: cachen samler opp alle versjoner som noen gang er
+      # lastet ned, mens bygget bruker én av dem.
+      #
+      # Tasken kommer fra `tiltakspenger.kotlin`. Repoer som ennå ikke har tatt i bruk convention-pluginene
+      # hopper over steget og dekkes automatisk den dagen de migreres. Andre Gradle-feil enn «task not found»
+      # feiler steget, slik at et reelt brudd ikke forsvinner i skip-grenen.
+      - name: Verifiser attestasjon på libs-artefakter
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! ./gradlew -q skrivLibsArtefakter 2>"$RUNNER_TEMP/gradle-feil.txt"; then
+            if grep -qi "not found in root project\|cannot locate tasks" "$RUNNER_TEMP/gradle-feil.txt"; then
+              echo "::notice::Repoet bruker ikke convention-pluginene ennå - hopper over attestasjonssjekken."
+              exit 0
+            fi
+            cat "$RUNNER_TEMP/gradle-feil.txt" >&2
+            exit 1
+          fi
+          feil=0
+          antall=0
+          while IFS= read -r jar; do
+            [ -n "$jar" ] || continue
+            antall=$((antall+1))
+            if ! gh attestation verify "$jar" \
+                 --repo navikt/tiltakspenger-libs \
+                 --signer-workflow navikt/tiltakspenger-libs/.github/workflows/push.yml >/dev/null 2>&1; then
+              echo "::error::Ikke verifisert mot libs sin publiseringsworkflow: $jar"
+              feil=1
+            fi
+          done < build/reports/libs-artefakter.txt
+          echo "Verifiserte $antall libs-artefakter."
+          exit $feil
 
   image:
     runs-on: ubuntu-latest

@@ -63,6 +63,12 @@ Fork-kjøringer får read-only token og ingen secrets: Slack-varsling skjer uans
 Node-varianten dekker både npm og pnpm ved å detektere pakkehåndterer fra lockfila (`pnpm-lock.yaml` → pnpm) — npm→pnpm-migreringen (jf. nais-doc) krever dermed ingen caller-endring, bare bytte av lockfil i repoet.
 Testene ligger i byggegatene: gradle-varianten kjører `./gradlew build` (inkl. tester), node-varianten kjører `npm ci`/`pnpm install --frozen-lockfile` + `test-kommando` (lint/tsc/test etter hva repoet har; `$PAKKEHANDTERER` er tilgjengelig i kommandoen).
 
+Testjobben i `test-og-bygg-gradle.yml` verifiserer også at `tiltakspenger-libs`-artefaktene på classpathen kommer fra libs sin egen publiseringsworkflow, med `gh attestation verify --signer-workflow`.
+Uten den sjekken er attestasjonen bare dokumentasjon: hvem som helst med `write:packages` kan publisere fra en laptop, og artefaktet ville blitt bygget inn uten at noe slo ut.
+Artefaktene pekes ut av Gradle-tasken `skrivLibsArtefakter` (fra convention-pluginen `tiltakspenger.kotlin`), ikke av et søk i Gradle-cachen — cachen samler opp alle versjoner som noen gang er lastet ned, mens bygget bruker én av dem.
+Repoer som ennå ikke har tatt i bruk convention-pluginene mangler tasken og hopper over steget; de dekkes automatisk den dagen de migreres.
+Feiler steget, er det enten et artefakt uten attestasjon eller ett som ikke kommer fra `push.yml` i libs — begge deler skal stoppe bygget.
+
 `test-og-bygg-gradle.yml` eksponerer imaget som workflow-output `IMAGE`; deploy-calleren sender den videre til `deploy-nais.yml` via `needs.<jobb>.outputs.IMAGE` — det er komposisjonsmønsteret for bygg-og-deploy-pipelines.
 Test og image-bygg er parallelle jobber i den delte workflowen: image-jobben bygger kun distribusjonen (`installDist -x check`) og pusher, mens testjobben kjører hele `build` pluss `installDist` — gatene fanger dermed dist-brekkasje før main (selve Dockerfile-bygget dekkes som før først av main-kjøringen).
 Callerens `needs` på workflow-kallet venter på begge, så deploy er fortsatt gatet på grønn test — men imaget kan ligge utestet i registryet uten å bli deployet (akseptert kostnad for ~1 min kortere main-pipeline).

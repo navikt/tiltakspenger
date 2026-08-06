@@ -1,0 +1,52 @@
+name: Deploy alerts til nais (delt)
+
+# Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
+# Deployer alert-manifestet til dev og prod med nais/deploy.
+# Kalleren må gi jobben `contents: read` (checkout av manifestet) + `id-token: write` (nais/deploy autentiserer med OIDC).
+# Skiller seg fra `deploy-nais.yml` ved at det ikke finnes noe image å deploye: alerts går rett fra main uten byggesteg, og begge miljøer kjøres i samme matrise i stedet for som to jobber hos kalleren.
+
+on:
+  workflow_call:
+    inputs:
+      nais-ressurs:
+        description: Sti til alert-manifestet
+        required: false
+        type: string
+        default: .nais/alerts.yml
+      nais-vars:
+        description: "Sti til vars-fila (tom gir .nais/vars/<miljø>.yml, `ingen` deployer uten vars-fil)"
+        required: false
+        type: string
+        default: ''
+
+# Minste privilegium: toppnivået nullstiller token-rettighetene for jobber som ikke deklarerer egne.
+permissions: {}
+
+jobs:
+  deploy:
+    name: Deploy alerts til nais (${{ matrix.cluster }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cluster: [ dev, prod ]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Deploysteget leser kun manifestfiler fra arbeidskatalogen - tokenet trengs ikke videre.
+          persist-credentials: false
+      - name: Deploy alerts til nais
+        uses: nais/deploy/actions/deploy@2d18f050f07b6a007864c6a57070ed915d571beb # v2
+        env:
+          CLUSTER: ${{ matrix.cluster }}-gcp
+          RESOURCE: ${{ inputs.nais-ressurs }}
+          # Alertene leser logger fra Loki-datakilden i sitt eget cluster.
+          # Vars som manifestet ikke templater, er harmløse, så den settes uavhengig av repo.
+          VAR: datasource=${{ matrix.cluster }}-gcp-loki
+          # Tom VARS gjør at nais/deploy hopper over vars-fil-innlasting (deployclient sjekker len > 0).
+          VARS: ${{ inputs.nais-vars != 'ingen' && (inputs.nais-vars != '' && inputs.nais-vars || format('.nais/vars/{0}.yml', matrix.cluster)) || '' }}
+          # Alerts har ingen verifiseringssti etter deploy, så det rendrede manifestet logges.
+          PRINT_PAYLOAD: true

@@ -49,6 +49,7 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 | `test-og-bygg-node.yml` | frontend-repoenes test-/verifiseringsgate (PR/branch; image-bygg forblir lokale); npm/pnpm detekteres fra lockfila | `node-version`, `kommando`; secrets `READER_TOKEN`, `SLACK_VARSEL_WEBHOOK_URL` |
 | `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
 | `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
+| `deploy-alerts.yml` | repoer med eget alert-manifest (saksbehandling-api, soknad-api); deployer til dev og prod i én matrise, uten byggesteg | `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `codeql-gradle.yml` | Kotlin/JVM-repoene (caller eier schedule + concurrency) | `java-version` |
 
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.

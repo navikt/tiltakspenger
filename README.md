@@ -290,3 +290,24 @@ Nye åpne issues og PR-er legges inn automatisk via projectets **Auto-add**-work
 Auto-add-workflowene bruker `is:issue is:open` for issues og `is:pr is:open` for PR-er.
 
 > **Merk:** view-filtre og Auto-add-workflows kan i dag kun konfigureres i GitHub-UI-et — det finnes ingen API/CLI for å opprette eller endre dem. Nye repoer må derfor legges til i Auto-add-workflowene manuelt.
+
+### Lese status fra kommandolinja
+
+Statusen til én issue leses fra issuen selv, ikke fra prosjektlista:
+
+```bash
+gh issue view <nr> --repo navikt/<repo> --json projectItems \
+  -q '.projectItems[] | "\(.title)=\(.status.name)"'
+# → Team tiltakspenger=In Progress
+```
+
+Trenger du hele prosjektet — for eksempel for å finne issues som mangler i det — må `--limit` settes høyere enn antall items, og resultatet kontrolleres mot totalen svaret oppgir:
+
+```bash
+gh project item-list 227 --owner navikt --limit 2000 --format json > prosjekt.json
+jq -e '.totalCount == (.items | length)' prosjekt.json || echo "avkortet – hev --limit"
+```
+
+Uten den kontrollen kutter `gh project item-list` stille ved `--limit` og gir et delvis svar med exit 0.
+Projectet passerte 500 items sommeren 2026, så defaultgrensen på 30 er langt under.
+Items fra alle `tiltakspenger*`-repoene ligger i samme project, så et issue-nummer må alltid pares med `content.repository` når du filtrerer.

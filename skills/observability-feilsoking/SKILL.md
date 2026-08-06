@@ -27,9 +27,42 @@ Bakgrunn om trace_id/span_id og hvordan de henger sammen: se «Feilsøking med l
 
 Labels for våre apper:
 
-- Loki: `k8s_cluster_name="prod"` eller `"dev"` (IKKE `prod-gcp`), app via `service_name`, namespace `tpts`. Bruk alltid `start`/`end` (nanosekunder).
+- Loki: `k8s_cluster_name="prod"` eller `"dev"` (IKKE `prod-gcp`), app via `service_name`, namespace via `service_namespace="tpts"` (IKKE `namespace` — den finnes ikke i Loki og gir tomt svar). Bruk alltid `start`/`end` (nanosekunder). Strømmene har bare `service_name`, `service_namespace`, `k8s_cluster_name`, `k8s_container_name`, `k8s_node_name`, `k8s_pod_name` og `detected_level`; resten må hentes ut av logglinja med `| json`.
+- `tiltakspenger-arena` kjører på fss og ligger under `prod-fss`/`dev-fss` — i både Loki og Mimir. Sveiper du over hele flåten, bruk `k8s_cluster_name=~"prod.*"`; med eksakt `"prod"` faller arena stille ut av svaret.
 - Tempo: `resource.service.name="<app>"`. Filtrer på `kind` (`server`/`client`) — søk uten kind-filter treffer jobb-/DB-spans og kan lure deg til å tro at HTTP-spans mangler.
 - Mimir: app-metrikker via `app="<app>"` (f.eks. `http_server_request_duration_seconds_*`, `jvm_gc_duration_seconds_*`).
+
+## Start her: tell før du henter
+
+De fleste spørsmål er tall («har vi feil nå?», «hvor mange?», «når begynte det?»), og da er logglinjer feil verktøy.
+Uthenting av linjer gir maks 100 om gangen og kutter de eldste først, mens en metrikkspørring gir eksakt svar i ett kall uten linjegrense.
+
+```bash
+# Fordeling per nivå siste time — ett kall, eksakt. Ingen ERROR-rad = ingen feil i vinduet.
+curl -s -H "X-Scope-OrgID: tenant" -H "User-Agent: tpts/feilsok" \
+  "https://loki.nav.cloud.nais.io/loki/api/v1/query" -G \
+  --data-urlencode 'query=sum by (level) (count_over_time({service_name="tiltakspenger-saksbehandling-api", k8s_cluster_name="prod"} | json [1h]))' \
+  --data-urlencode "time=$(date +%s)"
+# → DEBUG 6846, INFO 2555 (målt 2026-08-06)
+```
+
+Bytt `[1h]` mot `[24h]` for døgnet, eller kjør mot `query_range` med `step` for en kurve som viser *når* det endret seg.
+Først når tallet er lokalisert i tid, hent de rå linjene for det smale vinduet — da er 100 linjer rikelig.
+
+Får du tomt svar, sjekk at navnet finnes før du konkluderer:
+
+```bash
+# Hvilke av våre apper logger i det hele tatt (15), og hvilket cluster kjører én av dem i.
+# Uten query-selektoren får du alle 2424 appene i tenanten.
+.../loki/api/v1/label/service_name/values?query={service_namespace="tpts"}&start=<ns>&end=<ns>
+.../loki/api/v1/label/k8s_cluster_name/values?query={service_name="<app>"}&start=<ns>&end=<ns>
+
+# Hvilke metrikknavn finnes (659 for tpts), og fantes serien i vinduet
+.../prometheus/api/v1/label/__name__/values?match[]={namespace="tpts"}&start=<s>&end=<s>
+.../prometheus/api/v1/series?match[]=up{namespace="tpts",app="<app>"}&start=<s>&end=<s>
+```
+
+`/series` svarer på om serien fantes i tidsvinduet, noe instant-spørringen ikke kan — den ser bare 5 minutter bakover, så en app som sluttet å rapportere ser identisk ut med en metrikk som aldri har eksistert.
 
 ## Standardspørringer
 
@@ -81,6 +114,8 @@ sum by (k8s_pod_name) (count_over_time({k8s_cluster_name="prod", service_name="<
 
 ## Kjente feller
 
+- **Uthenting av logglinjer kutter stille.** Uten `limit` får du 100 linjer, uten `start`/`end` bare siste time, og siden nyeste linje kommer først forsvinner de eldste treffene — nettopp dem du leter etter tidlig i vinduet. Sammenlign `stats.summary.totalPostFilterLines` med `totalEntriesReturned` i svaret: matchet flere linjer enn du fikk, er resultatet avkortet. Grensene for gh, Loki, Tempo og Mimir er samlet i metarepoets `AGENTS.md`, seksjonen «Lesegrenser og stille avkorting».
+- **Mimirs `query_range` klipper til retensjon uten å si fra.** En spørring om 90 dager ga 30 dager tilbake med `status: success` og ingen `warnings` (målt 2026-08-06), så en «total siste kvartal» blir stille en månedstotal. Sammenlign første punkt i svaret med `start`-en du ba om.
 - Tempo-søk kan sporadisk svare helt tomt — retry 2–3 ganger med noen sekunders pause før du konkluderer.
 - `/api/traces/<id>` krever full 32-tegns trace_id.
 - Uten cluster-filter i Loki blander du prod- og dev-pods (samme `service_name`).

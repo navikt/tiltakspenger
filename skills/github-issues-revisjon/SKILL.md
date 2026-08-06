@@ -32,21 +32,68 @@ Strukturert arbeidsflyt for å revidere GitHub-issuene i tiltakspenger-repoene (
 
 Alle åpne issues skal ligge i prosjekt 227.
 
-```bash
-# Alle items i prosjektet
-gh project item-list 227 --owner navikt --limit 1000 --format json \
-  -q '.items[] | select(.content.type == "Issue") | "\(.content.repository)#\(.content.number)"' | sort > prosjekt.txt
+Listene under må være **komplette** før `comm` betyr noe — en avkortet liste og en tom liste ser like ut, og forskjellen mellom dem er hele svaret.
+Derfor sjekker hvert steg sin egen fullstendighet og avbryter framfor å rapportere på et utvalg.
 
-# Alle åpne issues i alle repoene (utvid repo-lista ved behov)
-for r in $(gh repo list navikt --limit 100 --json name -q '.[].name' | grep '^tiltakspenger'); do
-  gh issue list -R "navikt/$r" --state open --limit 300 --json number -q ".[] | \"navikt/$r#\(.number)\""
-done | sort > aapne.txt
+```bash
+set -e
+
+# Alle items i prosjektet. Svaret oppgir .totalCount — bruk det som fasit, ikke et gjettet --limit.
+gh project item-list 227 --owner navikt --limit 2000 --format json > prosjekt.json
+jq -e '.totalCount == (.items | length)' prosjekt.json > /dev/null \
+  || { echo "Prosjektlista er avkortet: $(jq '.totalCount' prosjekt.json) items finnes, $(jq '.items|length' prosjekt.json) hentet. Hev --limit."; exit 1; }
+jq -r '.items[] | select(.content.type == "Issue") | "\(.content.repository)#\(.content.number)"' prosjekt.json | sort > prosjekt.txt
+
+# Alle repoer med «tiltakspenger» i navnet. Søke-APIet oppgir total_count, så avkorting er synlig.
+gh api '/search/repositories?q=org:navikt+tiltakspenger+in:name&per_page=100' > repoer.json
+jq -e '.total_count == (.items | length) and (.incomplete_results | not)' repoer.json > /dev/null \
+  || { echo "Repolista er ufullstendig: $(jq '.total_count' repoer.json) treff, $(jq '.items|length' repoer.json) hentet."; exit 1; }
+# Søket treffer «tiltakspenger» hvor som helst i navnet, så prefikset filtrerer bort fremmede repoer
+# (dvh_tiltakspenger, RPA_DIR_*Tiltakspenger*) som ikke er våre.
+jq -r '.items[] | select(.archived | not) | select(.name | startswith("tiltakspenger")) | .full_name' repoer.json | sort > repoer.txt
+
+# Alle åpne issues i de repoene. --state står eksplisitt: default er «open», og lukkede
+# issues er usynlige helt til du ber om --state all.
+: > aapne.txt
+while read -r repo; do
+  if ! gh issue list -R "$repo" --state open --limit 500 --json number > issues.json 2> issues.err; then
+    # Issues avslått i repoet er et ekte «null åpne saker». Alt annet er en lesefeil vi ikke får overse.
+    grep -q "disabled issues" issues.err || { echo "Klarte ikke lese issues i $repo:"; cat issues.err; exit 1; }
+    continue
+  fi
+  test "$(jq 'length' issues.json)" -lt 500 \
+    || { echo "$repo har minst 500 åpne issues — hev --limit."; exit 1; }
+  jq -r --arg r "$repo" '.[] | "\($r)#\(.number)"' issues.json >> aapne.txt
+done < repoer.txt
+sort -o aapne.txt aapne.txt
 
 comm -23 aapne.txt prosjekt.txt   # åpne issues som mangler i prosjektet
 comm -13 aapne.txt prosjekt.txt   # prosjekt-items som er lukket (sjekk at status er Done)
 ```
 
+Ikke bytt til `gh repo list navikt` for repo-oppslaget.
+Organisasjonen har over 3000 repoer, og `gh repo list` kutter stille ved `--limit` uansett hvor høyt det settes — den utelater dessuten arkiverte repoer som default.
+Målt 2026-08-06 traff `gh repo list navikt --limit 100 | grep '^tiltakspenger'` **2** repoer, mens søke-APIet fant **19** aktive (metarepoet + 18 sub-repoer).
+Repoer med issues avslått (`tiltakspenger-interndokumentasjon`) får `gh issue list` til å avslutte med kode 1 og tom stdout.
+Løkka skiller derfor det tilfellet fra en ekte lesefeil: uten den skillelinja stopper `set -e` sveipet ved fjerde repo, og resten blir aldri lest.
+Kjør blokka som et skript og les exit-koden — kjører du den linje for linje, kan `set -e` oppføre seg annerledes enn i reell bruk.
+
 Legg manglende issues inn med `gh project item-add 227 --owner navikt --url <issue-url>` og sett riktig status med `gh project item-edit`.
+Les alltid tilbake at statusen faktisk står der før du rapporterer den som satt — se [Les tilbake etter skriving](#les-tilbake-etter-skriving) under.
+
+### Les tilbake etter skriving
+
+At `item-add` og `item-edit` returnerer en item-ID betyr bare at kallet ble tatt imot, ikke at feltet fikk verdien du ville ha.
+Les tilbake fra issuen selv, som er et punktoppslag og derfor verken kan avkortes eller forveksles med en issue med samme nummer i et annet repo:
+
+```bash
+gh issue view <nr> --repo navikt/<repo> --json projectItems \
+  -q '[.projectItems[] | "\(.title)=\(.status.name)"] | if length == 0 then "IKKE I NOE PROSJEKT" else join(", ") end'
+# → Team tiltakspenger=In Progress
+```
+
+Tom liste her betyr at issuen ikke ligger i noe prosjekt — det er et ekte svar, ikke et uteblitt treff.
+Bruk aldri `gh project item-list` til å bekrefte en enkelt skriving: den lista er over 500 items lang, kutter stille ved `--limit`, og inneholder items fra alle repoene, så et issue-nummer alene er tvetydig og må pares med `content.repository`.
 
 ### 2. Duplikater og overlapp
 

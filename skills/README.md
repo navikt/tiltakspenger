@@ -12,6 +12,7 @@ Hver skill er en mappe med en `SKILL.md` i det åpne [Agent Skills](https://code
 | [`tiltakspenger-testdata`](./tiltakspenger-testdata/SKILL.md) | Lag testdata lokalt (sak med innvilget vedtak, meldekortbehandling, klagebehandling) via de ferdige scriptene — digital eller papirsøknad som inngang. |
 | [`observability-feilsoking`](./observability-feilsoking/SKILL.md) | Feilsøk prod-problemer via Loki/Tempo/Mimir-API-ene — teamets labels, standardspørringer og heuristikker for timeouts, feilspikes og requester som forsvinner. |
 | [`github-issues-revisjon`](./github-issues-revisjon/SKILL.md) | Revider issues på tvers av repoene — prosjektdekning (nr. 227), duplikater/overlapp, ferdig-kandidater verifisert mot koden før lukking, og manglende kryss-lenker. |
+| [`gcp-tilgangsopprydding`](./gcp-tilgangsopprydding/SKILL.md) | Fjern GCP-tilgangen til folk som har sluttet — prosjekt-IAM, BigQuery-datasett-ACL og tjenestekonto-IAM, med tørrkjøring og behold-sperre. |
 
 ## Hvordan ta dem i bruk
 

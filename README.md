@@ -278,7 +278,7 @@ Se [README-en i workflow-mappa](.github/workflows/README.md) for caller-eksempel
 ## Sikkerhet
 
 Oppskrifter for herding av utviklermaskinen ligger i [`docs/sikkerhet/maskin-hardening/`](docs/sikkerhet/maskin-hardening/).
-Signerte commits med en nøkkel som ligger i maskinvare og ikke kan kopieres: [macOS](docs/sikkerhet/maskin-hardening/signerte-commits-mac.md) (testet) og [Linux](docs/sikkerhet/maskin-hardening/signerte-commits-linux.md) (ikke testet).
+Målet er at nøkler ligger i maskinvare og ikke kan kopieres ut av maskinen: [SSH-nøkkel i Secure Enclave](docs/sikkerhet/maskin-hardening/ssh-nokkel-mac.md) og [signerte commits](docs/sikkerhet/maskin-hardening/signerte-commits-mac.md) for macOS, og en [samlet oppskrift for Linux](docs/sikkerhet/maskin-hardening/signerte-commits-linux.md) som ikke er testet.
 
 ## Team-board (GitHub Project)
 

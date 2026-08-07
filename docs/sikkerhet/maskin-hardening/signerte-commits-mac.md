@@ -7,6 +7,7 @@ Oppskriften bruker en nøkkel i Secure Enclave via [Secretive](https://github.co
 Andre agenter som holder nøkkelen utenfor filsystemet fungerer likt — det som betyr noe er at den private nøkkelen aldri finnes som fil.
 Secure Enclave lager bare ECDSA P-256-nøkler, så nøkkeltypen alene viser om en nøkkel er maskinvarebundet.
 
+Oppskriften forutsetter at nøkkelen allerede finnes og er registrert — se [ssh-nokkel-mac.md](ssh-nokkel-mac.md).
 På Linux, se [signerte-commits-linux.md](signerte-commits-linux.md).
 
 ## Oppsett

@@ -18,8 +18,9 @@ docker run --rm -v "$ROOT":/repo --workdir /repo \
     rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
 
 echo "pre-push: zizmor …"
+# -q demper INFO-linjene per fil; funn og oppsummeringen skrives fortsatt ut.
 docker run --rm -v "$ROOT":/repo \
     ghcr.io/zizmorcore/zizmor@sha256:5800c8d5e83263d68a8874989b0eb3939e177540e9395de48158d24656141ee9 \
-    --offline --min-severity low --config /repo/.github/zizmor.yml /repo/.github
+    -q --offline --min-severity low --config /repo/.github/zizmor.yml /repo/.github
 
 echo "pre-push: grønt - trygt å pushe."

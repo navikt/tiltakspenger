@@ -10,11 +10,16 @@ Linux har ingen Secure Enclave.
 Det nærmeste tilsvarende er en **FIDO2-sikkerhetsnøkkel** — den private nøkkelen bor i maskinvaren, og fila på disk er bare et håndtak som er verdiløst uten at nøkkelen er plugget i.
 På macOS brukes Secure Enclave i stedet, se [signerte-commits-mac.md](signerte-commits-mac.md).
 
+Har du ingen sikkerhetsnøkkel, kan du signere med en vanlig SSH-nøkkel — se [uten maskinvarenøkkel](#uten-maskinvarenøkkel).
+Det gir ingen maskinvarebinding, men oppfyller likevel et eventuelt krav om signerte commits i repoet.
+
 Forutsetter OpenSSH 8.3 eller nyere og git 2.34 eller nyere.
 
 ## Oppsett
 
 ### 1. Lag en maskinvarebundet nøkkel
+
+Sikkerhetsnøkkelen må være plugget i før du kjører kommandoen — ellers feiler den med `Key enrollment failed: device not found`.
 
 ```sh
 ssh-keygen -t ed25519-sk -O resident -O verify-required \
@@ -48,6 +53,52 @@ git config --global commit.gpgsign true
 Merk at `user.signingkey` her peker på **håndtaket**, ikke på `.pub`-fila.
 Da går signeringen rett mot sikkerhetsnøkkelen uten agent.
 Bruker du i stedet en `ssh-agent` som holder nøkkelen, pek på `.pub`-fila — og pass da på at `SSH_AUTH_SOCK` er satt i shell-konfigen, siden `ssh-keygen -Y sign` ikke leser `IdentityAgent` fra `~/.ssh/config`.
+
+### 4. Registrer nøkkelen som signeringsnøkkel på GitHub
+
+<https://github.com/settings/ssh/new> med **Key type: Signing Key**, og innholdet fra `~/.ssh/signeringsnokkel.pub`.
+Signeringsnøkler er en egen liste — at nøkkelen allerede ligger der som autentiseringsnøkkel teller ikke.
+
+## Uten maskinvarenøkkel
+
+Mangler du en FIDO2-sikkerhetsnøkkel, kan du signere med en vanlig SSH-nøkkel.
+Den private nøkkelen ligger da på disk og kan kopieres — du mister maskinvarebindingen, men commitsene blir likevel verifisert som signerte av GitHub.
+
+### 1. Lag en nøkkel
+
+Lag en egen nøkkel for signering, med passfrase:
+
+```sh
+ssh-keygen -t ed25519 -C "$(git config user.email)" -f ~/.ssh/signeringsnokkel
+```
+
+Har du allerede en ed25519-nøkkel du vil gjenbruke (f.eks. `~/.ssh/id_ed25519`), kan du hoppe over dette steget og bruke den i stedet.
+
+### 2. Lag `allowed_signers`
+
+```sh
+printf '%s %s\n' "$(git config user.email)" "$(cut -d' ' -f1,2 ~/.ssh/signeringsnokkel.pub)" \
+  > ~/.ssh/allowed_signers
+```
+
+### 3. Slå på signering i git
+
+```sh
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/signeringsnokkel.pub
+git config --global gpg.ssh.allowedSignersFile ~/.ssh/allowed_signers
+git config --global commit.gpgsign true
+```
+
+Her peker `user.signingkey` på **`.pub`-fila**, slik at git bruker `ssh-agent` til signeringen.
+Legg nøkkelen inn i agenten:
+
+```sh
+ssh-add ~/.ssh/signeringsnokkel
+```
+
+Pass på at `SSH_AUTH_SOCK` er satt i shell-konfigen din — `ssh-keygen -Y sign` leser ikke `IdentityAgent` fra `~/.ssh/config`.
+Uten nøkkelen i agenten må du skrive passfrasen ved hver commit, og enkelte agenter (f.eks. GNOME Keyring) kan kreve at du bekrefter i et vindu.
 
 ### 4. Registrer nøkkelen som signeringsnøkkel på GitHub
 
@@ -108,6 +159,6 @@ Sjekk at repoet ikke har en slik jobb før du slår på kravet.
 
 ## Praktiske konsekvenser
 
-`commit.gpgsign` er global, så PIN og berøring kreves for hver commit i alle repoer på maskinen.
-En rebase av ti commits blir ti bekreftelser.
-Sikkerhetsnøkkelen må være plugget i for at du skal kunne committe i det hele tatt.
+`commit.gpgsign` er global, så signering kreves for hver commit i alle repoer på maskinen.
+Med maskinvarenøkkel betyr det PIN og berøring hver gang — en rebase av ti commits blir ti bekreftelser — og nøkkelen må være plugget i for at du skal kunne committe i det hele tatt.
+Med vanlig SSH-nøkkel i agent er det ingen per-commit-bekreftelse, men nøkkelen må være lagt inn i agenten (f.eks. etter hver omstart).

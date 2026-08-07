@@ -134,20 +134,17 @@ git switch main && git branch -D test/signering && git push origin --delete test
 
 ## Slå på kravet i et repo
 
-Grenbeskyttelse i GitHub finnes i to uavhengige systemer, og kravet kan slås på i begge.
-Sjekk hva repoet allerede har før du lager noe nytt: **Settings → Branches** viser klassiske regler, **Settings → Rules → Rulesets** viser rulesets.
-Merk at API-et `repos/{repo}/rules/branches/main` bare returnerer rulesets — et repo kan ha klassisk beskyttelse selv om det svarer tomt.
+Kravet settes i **Settings → Branches** — klassisk branch protection på `main` — ved å hake av **Require signed commits** og lagre nederst på siden.
 
-Har repoet allerede en klassisk regel for `main`, er det ett klikk: hak av **Require signed commits** og lagre nederst på siden.
+Det samme kan gjøres med en *ruleset* under **Settings → Rules**, men da finnes kravet to steder, og det blir tilsvarende to steder å lete når noe slipper gjennom. Hold det ett sted.
 
-Ellers lag en ruleset — **Settings → Rules → Rulesets → New branch ruleset**:
+Merk at API-et `repos/{repo}/rules/branches/main` **bare** returnerer rulesets.
+Det svarer tomt selv når klassisk beskyttelse er slått på, så det er ikke en måte å kontrollere om kravet er aktivt.
 
-- Enforcement status: `Active`
-- Target branches: Include default branch
-- Branch rules: `Require signed commits`
-
-Uansett vei: la bypass-lista stå tom.
+La bypass-lista stå tom.
 Legges kontoer inn der, er regelen dekorativ — det er nettopp en utviklerkonto et lekket token opptrer som.
+
+Bypass feiler dessuten stille i den retningen som lurer mest: en usignert push fra en konto med bypass blir **sluppet gjennom** og bare rapportert, med `remote: Bypassed rule violations` i utdataen. Ser du den linja, er kravet ikke i kraft for deg.
 
 ## Dependabot og CI
 

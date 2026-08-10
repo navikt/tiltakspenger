@@ -1,6 +1,11 @@
 name: Lint workflows
 
 on:
+  # Manuell trigger: begge de andre triggerne er sti-filtrerte, så en kjøring som feiler på
+  # infrastruktur (f.eks. «Failed to resolve action download info») ellers etterlater main rød
+  # til noen tilfeldigvis endrer .github/ igjen. Gir også en måte å validere den delte
+  # workflowen på uten å lage en PR.
+  workflow_dispatch:
   pull_request:
     paths:
       - '.github/**'

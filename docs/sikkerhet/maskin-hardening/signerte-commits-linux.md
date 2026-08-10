@@ -146,6 +146,23 @@ Legges kontoer inn der, er regelen dekorativ — det er nettopp en utviklerkonto
 
 Bypass feiler dessuten stille i den retningen som lurer mest: en usignert push fra en konto med bypass blir **sluppet gjennom** og bare rapportert, med `remote: Bypassed rule violations` i utdataen. Ser du den linja, er kravet ikke i kraft for deg.
 
+## Når en merge blokkeres
+
+Kravet gjelder bare grenen det står på. En usignert commit går derfor rett inn på en feature-gren uten innsigelser, og feilen dukker først opp ved merge — langt fra der årsaken ligger:
+
+> **Merging is blocked** — Commits must have verified signatures.
+
+Merge-knappen er grå, og ingen av metodene hjelper: squash og rebase er ikke en vei rundt (målt 2026-08-07).
+
+Fiksen er å signere commitene på nytt og tvinge grenen opp igjen:
+
+```sh
+git rebase -S main
+git push --force-with-lease
+```
+
+Historikk som allerede lå på `main` da kravet ble slått på, er upåvirket. Kravet gjelder commitene som legges til, ikke de som er der fra før — ellers ville grenen vært låst for godt.
+
 ## Dependabot og CI
 
 Commits GitHub lager selv gjennom API-et er GitHub-signert og passerer kravet.

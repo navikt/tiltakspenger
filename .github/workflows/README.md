@@ -54,6 +54,12 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 
 Utrullingsstatus per repo spores i [#31](https://github.com/navikt/tiltakspenger/issues/31) — tabellen sier hvem workflowen er for, ikke hvem som bruker den i dag.
 
+`deploy-alerts.yml` sender alltid variabelen `datasource`, og nais/deploy kjører da handlebars på hele manifestet.
+Prometheus-uttrykk må derfor escapes — `'\{{ $labels.app }}'` — ellers er de gyldige handlebars-oppslag som mangler i konteksten og rendres stille til tom streng.
+Bruk enkle anførselstegn: i doble er `\{` et ugyldig YAML-escape, så fila slutter å parse lokalt.
+Templatingen leser råteksten før YAML-parsing, så regelen gjelder også eksempler i kommentarer.
+`PRINT_PAYLOAD: true` logger det rendrede manifestet — sjekk der at uttrykkene overlevde.
+
 `lint-workflows.yml`: metarepoet kaller den selv fra `lint.yml` med lokal sti, slik at PR-er som endrer delte workflows testes med sin egen versjon.
 zizmor er blokkerende som default (flåtestandarden); et repo som ennå ikke har nedfelt unntakene sine i `zizmor.yml` setter `zizmor-blokkerende: false` midlertidig i calleren.
 

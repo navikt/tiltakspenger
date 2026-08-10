@@ -177,6 +177,10 @@ kan på samme måte legges inn i andre MCP-klienter.
 
 Repoets egne, verktøy-uavhengige skills ligger i [`skills/`](skills/README.md).
 
+Agentene skal kjøre isolert — se [kravet på ki-utvikling.nav.no](https://ki-utvikling.nav.no/nyheter/sandboxing-er-pakrevd-pa-nav-utstyr).
+På macOS og Linux holder det å installere cplt.
+For Windows, der cplt ikke finnes, ligger det en oppskrift med WSL2 i [`docs/ki-agenter/`](docs/ki-agenter/) som ikke er testet.
+
 ## Designsystem, skjemaer og datoer (Aksel)
 
 Alle frontendene bruker Navs designsystem [Aksel](https://aksel.nav.no). Les «Retningslinjer» på komponentsiden, ikke bare props-tabellen — flere av de viktige valgene står bare i prosateksten og fremgår ikke av typene.

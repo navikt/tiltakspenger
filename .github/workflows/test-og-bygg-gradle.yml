@@ -56,6 +56,13 @@ jobs:
     # Fork-PR-er: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger også på pull_request.
     # Guarden her slipper kun gjennom fork-PR-events - interne brancher dekkes av push-triggeren (ellers dobbelkjøres hver PR).
     # Dependabot-brancher testes av auto-merge-workflowen; push-events derfra skippes (Dependabot pusher aldri main direkte).
+    #
+    # ALDRI bytt `pull_request` mot `pull_request_target` her - se «Fork-PR-er og farlige triggere» i README.md.
+    # `pull_request` fra en fork kjører uten hemmeligheter og med skrivebeskyttet token, og det er hele grunnen til at
+    # vi trygt kan bygge kode vi ikke stoler på. `pull_request_target` kjører i base-repoets kontekst *med* hemmeligheter;
+    # kombinert med checkout av PR-ens egen kode gir det en fremmed rett til å kjøre vilkårlig kode med våre rettigheter.
+    # zizmor stopper det (dangerous-triggers, høy alvorlighet, blokkerende gate), men regelen står her fordi den ellers
+    # blir gjenoppfunnet hver gang noen trenger en hemmelighet i en fork-PR. Svaret da er: hemmeligheten skal ikke dit.
     if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.actor != 'dependabot[bot]')
     # Testjobben trenger aldri OIDC - id-token: write bor kun i image-jobben.
     permissions:

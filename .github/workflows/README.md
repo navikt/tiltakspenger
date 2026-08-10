@@ -66,6 +66,24 @@ zizmor er blokkerende som default (flåtestandarden); et repo som ennå ikke har
 **Fork-PR-er** testes av gatene: pushes i forks trigger aldri workflows i base-repoet, så gate-callerne trigger på både `push` og `pull_request`, og guarden i delt workflow slipper kun gjennom fork-PR-events (interne brancher dekkes av push-triggeren — én kjøring per endring, ikke to).
 Fork-kjøringer får read-only token og ingen secrets: Slack-varsling skjer uansett kun på main-ref, og node-gaten faller tilbake på `github.token` for lesing av public @navikt-pakker.
 
+### Fork-PR-er og farlige triggere
+
+At fork-kjøringer er uten hemmeligheter er ikke en bivirkning — det er hele grunnen til at vi trygt kan bygge og teste kode fra hvem som helst i verden.
+Repoene våre er offentlige, så en fork kan opprettes av alle, og en fork-PR kan inneholde vilkårlig kode.
+Under `pull_request` kjører den koden uten tilgang til hemmeligheter og med et skrivebeskyttet token, og da er det verste utfallet at noen bruker byggeminutter.
+
+**Derfor gjelder tre regler, uten unntak:**
+
+1. **Aldri `pull_request_target`.** Den kjører i base-repoets kontekst *med* hemmeligheter. Kombinert med checkout av PR-ens egen kode — som er hele poenget med å bruke den — gir den en fremmed rett til å kjøre vilkårlig kode med våre rettigheter.
+2. **Aldri `workflow_run` over artefakter fra en upålitelig kjøring.** Samme mekanisme, ett hakk mer indirekte: den utløsende kjøringen er upålitelig, mens den utløste har rettighetene.
+3. **Aldri self-hosted runners.** Fork-kode på en maskin vi eier flytter angrepsflaten fra en isolert container til vårt eget nettverk.
+
+Regel 1 og 2 håndheves maskinelt: zizmors `dangerous-triggers` gir høy alvorlighet, og lint-gaten er blokkerende — en workflow med `pull_request_target` kommer ikke inn i noe repo.
+Reglene står likevel skrevet, både her og i gatene selv, fordi de ellers blir gjenoppfunnet hver gang noen trenger en hemmelighet i en fork-PR.
+
+**Svaret når det behovet melder seg, er at hemmeligheten ikke skal dit.** Del jobben i to: la den upålitelige koden bygges og testes uten legitimasjon, og la et separat steg som trigges av `push` til en beskyttet gren gjøre det som faktisk krever tilgang.
+Målt 2026-08-10: null forekomster av `pull_request_target`, `workflow_run` og self-hosted runners i hele flåten.
+
 `dependabot-auto-merge.yml` og `-node.yml` er tekstlig parallelle - kun byggejobben (og dens inputs/secrets, bl.a. `READER_TOKEN`) skiller dem; endres den ene, oppdater den andre tilsvarende.
 Node-varianten dekker både npm og pnpm ved å detektere pakkehåndterer fra lockfila (`pnpm-lock.yaml` → pnpm) — npm→pnpm-migreringen (jf. nais-doc) krever dermed ingen caller-endring, bare bytte av lockfil i repoet.
 Testene ligger i byggegatene: gradle-varianten kjører `./gradlew build` (inkl. tester), node-varianten kjører `npm ci`/`pnpm install --frozen-lockfile` + `test-kommando` (lint/tsc/test etter hva repoet har; `$PAKKEHANDTERER` er tilgjengelig i kommandoen).

@@ -92,6 +92,7 @@ Testjobben i `test-og-bygg-gradle.yml` verifiserer også at `tiltakspenger-libs`
 Uten den sjekken er attestasjonen bare dokumentasjon: hvem som helst med `write:packages` kan publisere fra en laptop, og artefaktet ville blitt bygget inn uten at noe slo ut.
 Artefaktene pekes ut av Gradle-tasken `skrivLibsArtefakter` (fra convention-pluginen `tiltakspenger.kotlin`), ikke av et søk i Gradle-cachen — cachen samler opp alle versjoner som noen gang er lastet ned, mens bygget bruker én av dem.
 Repoer som ennå ikke har tatt i bruk convention-pluginene mangler tasken og hopper over steget; de dekkes automatisk den dagen de migreres.
+Repoer der bygget ikke konsumerer publiserte libs-artefakter skrur av sjekken i sin caller med `verifiser-libs-attestasjon: false` — i praksis libs selv, der modulene er prosjektavhengigheter og attestasjonene først lages av `push.yml` på main.
 Feiler steget, er det enten et artefakt uten attestasjon eller ett som ikke kommer fra `push.yml` i libs — begge deler skal stoppe bygget.
 
 `test-og-bygg-gradle.yml` eksponerer imaget som workflow-output `IMAGE`; deploy-calleren sender den videre til `deploy-nais.yml` via `needs.<jobb>.outputs.IMAGE` — det er komposisjonsmønsteret for bygg-og-deploy-pipelines.

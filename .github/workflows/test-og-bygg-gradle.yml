@@ -35,6 +35,14 @@ on:
         required: false
         type: boolean
         default: true
+      # Opt-out for testjobbens attestasjonssjekk. Gaten feiler bevisst på tom artefaktliste («målte ingenting»),
+      # så et repo der bygget ikke konsumerer publiserte libs-artefakter kan aldri bli grønt med sjekken på -
+      # det repoet skrur den av her i stedet for at den delte workflowen skal kjenne kallerne sine.
+      verifiser-libs-attestasjon:
+        description: Om libs-artefaktene på classpathen skal verifiseres mot attestasjonene fra libs' publiseringsworkflow (skru av kun når bygget ikke konsumerer publiserte libs-artefakter)
+        required: false
+        type: boolean
+        default: true
     outputs:
       IMAGE:
         description: "Docker-imaget som ble bygget (tomt når bygg-image er false)"
@@ -99,7 +107,11 @@ jobs:
       # Tasken kommer fra `tiltakspenger.kotlin`. Repoer som ennå ikke har tatt i bruk convention-pluginene
       # hopper over steget og dekkes automatisk den dagen de migreres. Andre Gradle-feil enn «task not found»
       # feiler steget, slik at et reelt brudd ikke forsvinner i skip-grenen.
+      #
+      # Repoer uten publiserte libs-artefakter på classpathen skrur av steget med `verifiser-libs-attestasjon` -
+      # begrunnelsen står på inputen.
       - name: Verifiser attestasjon på libs-artefakter
+        if: inputs.verifiser-libs-attestasjon == true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

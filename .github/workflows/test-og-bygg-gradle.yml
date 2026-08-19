@@ -180,7 +180,7 @@ jobs:
           IMAGE_GRADLE_KOMMANDO: ${{ inputs.image-gradle-kommando }}
       - name: Bygg og push docker-image
         # Versjonsoversikt (tag -> SHA): https://github.com/nais/docker-build-push/tags
-        uses: nais/docker-build-push@31c3a7321909bcb20799fdf46153fec721fd9512 # v0
+        uses: nais/docker-build-push@2d2b0a7193e65422b7f0355d4afb445e0a8b2cc3 # v0
         id: docker-push
         with:
           team: tpts

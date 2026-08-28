@@ -42,6 +42,32 @@ Host github.com
 
 Secretive viser stien under **Setup** i appen.
 
+### Langt brukernavn: lag en kort symlink
+
+Unix-socketer har en grense på 103 tegn i stien, og ssh kutter lengre stier stille før den prøver å koble til.
+Stien over er 79 tegn pluss brukernavnet ditt, så med mer enn 24 tegn i brukernavnet feiler alt under med `No such file or directory` — selv om fila er der når du ser etter.
+Mål:
+
+```sh
+printf %s "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh" | wc -c
+```
+
+Er tallet over 103, lag en symlink med kort sti og bruk den i stedet for den lange overalt i denne og neste oppskrift:
+
+```sh
+ln -s "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh" ~/.ssh/secretive.sock
+```
+
+```
+Host github.com
+  IdentityAgent ~/.ssh/secretive.sock
+```
+
+Symlinken peker på en fast sti, så den overlever at agenten starter på nytt.
+Kopier kommandoen herfra, ikke fra Slack: Slack bytter `"` til typografiske anførselstegn (`“ ”`), som shellet tar med som tegn i stien.
+Resultatet er en symlink som ser riktig ut, men som `file ~/.ssh/secretive.sock` kaller «broken symbolic link».
+Sjekk med `readlink ~/.ssh/secretive.sock` at målet er den fulle stien uten `“`, `'` eller bokstavelig `$HOME`.
+
 Merk at `IdentityAgent` bare gjelder ssh-klienten.
 Skal du også signere commits, må `SSH_AUTH_SOCK` i tillegg settes i shell-konfigen din (`~/.zshrc` eller tilsvarende) — det er steg 3 i [signerte-commits-mac.md](signerte-commits-mac.md).
 
@@ -79,7 +105,7 @@ ssh -T git@github.com
 
 Fingeravtrykk-dialogen skal komme, og svaret skal være `Hi <brukernavn>! You've successfully authenticated`.
 Kommer det ingen dialog, står nøkkelen uten **Require authentication before use**.
-Kommer det «Permission denied», svarer ikke SecretAgent — sjekk at den kjører og at stien i `~/.ssh/config` stemmer.
+Kommer det «Permission denied», svarer ikke SecretAgent — sjekk at den kjører, at stien i `~/.ssh/config` stemmer, og at den ikke er for lang (se symlink-avsnittet i steg 3).
 
 ## 7. Rydd bort nøkler som ikke er maskinvarebundet
 

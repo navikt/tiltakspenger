@@ -23,6 +23,7 @@ chmod 644 ~/.ssh/signeringsnokkel.pub
 ```
 
 Holder agenten flere nøkler, plukk ut riktig linje før du lagrer.
+Laget du symlinken `~/.ssh/secretive.sock` i forrige oppskrift, bruk den stien her og i steg 3.
 
 ### 2. Lag `allowed_signers`
 
@@ -71,6 +72,13 @@ ssh-add -L
 
 Den første skal vise Secretive-stien, den andre skal liste nøkkelen (linja begynner med `ecdsa-sha2-nistp256`).
 Svarer `ssh-add -L` med `The agent has no identities.`, peker variabelen fortsatt på Apple-agenten, og linja står i feil fil eller vinduet er gammelt.
+
+Svarer den i stedet `Error connecting to agent: No such file or directory`, finnes ikke stien variabelen peker på.
+Det har tre vanlige årsaker:
+
+- **SecretAgent kjører ikke.** Socketfila finnes bare mens agenten kjører. Sjekk med `pgrep -l SecretAgent`; er lista tom, åpne Secretive og la den installere SecretAgent som innloggingselement (steg 1 i [ssh-nokkel-mac.md](ssh-nokkel-mac.md)).
+- **Stien er feil.** `~` utvides ikke inne i anførselstegn, så `"~/Library/…"` blir en bokstavelig sti som ikke finnes — bruk `$HOME` som i eksemplene over. Kommandoer limt fra Slack har typografiske anførselstegn (`“ ”`) som shellet tar med i stien; kopier herfra. Sammenlign `echo "$SSH_AUTH_SOCK"` med stien Secretive viser under **Setup**, og sjekk at `ls -l` på den viser en socket (`s` først i rettighetene).
+- **Stien er for lang.** Finnes fila, men `ssh-add -L` svarer likevel `No such file or directory`, er stien over 103 tegn og ssh har kuttet den stille. Det skjer med mer enn 24 tegn i brukernavnet. Lag symlinken fra [ssh-nokkel-mac.md](ssh-nokkel-mac.md) (steg 3) og pek `SSH_AUTH_SOCK` på `$HOME/.ssh/secretive.sock` i stedet.
 
 IDE-er som IntelliJ og VS Code leser shell-konfigen når de starter.
 Var IDE-en åpen da du la inn linja, må den startes på nytt før commits derfra signeres.

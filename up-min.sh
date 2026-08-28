@@ -2,9 +2,7 @@
 # Script for å starte et minimalt docker-compose-oppsett:
 #   - postgresSaksbehandling  (port 5433)
 #   - postgresMeldekort       (port 5435)
-#   - pdfgen-service          (port 8081)
 #   - pdfgenrs-service        (port 8084)
-#   - wiremock                (port 8091)
 #
 # Nyttig når du kjører saksbehandling-api og meldekort-api fra IDE-en og bare
 # trenger databasene og de eksterne avhengighetene. Bruk ./up.sh hvis du vil ha
@@ -22,9 +20,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 tjenester=(
 	"postgresSaksbehandling"
 	"postgresMeldekort"
-	"pdfgen-service"
 	"pdfgenrs-service"
-	"wiremock"
 )
 
 bygg=false

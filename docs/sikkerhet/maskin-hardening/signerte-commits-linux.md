@@ -98,6 +98,9 @@ ssh-add ~/.ssh/signeringsnokkel
 ```
 
 Pass på at `SSH_AUTH_SOCK` er satt i shell-konfigen din — `ssh-keygen -Y sign` leser ikke `IdentityAgent` fra `~/.ssh/config`.
+De fleste skrivebordsmiljøer setter den for hele økten; en agent startet for hånd med `eval "$(ssh-agent)"` gjelder derimot bare i det vinduet.
+Sjekk i et nytt terminalvindu at `ssh-add -L` lister nøkkelen.
+Feiler commit med `No private key found for public key`, er det denne variabelen som peker feil.
 Uten nøkkelen i agenten må du skrive passfrasen ved hver commit, og enkelte agenter (f.eks. GNOME Keyring) kan kreve at du bekrefter i et vindu.
 
 ### 4. Registrer nøkkelen som signeringsnøkkel på GitHub

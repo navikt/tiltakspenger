@@ -43,7 +43,7 @@ Host github.com
 Secretive viser stien under **Setup** i appen.
 
 Merk at `IdentityAgent` bare gjelder ssh-klienten.
-Skal du også signere commits, må `SSH_AUTH_SOCK` peke samme vei — det er en egen innstilling, og en vanlig kilde til forvirring senere.
+Skal du også signere commits, må `SSH_AUTH_SOCK` i tillegg settes i shell-konfigen din (`~/.zshrc` eller tilsvarende) — det er steg 3 i [signerte-commits-mac.md](signerte-commits-mac.md).
 
 ## 4. Legg den offentlige nøkkelen på GitHub
 

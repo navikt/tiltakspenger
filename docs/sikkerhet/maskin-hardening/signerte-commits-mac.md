@@ -39,11 +39,51 @@ Dette er fella i hele oppsettet.
 `IdentityAgent` i `~/.ssh/config` gjelder bare ssh-klienten, mens git signerer med `ssh-keygen -Y sign`, som utelukkende leser `SSH_AUTH_SOCK`.
 Har du satt `IdentityAgent` og tror du er i mål, vil push virke mens signering feiler — og feilmeldingen peker ikke på årsaken.
 
+macOS setter dessuten `SSH_AUTH_SOCK` selv ved innlogging, til en Apple-agent som ikke kjenner Secretive-nøkkelen.
+Variabelen må derfor overstyres i **shell-konfigen**, så hvert nytt terminalvindu får riktig verdi — en `export` i det åpne vinduet forsvinner når vinduet lukkes.
+
+Hvilken fil som er riktig, avhenger av skallet. `echo $SHELL` sier hvilket du har.
+
+zsh (standard på macOS) — `~/.zshrc`:
+
 ```sh
 export SSH_AUTH_SOCK="$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
 ```
 
-Legg linja i shell-konfigen, ikke bare i det åpne vinduet.
+bash — `~/.bash_profile` (Terminal starter innloggingsskall, som ikke leser `~/.bashrc` uten at du selv sourcer den derfra):
+
+```sh
+export SSH_AUTH_SOCK="$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
+```
+
+fish — `~/.config/fish/config.fish`:
+
+```fish
+set -gx SSH_AUTH_SOCK "$HOME/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh"
+```
+
+Åpne så et **nytt** terminalvindu og sjekk at linja er lest:
+
+```sh
+echo "$SSH_AUTH_SOCK"
+ssh-add -L
+```
+
+Den første skal vise Secretive-stien, den andre skal liste nøkkelen (linja begynner med `ecdsa-sha2-nistp256`).
+Svarer `ssh-add -L` med `The agent has no identities.`, peker variabelen fortsatt på Apple-agenten, og linja står i feil fil eller vinduet er gammelt.
+
+IDE-er som IntelliJ og VS Code leser shell-konfigen når de starter.
+Var IDE-en åpen da du la inn linja, må den startes på nytt før commits derfra signeres.
+
+Symptomet når dette steget mangler, ved første commit:
+
+```
+error: No private key found for public key "/Users/<bruker>/.ssh/signeringsnokkel.pub"
+fatal: failed to write commit object
+```
+
+Meldingen sier ingenting om `SSH_AUTH_SOCK`, men det er den som er feil.
+Kjør `echo "$SSH_AUTH_SOCK"` i samme vindu som commiten feilet i.
 
 ### 4. Slå på signering i git
 
@@ -71,6 +111,7 @@ git log -1 --format='%h %G? %GS'
 
 `G` betyr god signatur.
 `N` betyr usignert, mens `U` eller `E` betyr signert uten at den lot seg verifisere mot `allowed_signers`.
+Feiler selve commiten med `No private key found for public key`, er det steg 3 som mangler i det vinduet.
 
 Push så grenen og sjekk at GitHub godtar signaturen serverside:
 

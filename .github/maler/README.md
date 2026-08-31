@@ -8,7 +8,7 @@ Kopier fila til repoets `.github/`, behold begrunnelseskommentarene, og gjør ku
 | `zizmor.yml` | `.github/zizmor.yml` | alle repo som kaller delte workflows |
 | `dependabot-gradle.yml` | `.github/dependabot.yml` | Kotlin/JVM-repoene (gradle + actions) |
 | `dependabot-node.yml` | `.github/dependabot.yml` | TypeScript/JavaScript-repoene (npm/pnpm + actions) |
-| `dependabot-actions.yml` | `.github/dependabot.yml` | repo uten kodeavhengigheter (iac, pdfgen) |
+| `dependabot-actions.yml` | `.github/dependabot.yml` | repo uten kodeavhengigheter (iac) |
 
 Endres en mal her, oppdater repoene som bruker den (samme regel som for caller-workflows — se [workflows-README](../workflows/README.md)).
 For `zizmor.yml` og `dependabot.yml` håndheves dette maskinelt: drift-vaktene i den delte lint-workflowen feiler hvis et repos kopi avviker fra malen (lenke-semantikk — GitHub kan ikke lenke config-filer på tvers av repo).

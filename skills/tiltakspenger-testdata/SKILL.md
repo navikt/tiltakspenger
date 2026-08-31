@@ -1,6 +1,6 @@
 ---
 name: tiltakspenger-testdata
-description: Lag testdata lokalt for tiltakspenger-saksbehandling via ferdige scripts — testsak med innvilget vedtak, meldekortbehandling, klagebehandling, eller digital-/papirsøknad seedet mot LokalMain. Kan også forhåndsvise og lagre PDF-brevene fra pdfgen og pdfgenrs.
+description: Lag testdata lokalt for tiltakspenger-saksbehandling via ferdige scripts — testsak med innvilget vedtak, meldekortbehandling, klagebehandling, eller digital-/papirsøknad seedet mot LokalMain. Kan også forhåndsvise og lagre PDF-brevene fra pdfgenrs.
 license: MIT
 metadata:
   domain: backend
@@ -49,13 +49,13 @@ Scriptene er lagdelt (byggekloss → kombo → topp-nivå). Velg minste script s
 | Bare en klagebehandling | `opprett-klage.sh SAK_ID [VEDTAK_ID]` (på en eksisterende sak) |
 | Simuleringer å teste (ytelse, feilutbetaling, justering en-/flerdags, sperre-scenarioer på tvers av meldeperioder/måneder, trekk m/reversering, månedsskifte-splitt) | `opprett-simuleringsscenarioer.sh` |
 | Iverksatt meldekort / åpen korrigering med egne dagstatuser | `fyll-og-iverksett-meldekort.sh` / `opprett-meldekort-korrigering.sh` `SAKSNUMMER [DATO=STATUS ...]` |
-| Alle PDF-brevene som filer | `forhandsvis-alle-pdfer.sh` (krever pdfgen på 8081 + pdfgenrs på 8084 i docker) |
+| Alle PDF-brevene som filer | `forhandsvis-alle-pdfer.sh` (krever pdfgenrs på 8084 i docker) |
 | Ett enkelt PDF-brev | `forhandsvis-vedtaksbrev.sh` / `forhandsvis-meldekortbrev.sh` / `forhandsvis-klagebrev.sh` |
 | Ett enkelt endepunkt-steg | tilsvarende byggekloss-script (se `scripts/testdata/README.md`) |
 
 PDF-scriptene lagrer til `$PDF_UT_DIR` (default `/tmp/tiltakspenger-pdfer`), med
-både pdfgen- og pdfgenrs-variant av hvert brev (lokal skygge-kjøring) slik at de
-kan sammenlignes. PDF-er som kun genereres av jobber (journalføring) dekkes ikke.
+én PDF per brev fra pdfgenrs. PDF-er som kun genereres av jobber (journalføring)
+dekkes ikke.
 
 ## Nyttig å vite (så du ikke gjetter)
 

@@ -10,19 +10,6 @@ services:
       - "127.0.0.1:5436:5432"
     volumes:
       - postgres-soknad-data:/var/lib/postgresql/data
-  pdfgen-service:
-    build:
-      context: ./tiltakspenger-pdfgen
-      dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:8081:8080"
-    volumes:
-      - ./tiltakspenger-pdfgen/templates:/app/templates
-      - ./tiltakspenger-pdfgen/fonts:/app/fonts
-      - ./tiltakspenger-pdfgen/data:/app/data
-      - ./tiltakspenger-pdfgen/resources:/app/resources
-    environment:
-      DISABLE_PDF_GET: false
 
   soknad-wonderwall:
     image: ghcr.io/nais/wonderwall:latest

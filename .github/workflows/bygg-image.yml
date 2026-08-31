@@ -1,7 +1,7 @@
 name: Bygg image (delt)
 
 # Delt workflow for alle tiltakspenger-repoene - se README.md i denne mappa for konvensjoner og plasseringsbegrunnelse.
-# Bygger og pusher docker-image til nais-registryet for repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs).
+# Bygger og pusher docker-image til nais-registryet for repo der Dockerfilen er hele bygget (pdfgenrs).
 # Repo med eget bygg før imaget (gradle/node) bruker test-og-bygg-workflowene i stedet.
 # Kalleren må gi jobben `contents: read` + `id-token: write` (nais/docker-build-push autentiserer med OIDC).
 

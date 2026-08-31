@@ -63,7 +63,6 @@ Følg [`AGENTS-backend.md`](AGENTS-backend.md).
 | `tiltakspenger-datadeling` | Datadeling mot andre systemer | [lenke](tiltakspenger-datadeling/AGENTS.md) |
 | `tiltakspenger-journalposthendelser` | Konsumerer journalposthendelser | [lenke](tiltakspenger-journalposthendelser/AGENTS.md) |
 | `tiltakspenger-meldekort-api` | Meldekort-API | [lenke](tiltakspenger-meldekort-api/AGENTS.md) |
-| `tiltakspenger-pdfgen` | PDF-genereringstjeneste med maler for PDF-generering | [lenke](tiltakspenger-pdfgen/AGENTS.md) |
 | `tiltakspenger-saksbehandling-api` | Saksbehandlings-API (kjerne-API for saksbehandling) | [lenke](tiltakspenger-saksbehandling-api/AGENTS.md) |
 | `tiltakspenger-soknad-api` | Søknads-API | [lenke](tiltakspenger-soknad-api/AGENTS.md) |
 | `tiltakspenger-tiltak` | Tiltak-integrasjon | [lenke](tiltakspenger-tiltak/AGENTS.md) |

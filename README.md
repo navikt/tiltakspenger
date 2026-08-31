@@ -47,7 +47,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-tiltak](https://github.com/navikt/tiltakspenger-tiltak)
 - [tiltakspenger-saksbehandling](https://github.com/navikt/tiltakspenger-saksbehandling)
 - [tiltakspenger-soknad-api](https://github.com/navikt/tiltakspenger-soknad-api)
-- [tiltakspenger-pdfgen](https://github.com/navikt/tiltakspenger-pdfgen)
 - [tiltakspenger-pdfgenrs](https://github.com/navikt/tiltakspenger-pdfgenrs)
 - [tiltakspenger-soknad](https://github.com/navikt/tiltakspenger-soknad)
 - [tiltakspenger-datadeling](https://github.com/navikt/tiltakspenger-datadeling)
@@ -72,8 +71,8 @@ rot av dette repositoryet.
 | script          | beskrivelse                                                                                                                                                                                                                                                        |
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options)                                                                                                         |
-| ./up-min.sh     | Starter kun databasene for saksbehandling og meldekort, pdfgen-tjenestene og wiremock — kan benyttes når backend-appene kjøres separat og med mock auth (se i [up-min.sh](https://github.com/navikt/tiltakspenger/blob/main/up-min.sh) for tilgjengelige options) |
-| ./down.sh       | Script for å stoppe alle apper i docker-compose (se i [down.sh](https://github.com/navikt/tiltakspenger/blob/main/down.sh) for tilgjengelige options)                                                                                                              |
+| ./up-min.sh     | Starter kun databasene for saksbehandling og meldekort, pdfgenrs-tjenesten og wiremock — kan benyttes når backend-appene kjøres separat og med mock auth (se i [up-min.sh](https://github.com/navikt/tiltakspenger/blob/main/up-min.sh) for tilgjengelige options) |
+| ./down.sh       | Script for å stoppe alle apper i docker-compose                                                                                                                                                                                                                   |
 | ./dkill.sh      | Script for å kjøre docker compose down, stopper og fjerner alle containere som eventuelt fortsatt kjører, og fjerner det tilhørende nettverket                                                                                                                     |
 | ./slettAlt.sh   | Kjører "docker compose down --rmi all --volumes", i.e. sletter alt.                                                                                                                                                                                                |
 | ./slettBaser.sh | Kjører "docker compose down --volumes", i.e. sletter basene.                                                                                                                                                                                                       |

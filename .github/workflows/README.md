@@ -47,7 +47,7 @@ Input-defaultene i de delte workflowene ER flåtestandarden (`java-version: '25'
 | `test-og-bygg-gradle.yml` | JVM-app-repoene (erstatter lokal `.test-and-build.yml`; PR-gate med `bygg-image: false`) | `java-version`, `gradle-kommando`, `image-gradle-kommando`, `bygg-image`; secrets `SLACK_VARSEL_WEBHOOK_URL`, `GRADLE_ENCRYPTION_KEY` (valgfri) |
 | `dependency-submission-gradle.yml` | JVM-app-repoene (Dependabot-synlighet for transitive avhengigheter; libs sender inn fra publiseringsbygget sitt) | `java-version` |
 | `test-og-bygg-node.yml` | frontend-repoenes test-/verifiseringsgate (PR/branch; image-bygg forblir lokale); npm/pnpm detekteres fra lockfila | `node-version`, `kommando`; secrets `READER_TOKEN`, `SLACK_VARSEL_WEBHOOK_URL` |
-| `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgen, pdfgenrs) | ingen inputs; output `IMAGE` |
+| `bygg-image.yml` | repo der Dockerfilen er hele bygget (pdfgenrs) | ingen inputs; output `IMAGE` |
 | `deploy-nais.yml` | alle repoer som deployer image til nais (erstatter lokal `.deploy-to-nais.yml`; bruker GitHub environment per miljø) | `NAIS_ENV`, `IMAGE`, `cluster-suffiks` (arena: `fss`), `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `deploy-alerts.yml` | repoer med eget alert-manifest (saksbehandling-api, soknad-api); deployer til dev og prod i én matrise, uten byggesteg | `nais-ressurs`, `nais-vars` (`ingen` deployer uten vars-fil) |
 | `codeql-gradle.yml` | Kotlin/JVM-repoene (caller eier schedule + concurrency) | `java-version` |
@@ -146,7 +146,7 @@ Modellen er delt med vilje, etter hva som gir mest security-verdi per repo-type:
 - **JVM-backendene (8): advanced setup** via delt `codeql-gradle.yml`-caller. Her har `security-and-quality`-suiten (kode­kvalitets-queries: ressurslekkasjer, null-deref, død kode) **ingen lokal erstatning** — Spotless/ktlint er formattering, Konsist er arkitektur, Kover er dekning. Advanced gir da unik verdi, og code-as-config/drift-vakt/SHA-pinning følger med.
   Dette er den eneste språktypen som bruker en delt CodeQL-caller; en tilsvarende `codeql-node.yml` fantes, men ble fjernet som ubrukt da frontendene landet på default setup (hent den fra git-historikk om et framtidig TS/JS-repo skulle trenge advanced).
 - **Frontendene (4): GitHub default setup.** For JS/TS dekker ESLint + `tsc` allerede kvalitetsqueriene, så advanced sitt eneste egentlige fortrinn forsvinner. Da vinner default setup: security-SAST ved **push + PR + ukentlig** (bedre timing enn callernes schedule-only), null vedlikehold, GitHub-styrt versjon, ingen fork-PR-floke (`security-events: write` mangler på fork-token).
-- **pdfgenrs: default setup** (auto-detektert Python/JS). **pdfgen** (Handlebars + shell) og **iac** (manifester) har ingen CodeQL-analyserbar kode — korrekt at de står uten.
+- **pdfgenrs: default setup** (auto-detektert Python/JS). **iac** (manifester) har ingen CodeQL-analyserbar kode — korrekt at det står uten.
 
 Konsekvens: frontend-callerne (`codeql.yml`) er bevisst IKKE innført, og den delte `codeql-node.yml` ble fjernet som ubrukt (kan hentes fra git-historikk om et framtidig TS/JS-repo trenger advanced).
 Advanced og default setup kan ikke stå på samtidig — opplasting fra advanced feiler mens default setup er på. Bytt derfor default AV (`gh api -X PATCH repos/navikt/<repo>/code-scanning/default-setup -f state=not-configured`) *før* en codeql-caller pushes, eller default PÅ (`-X PUT ... -f state=configured`) etter at en caller er fjernet.

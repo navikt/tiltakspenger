@@ -1,4 +1,4 @@
-# Standard Dependabot-konfig for repo uten kodeavhengigheter Dependabot skal følge (iac, pdfgen; metarepoet bruker denne).
+# Standard Dependabot-konfig for repo uten kodeavhengigheter Dependabot skal følge (iac; metarepoet bruker denne).
 # Holder SHA-pinnede actions ferske.
 version: 2
 updates:

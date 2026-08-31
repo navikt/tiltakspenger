@@ -39,7 +39,7 @@ jobs:
           # Deploysteget leser kun manifestfiler fra arbeidskatalogen - tokenet trengs ikke videre.
           persist-credentials: false
       - name: Deploy alerts til nais
-        uses: nais/deploy/actions/deploy@2d18f050f07b6a007864c6a57070ed915d571beb # v2
+        uses: nais/deploy/actions/deploy@027a91857992525139798892f2804b0ca21f4af6 # v2
         env:
           CLUSTER: ${{ matrix.cluster }}-gcp
           RESOURCE: ${{ inputs.nais-ressurs }}

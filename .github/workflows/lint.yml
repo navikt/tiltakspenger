@@ -3,8 +3,7 @@ name: Lint workflows
 on:
   # Manuell trigger: begge de andre triggerne er sti-filtrerte, så en kjøring som feiler på
   # infrastruktur (f.eks. «Failed to resolve action download info») ellers etterlater main rød
-  # til noen tilfeldigvis endrer .github/ igjen. Gir også en måte å validere den delte
-  # workflowen på uten å lage en PR.
+  # til noen tilfeldigvis endrer .github/ igjen.
   workflow_dispatch:
   pull_request:
     paths:
@@ -19,12 +18,9 @@ permissions: {}
 
 jobs:
   lint:
-    # Lokal sti (ikke @main) slik at endringer i den delte workflowen testes med PR-ens egen versjon.
     permissions:
       contents: read
-    uses: ./.github/workflows/lint-workflows.yml
+    uses: navikt/tiltakspenger-workflows/.github/workflows/lint-workflows.yml@main
     with:
-      # Metarepoets zizmor.yml er bevisst et supersett av malen (bot-conditions-unntak for de delte workflowene bor her).
-      zizmor-mal-sjekk: false
-      # Malene bor her, og metarepoets dependabot.yml er bevisst kun github-actions (auto ville krevd gradle-malen pga. rot-gradlefila).
+      # Metarepoets dependabot.yml er bevisst kun github-actions (auto ville krevd gradle-malen pga. rot-gradlefila).
       dependabot-mal: ingen

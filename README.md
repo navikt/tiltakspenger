@@ -262,7 +262,7 @@ Alert-historikken kan rekonstrueres uavhengig av Slack med en range-query mot Mi
 
 ### CI-varslene (`#tp-varsel`)
 
-Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligger som secret `SLACK_VARSEL_WEBHOOK_URL` i hvert repo (også som Dependabot-secret, siden Dependabot-kjøringer ikke ser vanlige Actions-secrets). Den brukes av test-og-bygg-workflowene i repoene og av den delte [`dependabot-auto-merge.yml`](.github/workflows/README.md). Webhook-verdien administreres i Slack-appen [«Tiltakspenger slack notifications»](https://api.slack.com/apps/A080BJA5P34/incoming-webhooks) under *Incoming Webhooks* (krever collaborator-tilgang på appen) — GitHub-secrets kan ikke leses tilbake, så det er dit man går for å hente verdien når et nytt repo skal ha secreten. Denne webhooken har ingenting med Alertmanager-kjeden å gjøre — at CI-varsler kommer frem sier altså ikke noe om alert-varslene, og omvendt.
+Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligger som secret `SLACK_VARSEL_WEBHOOK_URL` i hvert repo (også som Dependabot-secret, siden Dependabot-kjøringer ikke ser vanlige Actions-secrets). Den brukes av test-og-bygg-workflowene i repoene og av den delte [`dependabot-auto-merge.yml`](https://github.com/navikt/tiltakspenger-workflows/blob/main/.github/workflows/dependabot-auto-merge.yml). Webhook-verdien administreres i Slack-appen [«Tiltakspenger slack notifications»](https://api.slack.com/apps/A080BJA5P34/incoming-webhooks) under *Incoming Webhooks* (krever collaborator-tilgang på appen) — GitHub-secrets kan ikke leses tilbake, så det er dit man går for å hente verdien når et nytt repo skal ha secreten. Denne webhooken har ingenting med Alertmanager-kjeden å gjøre — at CI-varsler kommer frem sier altså ikke noe om alert-varslene, og omvendt.
 
 ### Videre lesning
 
@@ -273,10 +273,10 @@ Byggvarsler sendes direkte fra GitHub Actions med en egen Slack-webhook som ligg
 
 ## Delte GitHub Actions-workflows
 
-Delte workflows for repoene våre bor i [`.github/workflows/`](.github/workflows/) i dette repoet og kalles med `workflow_call` fra tynne caller-workflows i hvert repo.
-Se [README-en i workflow-mappa](.github/workflows/README.md) for caller-eksempel, konvensjoner (secrets, permissions, pinning), hvilke repoer som dekkes og forholdet til Nais-dokumentasjonen/Golden Path — og [#31](https://github.com/navikt/tiltakspenger/issues/31) for utrullingsstatus.
+Delte workflows for repoene våre bor i [`navikt/tiltakspenger-workflows`](https://github.com/navikt/tiltakspenger-workflows) (`.github/workflows/`) og kalles med `workflow_call` fra tynne caller-workflows i hvert repo.
+Se [README-en i workflow-mappa der](https://github.com/navikt/tiltakspenger-workflows/blob/main/.github/workflows/README.md) for caller-eksempel, konvensjoner (secrets, permissions, pinning), hvilke repoer som dekkes og forholdet til Nais-dokumentasjonen/Golden Path — og [#31](https://github.com/navikt/tiltakspenger/issues/31) for utrullingsstatus.
 
-**Hvorfor metarepoet?** Vi vurderte tre plasseringer (kartlagt 2026-07-17). Normen i Nav er et dedikert `<team>-workflows`-repo (20+ team, f.eks. `aap-workflows`), men med en portefølje på et par workflows er et eget repo mest overhead — vi følger heller tilleggsstønader, som bruker metarepoet sitt. `tiltakspenger-libs` ble valgt bort fordi workflow-endringer der ville trigget full maven-publisering, og fordi libs da blir både produsent og konsument av samme CI. Vokser porteføljen, kan workflowene flyttes til et eget `tiltakspenger-workflows`-repo — flyttingen er én endret linje per caller-repo.
+**Hvorfor eget repo?** Normen i Nav er et dedikert `<team>-workflows`-repo (20+ team, f.eks. `aap-workflows`). Vi startet (2026-07-17) med workflowene i dette metarepoet fordi porteføljen var liten, men flyttet dem til `tiltakspenger-workflows` da porteføljen vokste — flyttingen var én endret linje per caller-repo, som forventet. `tiltakspenger-libs` er fortsatt uaktuelt fordi workflow-endringer der ville trigget full maven-publisering, og fordi libs da blir både produsent og konsument av samme CI.
 
 ## Sikkerhet
 

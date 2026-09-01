@@ -160,9 +160,9 @@ fetch_repo() {
     # Enumerer de definerte og vis siste kjøring av HVER (også aldri kjørte).
     #  - dynamic/-workflows (Dependabot Updates, Copilot, …) er GitHub-interne
     #    og ikke bygg — hopp over.
-    #  - Delte reusable workflows («(delt)»-suffiks, jf. .github/workflows/
-    #    README.md) kjører aldri selvstendig og ville stått som evige
-    #    «ingen kjøringer»-rader.
+    #  - Delte reusable workflows («(delt)»-suffiks, jf. README-en i
+    #    navikt/tiltakspenger-workflows) kjører aldri selvstendig og ville
+    #    stått som evige «ingen kjøringer»-rader.
     $gh_to gh workflow list --repo "$repo" --json name,path \
         -q '.[] | select(.path | startswith("dynamic/") | not) | .name' 2>/dev/null \
     | while IFS= read -r wf; do

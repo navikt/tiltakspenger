@@ -197,11 +197,11 @@ services:
     volumes:
       - ./tiltakspenger-pdfgenrs/templates:/app/templates
       - ./tiltakspenger-pdfgenrs/fonts:/app/fonts
-      - ./tiltakspenger-pdfgenrs/data:/app/data
+      - ./tiltakspenger-pdfgenrs/testdata:/app/data
       - ./tiltakspenger-pdfgenrs/resources:/app/resources
       - ./tiltakspenger-pdfgenrs/lib:/app/lib
     environment:
-      # DEV_MODE gir GET-forhåndsvisning av data/tpts-datasettene, likt sub-repoets eget compose.
+      # DEV_MODE gir GET-forhåndsvisning av testdata/tpts-datasettene, likt sub-repoets eget compose.
       DEV_MODE: "true"
 
   wiremock:

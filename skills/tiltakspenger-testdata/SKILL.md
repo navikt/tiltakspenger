@@ -60,7 +60,7 @@ dekkes ikke.
 ## Nyttig å vite (så du ikke gjetter)
 
 - Auth mot LokalMain bruker fake Texas-tokens: saksbehandler `TokenMcTokenface` (A123456), beslutter `TokenMcTokenface2` (B123456). To brukere pga. 4-øyne.
-- Papir bruker fnr `12345678911` (matcher SAF-fakens journalpost `12345`).
+- Papir bruker fnr `12845678911` (matcher SAF-fakens journalpost `12345`).
 - `kjedeId` inneholder `/` og må URL-encodes (`%2F`) — scriptene håndterer dette.
 - Papir-utledning av tiltaksdeltakelse i client-fakene er kjent skjør; scriptene har en fallback. Se TODO-ene i `TiltaksdeltakelseFakeKlient.kt` / `LocalApplicationContext.kt`.
 

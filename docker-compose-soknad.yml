@@ -46,8 +46,8 @@ services:
                             "requestParam": "grant_type",
                             "match": "*",
                             "claims": {
-                                "sub": "12345678901",
-                                "pid": "12345678901",
+                                "sub": "12845678901",
+                                "pid": "12845678901",
                                 "client_id": "localhost:tpts:tiltakspenger-soknad",
                                 "acr": "Level4"
                             }
@@ -62,8 +62,8 @@ services:
                             "requestParam": "grant_type",
                             "match": "*",
                             "claims": {
-                                "sub": "12345678901",
-                                "pid": "12345678901",
+                                "sub": "12845678901",
+                                "pid": "12845678901",
                                 "aud": ["localhost:tpts:tiltakspenger-soknad-api"],
                                 "acr": "Level4"
                             }
@@ -78,8 +78,8 @@ services:
                             "requestParam": "grant_type",
                             "match": "*",
                             "claims": {
-                                "sub": "12345678901",
-                                "pid": "12345678901",
+                                "sub": "12845678901",
+                                "pid": "12845678901",
                                 "aud": ["localhost:tpts:tiltakspenger-soknad-api"],
                                 "acr": "Level4"
                             }

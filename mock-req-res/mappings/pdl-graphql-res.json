@@ -23,7 +23,7 @@
           "adressebeskyttelse": [],
           "forelderBarnRelasjon": [
             {
-              "relatertPersonsIdent": "10020662730",
+              "relatertPersonsIdent": "10820662730",
               "relatertPersonsRolle": "BARN",
               "minRolleForPerson": "MOR",
               "relatertPersonUtenFolkeregisteridentifikator": null,
@@ -49,7 +49,7 @@
               }
             },
             {
-              "relatertPersonsIdent": "07070676243",
+              "relatertPersonsIdent": "07870676243",
               "relatertPersonsRolle": "BARN",
               "minRolleForPerson": "MOR",
               "relatertPersonUtenFolkeregisteridentifikator": null,

@@ -19,3 +19,10 @@ TASKS.md
 
 # Console- og sidedumper fra lokal nettleserautomatisering
 .playwright-mcp/
+
+# Bearbeidede rapporter fra hemmelighetssveipet (script/sveip) — inneholder funn, aldri commit
+/reports/
+
+# Python-bytekode fra script/
+__pycache__/
+*.py[cod]

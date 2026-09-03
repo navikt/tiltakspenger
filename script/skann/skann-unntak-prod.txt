@@ -1,0 +1,70 @@
+# Unntaksliste for PRODUKSJONSKODE — bekreftede falske positiver i flåten.
+#
+# Motstykket er skann-unntak-test.txt. Listene er delt slik at et testunntak
+# aldri kan skjule et funn i produksjonskode. En feilplassert oppføring gir
+# ingen treff og vises som ubrukt i statistikken.
+#
+# Format, én oppføring per linje:
+#   sjekk-id regex             gjelder alle repoer
+#   repo-navn/sjekk-id regex   gjelder kun det repoet (basename av skannet sti)
+#
+# Hver oppføring MÅ ha en #-begrunnelse på linja over. Skriptet feiler ellers,
+# på samme måte som zizmor-unntakene våre.
+#
+# Rekkefølgen på arbeidet er: fiks det reelle funnet, forbedre mønsteret i
+# skriptet hvis den falske positiven er realistisk for flere repoer, og legg
+# den her først når ingen av delene gjelder.
+
+
+# --- tiltakspenger-libs ------------------------------------------------------
+
+# Publiseringsrepositoriet libs publiserer til. Står i
+# build-logic/build.gradle.kts og tiltakspenger.publisering.gradle.kts, og er
+# kontrollert fil for fil i baselinen.
+tiltakspenger-libs/nettverk maven\.pkg\.github\.com/navikt/tiltakspenger-libs
+
+# URL-en sikkerlogg bygger inn i «se sikkerlogg»-teksten, slik at en utvikler
+# kommer til riktig loggspørring. Bygges som streng og logges; kalles aldri.
+tiltakspenger-libs/nettverk console\.cloud\.google\.com/logs/query
+
+# Dokumentasjonslenke i en feilmeldingsstreng i common/Fnr.kt («Oppbygning: …»).
+# Kommentarfilteret fjerner kun lenker som står i kommentarer.
+tiltakspenger-libs/nettverk www\.skatteetaten\.no/person/folkeregister
+
+# lokal-oppstart er modulen som starter lokal infrastruktur: Databaseprobe
+# venter på at Postgres svarer på loopback, og Kommandokjører kjører docker
+# compose. Prosess- og socket-kallene er formålet med modulen.
+tiltakspenger-libs/prosess lokal-oppstart/src/main/kotlin/lokal/(Databaseprobe|Kommandokjører)\.kt:
+
+
+# --- tiltakspenger (metarepoet) ----------------------------------------------
+
+# Deklarerte Maven-repositorier i rotas build.gradle.kts for det lokale
+# verdikjede-oppsettet. De er forsyningskjede, men bevisste og gjennomgått i
+# baselinen — ikke et utgående kall fra kode.
+tiltakspenger/nettverk (packages\.confluent\.io|plugins\.gradle\.org|build\.shibboleth\.net)
+
+
+# --- tiltakspenger-pdfgenrs --------------------------------------------------
+
+# devtools/brev-preview er et lokalt forhåndsvisningsverktøy: det starter
+# docker compose, spør git om versjoner og prøver en port på loopback for å se
+# om containeren svarer. Prosess- og socket-kallene er formålet, og katalogen
+# følger ikke med i imaget (Dockerfile kopierer templates, fonts, resources
+# og lib).
+tiltakspenger-pdfgenrs/prosess devtools/brev-preview/(serve|versions)\.py:
+
+
+# --- metarepoet: skanneren selv ----------------------------------------------
+
+# Skanneren og selvtesten starter prosesser med vilje. skann-repo.py kaller
+# `git ls-files` — det er selve personverngarantien, og kan ikke gjøres uten
+# en prosess. selvtest.py bygger fixtur-repoet med git og kjører skanneren som
+# subprocess for å teste den ekte CLI-en, exit-koder inkludert.
+tiltakspenger/prosess script/skann/(skann-repo|selvtest)\.py:
+
+# README-en må kunne navngi plassholderformen for å forklare hvorfor den er et
+# funn i prod. Ren dokumentasjon, ingen ident.
+# Regexen skriver sifrene som kvantifikator, ikke som literal, ellers ville
+# denne lista selv blitt et funn.
+tiltakspenger/fnr script/skann/README\.md:9{11}

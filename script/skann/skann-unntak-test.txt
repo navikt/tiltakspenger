@@ -9,20 +9,6 @@
 
 # --- tiltakspenger-libs ------------------------------------------------------
 
-# Entra-issuer i JWT-testfixturer og texas-tester. Strengen er identiteten som
-# står i «iss»-feltet i et testtoken, ikke et endepunkt libs kaller.
-# auth-test-core er en testmodul, så også src/main der er testkode.
-tiltakspenger-libs/nettverk login\.microsoftonline\.com
-
-# Audience-verdien «https://graph.microsoft.com/.default» i texas-testene.
-# Scope-navn i en token-forespørsel, ikke et kall til Graph.
-tiltakspenger-libs/nettverk graph\.microsoft\.com
-
-# Fiktiv schema registry-vert i AvroKafkaConfig-testen. «.aiven» er ikke et
-# ekte toppdomene, så adressen kan ikke slås opp — men den har et punktum og
-# faller derfor utenfor enkeltledds-regelen i skriptet.
-tiltakspenger-libs/nettverk https://registry\.aiven:
-
 # Testen av sikkerlogg-teksten sammenligner mot den samme loggspørring-URL-en
 # som modulen bygger. Motstykket i prod-lista dekker implementasjonen.
 tiltakspenger-libs/nettverk console\.cloud\.google\.com/logs/query

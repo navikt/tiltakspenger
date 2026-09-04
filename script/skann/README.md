@@ -99,9 +99,11 @@ installasjon — inngangen legger sin egen mappe på `sys.path`.
 ```
 
 Bygger et fixtur-repo i en midlertidig katalog, kjører skanneren mot det som
-subprocess, og sjekker 51 punkter: personverngarantien, prod/test-skillet,
+subprocess, og sjekker 63 punkter: personverngarantien, prod/test-skillet,
 datovalideringen, kommentarklippingen, compose- og env-klassifiseringen,
-enkeltledds verter, de scope-delte unntakslistene, bevis-headeren,
+tjenestenavn i klyngen, pakkeregistre og skjemaverter, lockfil-hoppet,
+navneformene hemmelighetssjekken slipper, de scope-delte unntakslistene,
+bevis-headeren,
 «Hoppet over»-blokka i alle varianter, `--uten-test`, exit-kodene og ett
 kjernetreff per sjekk. Fixturen genereres i stedet for å
 ligge i git — plantede tokens og identer ville trigget GitHubs secret scanning.
@@ -113,7 +115,7 @@ ligge i git — plantede tokens og identer ville trigget GitHubs secret scanning
 |---|---|---|
 | `nettverk` | URL-er med ikke-godkjent vert — hva som er godkjent avhenger av scope, se under | `KODEFILER` i `spraak.py`: `.kt` `.kts` `.java` `.ts` `.tsx` `.js` `.mjs` `.cjs` `.astro` `.rs` `.py` `.sh` `.yml` `.yaml` `.tf` `.hcl` `.toml` |
 | `prosess` | prosess-, socket- og native-kall, med egne mønstre per språk | jvm, rust, node, python |
-| `hemmeligheter` | privatnøkkel-blokker, `ghp_`/`gho_`/`github_pat_`, `AKIA…`, `xox[baprs]-`, `NAIS_`/`AZURE_`-navn satt til en lang literal | alle |
+| `hemmeligheter` | privatnøkkel-blokker, `ghp_`/`gho_`/`github_pat_`, `AKIA…`, `xox[baprs]-`, `NAIS_`/`AZURE_`-navn satt til en lang literal. Verdier som selv er navn treffer ikke: små bokstaver i ledd, et miljøvariabelnavn (`AZURE_APP_CLIENT_ID`) eller en container-image-referanse (`ghcr.io/navikt/app:tag`) | alle |
 | `jwt` | JWT-lignende strenger — egen sjekk, fordi testfixturer har legitime | alle |
 | `base64` | base64-literaler på 60 tegn eller mer | alle |
 | `fnr` | 11-sifrede tall — se prod/test-skillet under | alle |
@@ -173,8 +175,9 @@ Sjekkene er strengest i prod, og skillet gjøres i `spraak.er_testfil`.
 (`tests/` eller `test/` — ankeret er bevisst, ellers ville en Kotlin-pakke som
 heter `test` under `src/main` blitt feilklassifisert), testmoduler kjent på
 navnet (`*-test`, `*test-common`, `*-test-core`), `mock-req-res/`, og
-frontendmønstrene `*.test.*` og `*.spec.*` (uten ende-anker, så `foo.test.d.ts`
-og `foo.spec.ts.snap` også teller), `__tests__/`, `e2e/`, `playwright/`,
+frontendmønstrene `*.test.*`, `*.spec.*` og `*.stories.*` (uten ende-anker, så
+`foo.test.d.ts` og `foo.spec.ts.snap` også teller — Storybook-filer hører til av
+samme grunn: de kjører i katalogen, aldri i det som deployes), `__tests__/`, `e2e/`, `playwright/`,
 `fixtures/`, `testdata/` og `test-data/`. I tillegg testriggenes egen
 konfigurasjon: `playwright.config.*`, `vitest.config.*` og `jest.config.*` —
 de kjører testene og blir aldri med i deployment. Bygg- og lintconfiger
@@ -201,7 +204,26 @@ Nettverkssjekken bruker samme prod/test-skille, og lista er ulik i de to.
 | Scope | Godkjent |
 |---|---|
 | test | `localhost`, `127.0.0.1`, `0.0.0.0`, `::1`, `host.docker.internal`, `example.com/org/net`, RFC 5737-adressene, og suffiksene `.test`, `.local`, `.localhost`, `.invalid`, `.example`, `.example.com/org/net`, `.nav.no`, `.adeo.no`, `.nais.io`. Loopback og private adresser godkjennes også via `ipaddress`. |
-| prod | Kun `.nav.no`, `.adeo.no` og `.nais.io` (apex inkludert), pluss egne apper adressert på tjenestenavn i klyngen (`tiltakspenger-*`). Alt annet er funn — også `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` og `host.docker.internal`. |
+| prod | `.nav.no`, `.adeo.no` og `.nais.io` (apex inkludert), apper adressert på tjenestenavn i klyngen, suffiksene `.svc.cluster.local` og `.svc.nais.local`, kjente pakkeregistre, skjemaverter og `login.microsoftonline.com`/`graph.microsoft.com`. Alt annet er funn — også `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` og `host.docker.internal`. |
+
+Fire lister gjelder i **begge** scope, fordi noe som er greit i koden som
+deployes ikke kan være strengere vurdert i en testfil:
+
+| Liste | Innhold | Hvorfor |
+|---|---|---|
+| tjenestenavn i klyngen | `app`, `app.namespace`, `*.svc.cluster.local`, `*.svc.nais.local` | Nais' service discovery |
+| pakkeregistre | npmjs, GitHub Packages, Maven Central, Gradle-plugins, Confluent, crates.io, PyPI | bygget henter avhengigheter, appen ringer ikke ut |
+| skjemaverter | `www.w3.org`, `json-schema.org`, `schemas.xmlsoap.org`, `xmlns.jcp.org` | navnerom, aldri et oppslag |
+| identitetsleverandør | `login.microsoftonline.com`, `graph.microsoft.com` | plattformens egen |
+
+Ukjente pakkeregistre er fortsatt funn — der ligger forsyningskjede-signalet.
+Altinn, Brønnøysund, Maskinporten og andre partnerintegrasjoner varierer per
+team og hører hjemme i unntakslista med begrunnelse, ikke i lista over.
+
+Lockfiler (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `Cargo.lock`,
+`*.lockfile`) leses ikke av nettverkssjekken i det hele tatt. De er
+maskingenererte, og registeret de peker på er bestemt i `.npmrc`,
+`pnpm-workspace.yaml` eller byggfila. De andre sjekkene leser dem fortsatt.
 
 En testfixtur skal kunne peke på hva som helst fiktivt. I prod er lista
 minimal, av samme grunn som 11-sifferregelen er absolutt: en lokal adresse i
@@ -211,16 +233,22 @@ Dokumentasjonsadresser hører i kommentarer, og de strippes allerede.
 Interpolerte verter (`$`, `{`, `%`) godkjennes i begge scope — der er strengen
 ikke en adresse i det hele tatt.
 
-Enkeltledds verter uten punktum godkjennes derimot **bare i test**, der de er
-stubber (`http://test`, `http://pdl`). I prod er de funn, med ett unntak:
-`http://tiltakspenger-*` er måten Nais-apper i samme namespace snakker sammen
-på. Den namespace-kvalifiserte formen (`tiltakspenger-x.tpts`) har punktum og
-faller utenfor mønsteret.
+**Tjenestenavn i klyngen er en heuristikk.** Ett ledd (`http://amt-deltaker`)
+godkjennes, og to ledd (`http://amt-deltaker.amt`) når siste ledd ikke er et
+kjent toppdomene — `TOPPDOMENER` i `sjekker.py` er den eksplisitte lista, så
+`example.com` og `evil.io` er fortsatt funn. Loopback-navnene er unntatt:
+`localhost` og `host.docker.internal` er funn i prod, det samme er alt som
+`ipaddress` leser som en IP-adresse.
+
+Prisen står i koden: en teststubb som `http://test` eller `http://pdl` i
+produksjonskode slipper nå gjennom, og et namespace som deler navn med et
+toppdomene ville blitt lest som et domene. Alternativet — å binde formen til
+ett teams appnavnprefiks — gjør skriptet ubrukelig for alle andre.
 
 `.local` står bevisst ikke i prod-lista. Målt i flåten finnes `elector.local`
-(Nais leader elector) og `texas.local` kun i testkode. Dukker ekte prodbruk
-opp, hører den hjemme som en begrunnet unntaksoppføring, ikke som en
-oppmyking av lista.
+(Nais leader elector) og `texas.local` kun i testkode, og målingen er gjentatt
+over 69 repoer i tre naboteam med samme svar. Dukker ekte prodbruk opp, hører
+den hjemme som en begrunnet unntaksoppføring, ikke som en oppmyking av lista.
 
 ### Den absolutte prod-regelen
 

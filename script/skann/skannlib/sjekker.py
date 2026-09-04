@@ -48,35 +48,82 @@ GODKJENTE_TESTSUFFIKSER = (
     ".nav.no", ".adeo.no", ".nais.io",
 )
 
-# Det eneste som er godkjent i PRODUKSJONSKODE: våre egne domener. Alt annet
-# er et funn — også localhost, 127.0.0.1, 0.0.0.0, ::1 og
+# Det eneste domenesuffikset som er godkjent i PRODUKSJONSKODE: Navs egne. Alt
+# annet er et funn — også localhost, 127.0.0.1, 0.0.0.0, ::1 og
 # host.docker.internal. En lokal adresse i kode som blir med er en
 # lokal-profildefault på avveie, ikke noe skriptet skal tie om.
 #
 # «.local» står bevisst ikke her. Målt i flåten 2026-09-02 finnes elector.local
-# (Nais leader elector) og texas.local kun i testkode — 13 forekomster, alle
-# under src/test. Dukker ekte prodbruk opp, hører den hjemme som en begrunnet
-# unntaksoppføring, ikke som en oppmyking av lista.
+# (Nais leader elector) og texas.local kun i testkode. Målingen ble gjentatt
+# 2026-09-04 over 69 repoer i tre naboteam: ingen av de to navnene finnes i
+# prodkode der heller, så suffikset holdes utenfor. Dukker ekte prodbruk opp,
+# hører den hjemme som en begrunnet unntaksoppføring, ikke som en oppmyking.
 GODKJENTE_PRODSUFFIKSER = (".nav.no", ".adeo.no", ".nais.io")
 
-# Egne apper adressert med tjenestenavn i klyngen («http://tiltakspenger-tiltak»
-# og den namespace-kvalifiserte «http://tiltakspenger-x.tpts»). Dette er Nais'
-# service discovery i vårt eget namespace, og den eneste verten uten et av våre
-# domenesuffikser som er godkjent i prod.
+# Apper adressert med tjenestenavn i klyngen. Dette er Nais' service discovery:
+# «http://amt-deltaker» innenfor eget namespace, «http://amt-deltaker.amt» på
+# tvers, og den fullt kvalifiserte formen med .svc.cluster.local.
 #
-# Begge ledd er bundet: appnavnet må ha tiltakspenger-prefikset, og namespacet
-# må være tpts. Et tjenestenavn i et annet team sitt namespace er et kall ut av
-# tillitsdomenet vårt og skal fortsatt være et funn.
-#
-# Målt i flåten 2026-09-02: fem enkeltledds-navn i prodkode, alle med
-# tiltakspenger-prefikset, ingen legitime utenfor det — og én kvalifisert form,
-# tiltakspenger-meldekort-microfrontend.tpts.
-K8S_TJENESTE = re.compile(r"^tiltakspenger-[a-z0-9-]+(\.tpts)?$")
+# Formen er generell, ikke bundet til ett team. Et repo som skal kunne skannes
+# av naboene våre kan ikke ha vårt eget appnavnprefiks som eneste godkjente
+# tjenestenavn.
+K8S_SUFFIKSER = (".svc.cluster.local", ".svc.nais.local")
+
+# Toppdomener som skiller et ekte domene fra et namespace. «amt-deltaker.amt»
+# er service discovery; «evil.io» og «example.com» er verter ute på nettet.
+# Lista er bevisst kort og eksplisitt: den skal fange de domenene som faktisk
+# dukker opp i kode, ikke være en fullstendig TLD-liste.
+TOPPDOMENER = frozenset({
+    "no", "se", "dk", "fi", "is", "de", "fr", "nl", "uk", "eu", "us", "ru",
+    "com", "org", "net", "int", "biz", "info", "co", "gov", "edu", "mil",
+    "io", "dev", "app", "cloud", "ai", "sh", "me", "ms", "tv", "cc", "xyz",
+    "tech", "online", "site", "local",
+})
+
+# Enkeltledds navn som IKKE er tjenestenavn i klyngen. «localhost» peker på
+# poden selv, ikke på en tjeneste, og hører ikke hjemme i kode som deployes.
+IKKE_TJENESTENAVN = frozenset({"localhost", "host", "host.docker.internal"})
+
+# Pakkeregistre. En URL hit er et bygg som henter avhengigheter, ikke et kall
+# ut fra en kjørende app. Ukjente registre er fortsatt funn — der ligger
+# forsyningskjede-signalet.
+PAKKEREGISTRE = frozenset({
+    "registry.npmjs.org", "npm.pkg.github.com", "maven.pkg.github.com",
+    "repo.maven.apache.org", "repo1.maven.org", "plugins.gradle.org",
+    "services.gradle.org", "packages.confluent.io",
+    "crates.io", "static.crates.io", "pypi.org", "files.pythonhosted.org",
+})
+
+# Navnerom, ikke adresser. En xmlns i en SVG eller en $schema i en JSON-fil
+# slås aldri opp; strengen er en identifikator.
+SKJEMAVERTER = frozenset({
+    "www.w3.org", "json-schema.org", "schemas.xmlsoap.org", "xmlns.jcp.org",
+})
+
+# Identitetsleverandøren Nav-plattformen faktisk bruker. Kun disse to:
+# Altinn, Brønnøysund, Maskinporten og liknende er partnerintegrasjoner som
+# varierer per team, og hører hjemme i unntakslista med begrunnelse.
+IDENTITETSVERTER = frozenset({
+    "login.microsoftonline.com", "graph.microsoft.com",
+})
+
+# Lockfiler er maskingenererte, og registeret de peker på er styrt et annet
+# sted (.npmrc, pnpm-workspace.yaml, byggfila). Å lese dem gir tusenvis av
+# treff på samme vert uten at noen av dem er en beslutning i koden.
+LOCKFILER = re.compile(
+    r"(^|/)(pnpm-lock\.yaml|yarn\.lock|package-lock\.json|Cargo\.lock"
+    r"|[^/]*\.lockfile)$",
+)
 
 # Klammet IPv6-vert («http://[::1]:8080») fanges for seg: «]» må med i verten,
 # men ikke ellers — der avslutter den en liste eller en Markdown-lenke.
+#
+# «|», «*» og «(» avslutter også en vert. Målt over 69 nabo-repoer er de tre
+# tegnene som faktisk dukker opp midt i et «vertsnavn»: en Markdown-tabell
+# («grafana.nav.cloud.nais.io|Grafana») og et regex-literal
+# («https://(test|prod).oidc.*difi.*»). «;» og «#» forekom ikke.
 URL_MØNSTER = re.compile(
-    r"\b(?:https?|wss?)://(\[[0-9A-Fa-f:.]+\](?::\d+)?|[^\s\"'`<>,\)\]\}\\]+)",
+    r"\b(?:https?|wss?)://(\[[0-9A-Fa-f:.]+\](?::\d+)?|[^\s\"'`<>,\)\]\}\\|*(]+)",
     re.IGNORECASE,
 )
 
@@ -161,6 +208,15 @@ PLASSHOLDER = re.compile(
 # bindestrek eller punktum, uten entropi. En GUID starter med et siffer eller
 # blander store og små bokstaver, og fanges fortsatt.
 NAVNEFORM = re.compile(r"^[a-z][a-z0-9]*(?:[-.][a-z0-9]+)*$")
+# En literal som selv er et miljøvariabelnavn er en nøkkel, ikke en verdi:
+# «const val AZURE_APP_CLIENT_ID = "AZURE_APP_CLIENT_ID"» sier hvor verdien
+# skal hentes fra, den bærer den ikke. Målt hos et naboteam sto 29 av 30
+# hemmelighetstreff på denne formen.
+MILJØNAVN_LITERAL = re.compile(r"^[A-Z][A-Z0-9_]{2,}$")
+# Container-image på formen «registry/sti» eller «registry/sti:tag». Taggen er
+# ofte en commit-sha, som ser ut som entropi. Kun små bokstaver, så en
+# base64-hemmelighet med store bokstaver eller «+/=» treffer ikke.
+IMAGEFORM = re.compile(r"^[a-z0-9][a-z0-9.-]*(?::\d+)?(?:/[a-z0-9._-]+)+$")
 
 JWT_MØNSTER = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{4,}")
 
@@ -198,13 +254,17 @@ def vert_er_godkjent(vert, scope):
     if not vert or "$" in vert or "{" in vert or "%" in vert:
         return True  # interpolert vert, ikke en adresse
 
+    # Godkjent i begge scope. Rekkefølgen er poenget: alt som er greit i prod
+    # skal også være greit i test, ellers ville testkode blitt strengere
+    # vurdert enn koden som faktisk deployes.
+    if vert in PAKKEREGISTRE or vert in SKJEMAVERTER or vert in IDENTITETSVERTER:
+        return True
+    if vert.endswith(K8S_SUFFIKSER):
+        return True
+    if er_klyngetjeneste(vert):
+        return True
+
     if scope == "prod":
-        # Enkeltledds verter godkjennes ikke her. En teststubb som
-        # «http://test» hører ikke hjemme i kode som blir med i artefakten, og
-        # «localhost» er en lokal-profildefault på avveie. Unntaket er våre egne
-        # apper adressert på tjenestenavn i klyngen.
-        if K8S_TJENESTE.match(vert):
-            return True
         return any(vert == suffiks.lstrip(".") or vert.endswith(suffiks)
                    for suffiks in GODKJENTE_PRODSUFFIKSER)
 
@@ -233,8 +293,36 @@ def _er_ip(vert):
     return True
 
 
+def er_klyngetjeneste(vert):
+    """Om verten ser ut som en app adressert med Nais' service discovery.
+
+    To former godkjennes: «amt-deltaker» i eget namespace og
+    «amt-deltaker.amt» på tvers av namespace. Den kvalifiserte formen skilles
+    fra et ekte domene på siste ledd — er det et kjent toppdomene, er strengen
+    en vert ute på nettet, ikke et namespace.
+
+    Dette er en heuristikk, og prisen står her: en teststubb som
+    «http://test» eller «http://pdl» i produksjonskode slipper nå gjennom, og
+    et namespace som deler navn med et toppdomene («app.io») ville blitt lest
+    som et domene. Alternativet — å binde formen til ett teams appnavn — gjør
+    skriptet ubrukelig for alle andre.
+    """
+    if _er_ip(vert) or vert in IKKE_TJENESTENAVN:
+        return False
+    deler = vert.split(".")
+    if not all(re.fullmatch(r"[a-z0-9-]+", del_) for del_ in deler):
+        return False
+    if len(deler) == 1:
+        return True
+    return len(deler) == 2 and deler[1] not in TOPPDOMENER
+
+
 def nettverk(sti, endelse, linjer, treff):
     if endelse not in spraak.KODEFILER:
+        return
+    if LOCKFILER.search(sti):
+        # Lockfila er et avtrykk av det byggfila og .npmrc allerede bestemmer.
+        # De andre sjekkene leser den fortsatt.
         return
     scope = spraak.scope(sti)
     for nr, linje in enumerate(linjer, 1):
@@ -273,7 +361,9 @@ def hemmeligheter(sti, linjer, treff):
         match = MILJØ_HEMMELIGHET.search(linje)
         if (match
                 and not PLASSHOLDER.search(match.group(2))
-                and not NAVNEFORM.match(match.group(2))):
+                and not NAVNEFORM.match(match.group(2))
+                and not MILJØNAVN_LITERAL.match(match.group(2))
+                and not IMAGEFORM.match(match.group(2))):
             treff.append(("hemmeligheter", "FUNN", sti, nr,
                           f"{match.group(1)} satt til en lang literal",
                           match.group(0)))

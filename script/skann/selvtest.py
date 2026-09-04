@@ -46,6 +46,16 @@ LOKAL_VERT = "http://" + "local" + "host:8080/health"
 K8S_VERT = "http://" + "tiltakspenger" + "-tiltak"
 K8S_VERT_NS = "http://" + "tiltakspenger" + "-tiltak.tpts"
 FREMMED_NS = "http://" + "annet" + "-app.tpts"
+K8S_FULL = "http://" + "poao-tilgang.poao" + ".svc.cluster.local"
+DOMENE_VERT = "https://" + "example" + ".com/api"
+REGISTER_OK = "https://" + "registry.npmjs" + ".org/pakke"
+REGISTER_UKJENT = "https://" + "ukjent-registry" + ".io/pakke"
+SKJEMA_VERT = "https://" + "www.w3" + ".org/2000/svg"
+IDENT_VERT = "https://" + "login.microsoftonline" + ".com/felles/token"
+# Miljøvariabelnavn som verdi, container-image, og en ekte lang literal.
+MILJØNAVN = "AZURE_APP" + "_CLIENT_SECRET"
+IMAGEREF = "ghcr.io/" + "navikt/fixtur/fixtur"
+HEMMELIG_VERDI = "aB3xY9Kq2LmN4pR7sT1u" + "V5wZ8cD6eF0gH2iJ4kL"
 
 
 def med_kontrollsifre(ni):
@@ -152,9 +162,30 @@ val lokal = "{LOKAL_VERT}"
 val tjeneste = "{K8S_VERT}"
 val tjenesteNs = "{K8S_VERT_NS}"
 val fremmedNs = "{FREMMED_NS}"
+val fullKvalifisert = "{K8S_FULL}"
+val domene = "{DOMENE_VERT}"
+val register = "{REGISTER_OK}"
+val ukjentRegister = "{REGISTER_UKJENT}"
+val skjema = "{SKJEMA_VERT}"
+val identitet = "{IDENT_VERT}"
 """)
     skriv(rot, "src/test/verter.kt", f"""package fixtur
 val lokal = "{LOKAL_VERT}"
+""")
+    # --- lockfil: nettverkssjekken hopper over, de andre leser den ---------
+    skriv(rot, "frontend/pnpm-lock.yaml", f"""packages:
+  /pakke@1.0.0:
+    resolution: {{tarball: {REGISTER_UKJENT}}}
+    ident: "{PLASSHOLDER}"
+""")
+    # --- storybook er testkode ---------------------------------------------
+    skriv(rot, "src/Knapp.stories.tsx", f"""export const url = '{LOKAL_VERT}';
+""")
+    # --- hemmeligheter: navn og image er ikke verdier ----------------------
+    skriv(rot, "src/hemmelig.kt", f"""package fixtur
+const val AZURE_APP_CLIENT_SECRET_KEY = "{MILJØNAVN}"
+const val NAIS_APP_IMAGE = "{IMAGEREF}"
+const val AZURE_APP_CLIENT_SECRET = "{HEMMELIG_VERDI}"
 """)
     # --- rent repo for exit 0 ----------------------------------------------
     skriv(rot, "rent/README.md", "Ingenting å finne her.\n")
@@ -311,19 +342,51 @@ def kjør_selvtest(rot):
     f.sjekk(".env.prod er fortsatt prod",
             any(".env.prod" in linje for linje in funnlinjer(r)))
 
-    print("\nEnkeltledds verter")
+    print("\nTjenestenavn i klyngen")
     prod_verter = [linje for linje in funnlinjer(r) if "src/verter.kt" in linje]
     f.sjekk("localhost i prodfil er funn",
             any("localhost" in linje for linje in prod_verter))
-    f.sjekk("eget k8s-tjenestenavn i prod er godkjent",
+    f.sjekk("enkeltledds tjenestenavn i prod er godkjent",
             not any("tiltakspenger-tiltak" in linje and ".tpts" not in linje
                     for linje in prod_verter))
-    f.sjekk("namespace-kvalifisert eget navn i prod er godkjent",
+    f.sjekk("namespace-kvalifisert tjenestenavn i prod er godkjent",
             not any("tiltakspenger-tiltak.tpts" in linje for linje in prod_verter))
-    f.sjekk("annet namespace i prod er funn",
-            any("annet-app.tpts" in linje for linje in prod_verter))
+    f.sjekk("annet teams namespace i prod er godkjent",
+            not any("annet-app.tpts" in linje for linje in prod_verter))
+    f.sjekk(".svc.cluster.local i prod er godkjent",
+            not any("svc.cluster.local" in linje for linje in prod_verter))
+    f.sjekk("to ledd med kjent toppdomene i prod er funn",
+            any("example.com" in linje for linje in prod_verter))
     f.sjekk("localhost i testfil er stille",
             not any("src/test/verter.kt" in linje for linje in funnlinjer(r)))
+
+    print("\nPakkeregistre, skjema og identitetsleverandør")
+    f.sjekk("kjent pakkeregister i prod er godkjent",
+            not any("registry.npmjs.org" in linje for linje in prod_verter))
+    f.sjekk("ukjent register i prod er funn",
+            any("ukjent-registry.io" in linje for linje in prod_verter))
+    f.sjekk("skjemavert i prod er godkjent",
+            not any("w3.org" in linje for linje in prod_verter))
+    f.sjekk("identitetsleverandør i prod er godkjent",
+            not any("microsoftonline" in linje for linje in prod_verter))
+
+    print("\nLockfiler og storybook")
+    lock_linjer = [linje for linje in funnlinjer(r) if "pnpm-lock.yaml" in linje]
+    f.sjekk("nettverkssjekken hopper over lockfila",
+            not any("ukjent-registry.io" in linje for linje in lock_linjer))
+    f.sjekk("de andre sjekkene leser lockfila fortsatt",
+            any(PLASSHOLDER in linje for linje in lock_linjer))
+    f.sjekk("storybook-fil er testkode",
+            not any(".stories.tsx" in linje for linje in funnlinjer(r)))
+
+    print("\nHemmeligheter: navn er ikke verdier")
+    hem_linjer = [linje for linje in funnlinjer(r) if "src/hemmelig.kt" in linje]
+    f.sjekk("miljøvariabelnavn som literal er stille",
+            not any("CLIENT_SECRET_KEY" in linje for linje in hem_linjer))
+    f.sjekk("container-image som literal er stille",
+            not any("NAIS_APP_IMAGE" in linje for linje in hem_linjer))
+    f.sjekk("ekte lang literal er funn",
+            any("hemmelig.kt:4" in linje for linje in hem_linjer))
 
     print("\nBevis-header")
     header = ut.split("=" * 72)[1] if "=" * 72 in ut else ""

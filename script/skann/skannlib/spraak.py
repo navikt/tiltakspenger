@@ -99,8 +99,9 @@ TESTSTI_MØNSTRE = (
     re.compile(r"^tests?/"),
     # Frontend: filnavn og kataloger.
     # Uten ende-anker, slik at «foo.test.d.ts» og «foo.spec.ts.snap» også
-    # regnes som test.
-    re.compile(r"\.(test|spec)\."),
+    # regnes som test. «.stories.» hører til av samme grunn som «.spec.»:
+    # Storybook-filer kjører i katalogen, aldri i det som deployes.
+    re.compile(r"\.(test|spec|stories)\."),
     re.compile(r"(^|/)(__tests__|e2e|playwright|fixtures|testdata|test-data)/"),
     # Testriggenes egen konfigurasjon. Kun kjørerne — bygg- og lintconfiger
     # (vite, next, astro, eslint) blir med i deployment og er prod.

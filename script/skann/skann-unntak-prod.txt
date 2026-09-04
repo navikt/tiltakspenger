@@ -18,11 +18,6 @@
 
 # --- tiltakspenger-libs ------------------------------------------------------
 
-# Publiseringsrepositoriet libs publiserer til. Står i
-# build-logic/build.gradle.kts og tiltakspenger.publisering.gradle.kts, og er
-# kontrollert fil for fil i baselinen.
-tiltakspenger-libs/nettverk maven\.pkg\.github\.com/navikt/tiltakspenger-libs
-
 # URL-en sikkerlogg bygger inn i «se sikkerlogg»-teksten, slik at en utvikler
 # kommer til riktig loggspørring. Bygges som streng og logges; kalles aldri.
 tiltakspenger-libs/nettverk console\.cloud\.google\.com/logs/query
@@ -39,10 +34,11 @@ tiltakspenger-libs/prosess lokal-oppstart/src/main/kotlin/lokal/(Databaseprobe|K
 
 # --- tiltakspenger (metarepoet) ----------------------------------------------
 
-# Deklarerte Maven-repositorier i rotas build.gradle.kts for det lokale
-# verdikjede-oppsettet. De er forsyningskjede, men bevisste og gjennomgått i
-# baselinen — ikke et utgående kall fra kode.
-tiltakspenger/nettverk (packages\.confluent\.io|plugins\.gradle\.org|build\.shibboleth\.net)
+# Deklarert Maven-repositorium i rotas build.gradle.kts for det lokale
+# verdikjede-oppsettet. Det er forsyningskjede, men bevisst og gjennomgått i
+# baselinen — ikke et utgående kall fra kode. Confluent og Gradle-plugins sto
+# her til de kom inn i skriptets liste over kjente pakkeregistre.
+tiltakspenger/nettverk build\.shibboleth\.net
 
 
 # --- tiltakspenger-pdfgenrs --------------------------------------------------

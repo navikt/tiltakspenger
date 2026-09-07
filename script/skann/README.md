@@ -99,7 +99,7 @@ installasjon — inngangen legger sin egen mappe på `sys.path`.
 ```
 
 Bygger et fixtur-repo i en midlertidig katalog, kjører skanneren mot det som
-subprocess, og sjekker 67 punkter: personverngarantien, prod/test-skillet,
+subprocess, og sjekker 75 punkter: personverngarantien, prod/test-skillet,
 datovalideringen, kommentarklippingen, compose- og env-klassifiseringen,
 tjenestenavn i klyngen, pakkeregistre, skjemaverter og offentlige
 partnere, lockfil-hoppet,
@@ -123,8 +123,12 @@ ligge i git — plantede tokens og identer ville trigget GitHubs secret scanning
 | `kontonummer` | 11 siffer som validerer mod11 som norsk kontonummer | alle |
 | `gitleaks` | hele git-historikken, via gitleaks-binæren på PATH | ekstern |
 
-Kommentarlinjer og etterfølgende kommentarer klippes bort før `nettverk` og
-`prosess` kjører — en dokumentasjonslenke i en KDoc er ikke et utgående kall.
+Kommentarlinjer, etterfølgende kommentarer og `/* … */` på samme linje klippes
+bort før `nettverk` og `prosess` kjører — en dokumentasjonslenke i en KDoc er
+ikke et utgående kall. For `fnr` gjelder klippingen bare tall som ikke
+validerer: et uvalidert ellevesiffer i en kommentar eller i markdown (typisk et
+kjøringsnummer fra GitHub Actions) rapporteres ikke, mens en gyldig nummerserie
+er funn uansett hvor den står.
 Versjonsnumre, maven-koordinater og sifre som er del av et lengre tall eller en
 identifikator treffer ikke `fnr` og `kontonummer`.
 
@@ -270,6 +274,12 @@ er alvoret høyere.
 Kun kontekstvaktene gjelder: sifre som er del av et lengre tall, en
 maven-koordinat, en versjon eller en identifikator er ikke frittstående tall og
 rapporteres ikke.
+
+**Unntaket er kommentarer og markdown.** Et tall som verken validerer som fnr
+eller kontonummer, og som står i en kommentar eller i en markdown-fil, er ikke
+funn — der er det et kjøringsnummer eller en referanse, ikke kode som deployes.
+Validerer tallet, er det funn også der: personopplysningen er den samme uansett
+om linja kjører.
 
 **I testkode** står den mildere regelen: tallet valideres mot mod11 etter begge
 ordningene, plassholdersekvenser forkastes, og syntetiske serier rapporteres

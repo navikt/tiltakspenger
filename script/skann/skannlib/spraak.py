@@ -56,14 +56,53 @@ def kommentarsyntaks(endelse):
     return None
 
 
+# Filer som er dokumentasjon, ikke kode. Nettverkssjekken hopper over dem via
+# KODEFILER; for fnr-sjekken betyr de at et uvalidert ellevesiffer ikke er funn.
+DOKUMENTFILER = {".md", ".markdown", ".mdx"}
+
+# Språk med blokkommentarer «/* … */» i tillegg til linjekommentaren.
+BLOKKOMMENTAR_SPRÅK = JVM_OG_RUST | JS_FAMILIE | BEGGE_KOMMENTARTYPER
+
+
 def er_kommentarlinje(linje):
-    """Sant når hele linja er en kommentar."""
+    """Sant når hele linja er en kommentar.
+
+    «/* … */ kode» er ikke en kommentarlinje: blokka lukkes, og koden etter
+    den kjører. Da klipper uten_kommentar bort blokka og beholder koden.
+    """
     renset = linje.lstrip()
-    return renset.startswith(("//", "#", "*", "/*", "<!--"))
+    if renset.startswith("/*"):
+        slutt = renset.find("*/")
+        return slutt == -1 or not renset[slutt + 2:].strip()
+    return renset.startswith(("//", "#", "*", "<!--"))
+
+
+def uten_blokkommentar(linje, strengtegn):
+    """Fjerner «/* … */» som åpner på linja, utenfor strenger.
+
+    Lukkes blokka på samme linje, tas bare spennet ut og koden rundt beholdes.
+    Lukkes den ikke, er resten av linja kommentar. Blokker som strekker seg
+    over flere linjer og fortsetter uten innledende «*» ser denne ikke.
+    """
+    while True:
+        i = linje.find("/*")
+        if i == -1:
+            return linje
+        if any(linje.count(tegn, 0, i) % 2 for tegn in strengtegn):
+            return linje  # inne i en streng: ikke en kommentar
+        j = linje.find("*/", i + 2)
+        if j == -1:
+            return linje[:i]
+        linje = linje[:i] + " " + linje[j + 2:]
+
+
+def i_kode(linje, endelse, tekst):
+    """Sant når teksten står i kode, ikke i en kommentar på linja."""
+    return not er_kommentarlinje(linje) and tekst in uten_kommentar(linje, endelse)
 
 
 def uten_kommentar(linje, endelse):
-    """Klipper vekk en etterfølgende kommentar på linja.
+    """Klipper vekk kommentarene på linja: «/* … */» og en etterfølgende linjekommentar.
 
     En URL eller et prosesskall i en kommentar er dokumentasjon, ikke kode.
     «//» inne i en URL har alltid «:» foran seg, og en kommentarstart inne i en
@@ -74,6 +113,8 @@ def uten_kommentar(linje, endelse):
     if syntaks is None:
         return linje
     merker, strengtegn = syntaks
+    if endelse in BLOKKOMMENTAR_SPRÅK:
+        linje = uten_blokkommentar(linje, strengtegn)
     for i in range(len(linje)):
         for merke in merker:
             if not linje.startswith(merke, i):

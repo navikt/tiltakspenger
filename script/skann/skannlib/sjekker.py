@@ -402,7 +402,9 @@ def base64(sti, linjer, treff):
                 continue  # filsti
             før = linje[match.start() - 1] if match.start() else ""
             etter = linje[match.end()] if match.end() < len(linje) else ""
-            if før in "./-_" or etter in "./-_":
+            # Tom streng er «i» enhver streng, så kantene må sjekkes eksplisitt —
+            # ellers forsvinner en literal som starter eller slutter linja.
+            if (før and før in "./-_") or (etter and etter in "./-_"):
                 continue  # midt i en lengre sti eller identifikator
             treff.append(("base64", "FUNN", sti, nr,
                           f"base64-literal på {len(tekst)} tegn", tekst))
@@ -422,7 +424,7 @@ def prod_melding(tekst):
     return "11 siffer i produksjonskode"
 
 
-def fnr(sti, linjer, treff):
+def fnr(sti, endelse, linjer, treff):
     """11-sifrede tall. Strengere i prod enn i test.
 
     I produksjonskode er ethvert frittstående 11-sifret tall et funn: det finnes
@@ -431,17 +433,27 @@ def fnr(sti, linjer, treff):
     kontekstvaktene gjelder, og de skiller ut det som ikke er et frittstående
     tall.
 
+    Ett unntak: et tall som ikke validerer som noe, og som står i en kommentar
+    eller i en markdown-fil, er et kjøringsnummer eller en referanse — ikke
+    kode som deployes. Validerer tallet, er det funn også der: personopplysningen
+    er den samme uansett om linja kjører.
+
     I testkode valideres tallet mot begge ordningene, og syntetiske serier
     rapporteres som INFO.
     """
     prod = not spraak.er_testfil(sti)
+    dokumentasjon = endelse in spraak.DOKUMENTFILER
     for nr, linje in enumerate(linjer, 1):
         for match in siffer.FNR_MØNSTER.finditer(linje):
             if siffer.del_av_lengre_verdi(linje, match.start(), match.end()):
                 continue
             tekst = match.group(0)
             if prod:
-                treff.append(("fnr", "FUNN", sti, nr, prod_melding(tekst), tekst))
+                melding = prod_melding(tekst)
+                uvalidert = melding == "11 siffer i produksjonskode"
+                if uvalidert and (dokumentasjon or not spraak.i_kode(linje, endelse, tekst)):
+                    continue
+                treff.append(("fnr", "FUNN", sti, nr, melding, tekst))
                 continue
             if siffer.er_plassholdersekvens(tekst):
                 continue
@@ -497,6 +509,6 @@ def kjør_alle(sti, endelse, linjer, valgte, treff):
     if "base64" in valgte:
         base64(sti, linjer, treff)
     if "fnr" in valgte:
-        fnr(sti, linjer, treff)
+        fnr(sti, endelse, linjer, treff)
     if "kontonummer" in valgte:
         kontonummer(sti, linjer, valgte, treff)

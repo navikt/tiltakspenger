@@ -102,6 +102,21 @@ def er_ekte(n):
 
 
 FNR_EKTE = finn_fnr(1, 1, er_ekte)
+
+
+def finn_kjøringsnummer():
+    """Et 11-sifret tall som verken validerer som fnr eller kontonummer, slik et
+    kjøringsnummer fra GitHub Actions gjerne er."""
+    for n in range(30463460000, 30463470000):
+        s = str(n)
+        if (siffer.fnr_kategori(s) is None and not siffer.er_gyldig_konto(s)
+                and not siffer.er_plassholdersekvens(s)):
+            return s
+    raise AssertionError("fant ikke et uvaliderende tall")
+
+
+KJØRINGSNUMMER = finn_kjøringsnummer()
+BLOKK_VERT = "https://" + "blokk-vert" + ".io/api"
 FNR_TESTNORGE = finn_fnr(10, 82, lambda n: siffer.fnr_kategori(n) is not None)
 FNR_UMULIG_DATO = finn_fnr(31, 2, lambda n: siffer.fnr_ordning(n) is not None)
 KONTO = finn_konto()
@@ -129,6 +144,23 @@ val b64 = "{BASE64}"
 val ellevesiffer = "{FNR_EKTE}"
 val plassholder = "{PLASSHOLDER}"
 val apostrof = "don't" // dokumentasjon: {EKSTERN}
+""")
+    # Kommentarer og markdown: uvaliderte ellevesifre er stille, validerte er funn,
+    # og en blokkommentar foran kode skjuler ikke koden.
+    skriv(rot, "src/kommentar.kt", f"""package fixtur
+// kjøring {KJØRINGSNUMMER}
+val a = 1 /* doku: {EKSTERN} */
+/* se doku: {EKSTERN} */ val b = "{BLOKK_VERT}"
+val c = 2 // {FNR_EKTE}
+val d = "{KJØRINGSNUMMER}"
+""")
+    skriv(rot, "dok/README.md", f"""# Dok
+Kjøring {KJØRINGSNUMMER} feilet.
+Nummer {FNR_EKTE}.
+""")
+    # base64 som fyller hele linja: begge kantene er tomme
+    skriv(rot, "src/b64kant.kt", f"""package fixtur
+{BASE64}
 """)
     skriv(rot, "src/konto.kt", f"""package fixtur
 val konto = "{KONTO[:4]}.{KONTO[4:6]}.{KONTO[6:]}"
@@ -333,6 +365,28 @@ def kjør_selvtest(rot):
                 for linje in linjer_test))
     f.sjekk("gyldig dato treffer i test",
             any(FNR_EKTE in linje for linje in linjer_test))
+
+    print("\nUvaliderte ellevesifre i kommentar og markdown")
+    kom = [linje for linje in funnlinjer(r) if "src/kommentar.kt" in linje]
+    f.sjekk("kjøringsnummer i kommentarlinje er stille",
+            not any("kommentar.kt:2" in linje for linje in kom))
+    f.sjekk("kjøringsnummer i kode er fortsatt funn",
+            any("kommentar.kt:6" in linje and KJØRINGSNUMMER in linje for linje in kom))
+    f.sjekk("gyldig nummerserie i kommentar er fortsatt funn",
+            any("kommentar.kt:5" in linje and FNR_EKTE in linje for linje in kom))
+    f.sjekk("blokkommentar bak kode klippes",
+            not any("kommentar.kt:3" in linje for linje in kom))
+    f.sjekk("blokkommentar foran kode klipper kommentaren, ikke koden",
+            any("kommentar.kt:4" in linje and "blokk-vert" in linje for linje in kom)
+            and sum("kommentar.kt:4" in linje for linje in kom) == 1)
+    dok = [linje for linje in funnlinjer(r) if "dok/README.md" in linje]
+    f.sjekk("uvalidert ellevesiffer i markdown er stille",
+            not any(KJØRINGSNUMMER in linje for linje in dok))
+    f.sjekk("gyldig nummerserie i markdown er funn",
+            any(FNR_EKTE in linje for linje in dok))
+    f.sjekk("base64 som fyller linja er funn",
+            any("src/b64kant.kt:2" in linje and "base64-literal" in linje
+                for linje in funnlinjer(r)))
 
     print("\nKommentarklipping")
     f.sjekk("apostrof i Kotlin-streng stopper ikke klippingen",

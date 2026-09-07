@@ -27,14 +27,35 @@ def kontrollsiffer(siffer, vekter):
     return 11 - rest
 
 
+def gyldige_k1(siffer9):
+    """De fire k1-verdiene Skatteetatens 2032-ordning godtar: rest 0, 1, 2 og 3.
+
+    Rest 0 er dagens beregning. Verdien 10 finnes ikke som siffer og faller ut.
+    https://skatteetaten.github.io/folkeregisteret-api-dokumentasjon/nytt-fodselsnummer-fra-2032/
+    """
+    rest = sum(s * v for s, v in zip(siffer9, VEKTER_FNR_K1)) % 11
+    ut = set()
+    for r in range(4):
+        k1 = (11 + r) - rest
+        if k1 >= 11:
+            k1 -= 11
+        if k1 != 10:
+            ut.add(k1)
+    return ut
+
+
 def fnr_ordning(tekst):
     """Hvilken ordning nummeret validerer etter, eller None.
 
     «gammel» — k1 og k2 stemmer, slik fødselsnummer har vært bygget til nå.
-    «2032»   — kun k2 stemmer. Skatteetaten frigjør det første kontrollsifferet
-               for å utvide nummerrommet, så fra 2032 er k2 alene fasiten.
-               Dolly deler allerede ut slike numre, og en sjekk som krever k1
+    «2032»   — k2 stemmer, og k1 er en av de tre ekstra verdiene Skatteetaten
+               åpner for fra 2032 for å utvide nummerrommet (rest 1–3). Dolly
+               deler allerede ut slike numre, og en sjekk som krever dagens k1
                er blind for dem.
+
+    Samme tabell som wrapperens validate.py og navikt/fnrvalidator, så
+    skanneren og sveipet er enige om hva som er en gyldig nummerserie. Et
+    nummer med riktig k2 og en k1 utenfor de fire kan ikke tildeles noen.
 
     k2 bruker samme vekter som kontonummer-kontrollen. Et nummer som kun
     validerer etter 2032-ordningen har derfor ikke sterkere validering enn et
@@ -44,8 +65,9 @@ def fnr_ordning(tekst):
     k2 = kontrollsiffer(siffer[:10], VEKTER_FNR_K2)
     if k2 is None or k2 != siffer[10]:
         return None
-    k1 = kontrollsiffer(siffer[:9], VEKTER_FNR_K1)
-    return "gammel" if k1 is not None and k1 == siffer[9] else "2032"
+    if siffer[9] == kontrollsiffer(siffer[:9], VEKTER_FNR_K1):
+        return "gammel"
+    return "2032" if siffer[9] in gyldige_k1(siffer[:9]) else None
 
 
 def er_gyldig_konto(tekst):

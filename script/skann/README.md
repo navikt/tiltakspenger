@@ -99,7 +99,7 @@ installasjon — inngangen legger sin egen mappe på `sys.path`.
 ```
 
 Bygger et fixtur-repo i en midlertidig katalog, kjører skanneren mot det som
-subprocess, og sjekker 85 punkter: personverngarantien, prod/test-skillet,
+subprocess, og sjekker 87 punkter: personverngarantien, prod/test-skillet,
 datovalideringen, kommentarklippingen, compose- og env-klassifiseringen,
 tjenestenavn i klyngen, pakkeregistre, skjemaverter og offentlige
 partnere, lockfil-hoppet,
@@ -288,14 +288,16 @@ som INFO.
 
 ### To ordninger for kontrollsifrene
 
-Skatteetaten frigjør det **første** kontrollsifferet for å utvide
-nummerrommet. Fra 2032 er k2 alene fasiten, og Dolly deler allerede ut slike
+Skatteetaten utvider nummerrommet fra 2032 ved å gi det **første**
+kontrollsifferet fire gyldige verdier (rest 0–3) i stedet for én. Samme tabell
+som wrapperens `validate.py` og navikt/fnrvalidator, så skanneren og sveipet er
+enige om hva som er en gyldig nummerserie. Dolly deler allerede ut slike
 numre. En sjekk som krever begge kontrollsifrene er blind for dem.
 
 | Ordning | Krav | Melding |
 |---|---|---|
 | gammel | k1 og k2 stemmer | `gyldig nummerserie for fødselsnummer (gammel ordning), …` |
-| 2032 | kun k2 stemmer | `gyldig nummerserie for fødselsnummer (2032-ordning, kan også være kontonummer), …` |
+| 2032 | k2 stemmer, k1 er en av de tre nye verdiene | `gyldig nummerserie for fødselsnummer (2032-ordning, kan også være kontonummer), …` |
 
 Månedsklassifiseringen er den samme for begge — 01–12 er serien som er i bruk i
 Folkeregisteret, 41–52 Dolly,

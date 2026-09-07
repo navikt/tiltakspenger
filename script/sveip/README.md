@@ -77,7 +77,7 @@ Treffene deles på tre akser:
 |---|---|---|
 | scope | prod / test | `er_teststi` — teststi-definisjonen i [`kriterier.md`](kriterier.md) |
 | serie | gyldig nummerserie / syntetisk eller ugyldig | wrapperens `validate.py`: `fnr` og `dnr` er gyldig serie; `hnr` (Dolly), `tnr` (Test-Norge) og alt som ikke validerer er det ikke |
-| tilstand | HEAD / historikk | `git grep` etter verdien i klonens HEAD på kjøretidspunktet |
+| tilstand | HEAD / historikk | om verdien står i en fil med samme scope i klonens HEAD på kjøretidspunktet (én sifferindeks per repo) |
 
 Ut kommer `<teammappe>/fnr-<dato>.md` og `.csv` med kjøringsbevis, matrisen og åtte seksjoner i
 prioritert rekkefølge: gyldig serie før syntetisk, produksjonskode før testkode, HEAD før historikk.

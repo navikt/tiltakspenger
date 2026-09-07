@@ -122,32 +122,43 @@ def skann_repo(gitleaks: str, wrapper: Path, mappe: Path, repo: str) -> list[dic
             siste = (r.stderr or r.stdout).strip().splitlines()
             print(f'ADVARSEL: {repo}: gitleaks ga exit {r.returncode}: '
                   f'{siste[-1] if siste else "ingen utskrift"}')
-            return []
+            return None
         if not os.path.isfile(rapport):
             return []
         with open(rapport, encoding='utf-8') as fh:
             return json.load(fh) or []
 
 
-def head_ellevesifre(mappe: Path, repo: str) -> set[str] | None:
-    """Alle 11-sifrede vinduer som finnes i klonens HEAD nå, som én indeks per repo.
+def head_ellevesifre(mappe: Path, repo: str) -> dict[str, set[str]] | None:
+    """Alle 11-sifrede vinduer som finnes i klonens HEAD nå, som én indeks per repo og scope.
 
     Ett `git grep` per repo i stedet for ett per verdi: team-tiltak ga 19 530 oppslag og minutter
     med venting. Sifferrekker lengre enn elleve gir alle sine 11-vinduer, så et treff midt i en
     lengre rekke telles som før (`git grep -F` matchet delstrenger). `-a` leser binærfiler som
-    tekst, som `-F`-oppslaget også traff. None betyr at git feilet — da skal ingen rad påstå noe.
+    tekst, som `-F`-oppslaget også traff.
+
+    Indeksen er delt på prod og test etter stien verdien står i nå. Et treff regnes som «i HEAD»
+    bare når verdien finnes i samme scope i dag: en prod-forekomst som er fjernet, og der verdien
+    kun lever igjen i en testfil, hører hjemme under prod·historikk — testfilen får sin egen rad.
+    None betyr at git feilet — da skal ingen rad påstå noe.
     """
-    r = git(mappe / repo, 'grep', '-a', '-h', '-o', '-E', '[0-9]{11,}', 'HEAD', '--')
+    r = git(mappe / repo, 'grep', '-a', '-o', '-E', '[0-9]{11,}', 'HEAD', '--')
     if r.returncode not in (0, 1):
         siste = (r.stderr or '').strip().splitlines()
         print(f'ADVARSEL: {repo}: git grep i HEAD ga exit {r.returncode}: '
               f'{siste[-1] if siste else "ingen utskrift"}')
         return None
-    vinduer = set()
-    for rekke in r.stdout.split():
+    indeks = {'prod': set(), 'test': set()}
+    for linje in r.stdout.splitlines():
+        # «HEAD:sti:sifre» — stien kan inneholde kolon, sifrene aldri
+        deler = linje.split(':')
+        if len(deler) < 3 or not deler[-1].isdigit():
+            continue
+        sti, rekke = ':'.join(deler[1:-1]), deler[-1]
+        vinduer = indeks['test' if er_teststi(sti) else 'prod']
         for i in range(len(rekke) - 10):
             vinduer.add(rekke[i:i + 11])
-    return vinduer
+    return indeks
 
 
 def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate) -> list[dict]:
@@ -161,9 +172,11 @@ def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate
     with ThreadPoolExecutor(max_workers=PARALLELLE_REPOER) as pool:
         head_indeks = dict(zip(repoer, pool.map(lambda r: head_ellevesifre(mappe, r), repoer)))
     funn = []
+    feilet = []
     for repo, treff in rå.items():
-        if head_indeks[repo] is None:
-            print(f'ADVARSEL: {repo}: HEAD-status er ukjent, {len(treff)} treff hoppes over')
+        if treff is None or head_indeks[repo] is None:
+            feilet.append(repo)
+            print(f'ADVARSEL: {repo}: hoppes over — gitleaks eller git feilet, se over')
             continue
         for v in treff:
             verdi = str(v.get('Secret') or '')
@@ -184,17 +197,17 @@ def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate
                 'type': type_,
                 'gyldig_serie': type_ in GYLDIG_SERIE_TYPER,
                 'scope': 'test' if er_teststi(sti) else 'prod',
-                'i_head': verdi in head_indeks[repo],
+                'i_head': verdi in head_indeks[repo]['test' if er_teststi(sti) else 'prod'],
                 'fil': sti,
                 'linje': int(v.get('StartLine') or 0),
                 'commit': commit,
                 'commitdato': str(v.get('Date') or '')[:10],
             })
-    return funn
+    return funn, feilet
 
 
 def kjoringsbevis(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path,
-                  dato: str, antall: int) -> list[str]:
+                  dato: str, antall: int, feilet: list[str]) -> list[str]:
     """Header som gjør fila selvdokumenterende — samme idé som i script/skann og klassifiser.py."""
     nå = datetime.now().astimezone()
     versjon = kommando(gitleaks, 'version') or 'ukjent'
@@ -209,6 +222,7 @@ def kjoringsbevis(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path,
         f'  Dato        : {dato}',
         f'  Teammappe   : {mappe}',
         f'  Repoer      : {len(repoer)} med .git, {antall} treff etter plassholderfilteret',
+        f'  Feilet      : {", ".join(feilet) if feilet else "ingen — alle repoer er med"}',
         f'  gitleaks    : {versjon.removeprefix("v")} ({gitleaks})',
         f'  Regel       : off-id fra {wrapper / "config.toml"}, alle refs (--log-opts=--all)',
         f'  Wrapper     : {wrapper.name} @ {wrapper_sha[:10] or "ukjent"}',
@@ -293,9 +307,9 @@ def seksjon(funn, gyldig: bool, scope: str, i_hode: bool) -> list[str]:
     return ut
 
 
-def skriv_md(sti: Path, mappe: Path, repoer, gitleaks, wrapper, dato, funn):
+def skriv_md(sti: Path, mappe: Path, repoer, gitleaks, wrapper, dato, funn, feilet):
     ut = [f'# Ellevesifre i {mappe.name} — {dato}', '']
-    ut += kjoringsbevis(mappe, repoer, gitleaks, wrapper, dato, len(funn))
+    ut += kjoringsbevis(mappe, repoer, gitleaks, wrapper, dato, len(funn), feilet)
     ut += ['', '## Matrise', '']
     ut += matrise(funn)
     ut += ['', '## Funn', '',
@@ -320,7 +334,8 @@ def skriv_md(sti: Path, mappe: Path, repoer, gitleaks, wrapper, dato, funn):
            'gyldig serie er et funn uansett hva oppslaget svarer: er det ikke tildelt i dag, '
            'kan det bli det i morgen.',
            '',
-           'HEAD/historikk-aksen er målt mot klonens HEAD på kjøretidspunktet. En klone som ikke '
+           'HEAD/historikk-aksen er målt mot klonens HEAD på kjøretidspunktet, per scope: en verdi '
+           'regnes som i HEAD for en prod-rad bare når den står i en prod-fil i dag. En klone som ikke '
            'er oppdatert, eller en gren som ikke er hentet ned, flytter grensen mellom de to.',
            '']
     sti.write_text('\n'.join(ut) + '\n', encoding='utf-8')
@@ -374,16 +389,18 @@ def main():
     validate = finn_validate(wrapper)
 
     print(f'Skanner {len(repoer)} repoer i {mappe} …')
-    funn = samle(mappe, repoer, gitleaks, wrapper, validate)
+    funn, feilet = samle(mappe, repoer, gitleaks, wrapper, validate)
 
     md = Path(args.ut).expanduser() if args.ut else mappe / f'fnr-{dato}.md'
     csv_sti = md.with_suffix('.csv')
     md.parent.mkdir(parents=True, exist_ok=True)
-    skriv_md(md, mappe, repoer, gitleaks, wrapper, dato, funn)
+    skriv_md(md, mappe, repoer, gitleaks, wrapper, dato, funn, feilet)
     skriv_csv(csv_sti, funn)
 
     gyldige_i_head = [f for f in funn if f['gyldig_serie'] and f['i_head']]
     print(f'{len(funn)} treff. Skrev {md} og {csv_sti.name}.')
+    if feilet:
+        print(f'  FEILET: {", ".join(feilet)} — ikke med i tallene')
     for gyldig in (True, False):
         for i_hode in (True, False):
             treff = [f for f in funn if f['gyldig_serie'] == gyldig and f['i_head'] == i_hode]

@@ -104,6 +104,32 @@ def er_ekte(n):
 FNR_EKTE = finn_fnr(1, 1, er_ekte)
 
 
+def finn_k1_varianter():
+    """To numre med riktig k2 og gyldig dato: ett med k1 i 2032-settet (men ikke dagens
+    k1), ett med k1 utenfor settet. Begge i serien som er i bruk (måned 01)."""
+    i_settet = utenfor = None
+    for n in range(1000):
+        ni = [int(c) for c in f"0101{n:05d}"]
+        std = siffer.kontrollsiffer(ni, siffer.VEKTER_FNR_K1)
+        for k1 in range(10):
+            k2 = siffer.kontrollsiffer(ni + [k1], siffer.VEKTER_FNR_K2)
+            if k2 is None or k1 == std:
+                continue
+            kandidat = "".join(map(str, ni)) + str(k1) + str(k2)
+            if siffer.er_plassholdersekvens(kandidat):
+                continue
+            if k1 in siffer.gyldige_k1(ni):
+                i_settet = i_settet or kandidat
+            else:
+                utenfor = utenfor or kandidat
+        if i_settet and utenfor:
+            return i_settet, utenfor
+    raise SystemExit("fant ikke k1-varianter")
+
+
+FNR_2032, FNR_K1_UTENFOR = finn_k1_varianter()
+
+
 def finn_kjøringsnummer():
     """Et 11-sifret tall som verken validerer som fnr eller kontonummer, slik et
     kjøringsnummer fra GitHub Actions gjerne er."""
@@ -201,6 +227,8 @@ val konto = "{KONTO[:4]}.{KONTO[4:6]}.{KONTO[6:]}"
 val ekte = "{FNR_EKTE}"
 val testnorge = "{FNR_TESTNORGE}"
 val umuligDato = "{FNR_UMULIG_DATO}"
+val k1i2032 = "{FNR_2032}"
+val k1utenfor = "{FNR_K1_UTENFOR}"
 val plassholder = "{PLASSHOLDER}"
 """)
     # --- JS: apostrof og backtick avgrenser strenger ------------------------
@@ -382,6 +410,14 @@ def kjør_selvtest(rot):
             not any(PLASSHOLDER in linje for linje in linjer_test))
     f.sjekk("syntetisk serie i test er INFO",
             any(FNR_TESTNORGE in linje and "INFO" in linje for linje in linjer_test))
+
+    print("\nKontrollsiffer k1 etter 2032-tabellen")
+    f.sjekk("k1 i 2032-settet er gyldig nummerserie",
+            any(FNR_2032 in linje and "2032-ordning" in linje and "INFO" not in linje
+                for linje in linjer_test))
+    f.sjekk("k1 utenfor settet er ikke fødselsnummer",
+            not any(FNR_K1_UTENFOR in linje and "fødselsnummer" in linje
+                    for linje in linjer_test), FNR_K1_UTENFOR)
 
     print("\nDatovalidering")
     # Tallet validerer fortsatt mod11 som kontonummer — k2 og kontokontrollen

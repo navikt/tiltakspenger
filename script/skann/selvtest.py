@@ -52,6 +52,8 @@ REGISTER_OK = "https://" + "registry.npmjs" + ".org/pakke"
 REGISTER_UKJENT = "https://" + "ukjent-registry" + ".io/pakke"
 SKJEMA_VERT = "https://" + "www.w3" + ".org/2000/svg"
 IDENT_VERT = "https://" + "login.microsoftonline" + ".com/felles/token"
+PARTNER_VERT = "https://" + "data.brreg" + ".no/enhetsregisteret"
+OFFENTLIG_ANNEN = "https://" + "www.digdir" + ".no/api"
 # Miljøvariabelnavn som verdi, container-image, og en ekte lang literal.
 MILJØNAVN = "AZURE_APP" + "_CLIENT_SECRET"
 IMAGEREF = "ghcr.io/" + "navikt/fixtur/fixtur"
@@ -168,6 +170,8 @@ val register = "{REGISTER_OK}"
 val ukjentRegister = "{REGISTER_UKJENT}"
 val skjema = "{SKJEMA_VERT}"
 val identitet = "{IDENT_VERT}"
+val partner = "{PARTNER_VERT}"
+val annenOffentlig = "{OFFENTLIG_ANNEN}"
 """)
     skriv(rot, "src/test/verter.kt", f"""package fixtur
 val lokal = "{LOKAL_VERT}"
@@ -180,6 +184,9 @@ val lokal = "{LOKAL_VERT}"
 """)
     # --- storybook er testkode ---------------------------------------------
     skriv(rot, "src/Knapp.stories.tsx", f"""export const url = '{LOKAL_VERT}';
+""")
+    # testriggenes egen konfigurasjon er testkode, også cypress
+    skriv(rot, "cypress.config.ts", f"""export default {{ baseUrl: '{LOKAL_VERT}' }};
 """)
     # --- hemmeligheter: navn og image er ikke verdier ----------------------
     skriv(rot, "src/hemmelig.kt", f"""package fixtur
@@ -299,6 +306,8 @@ def kjør_selvtest(rot):
     f.sjekk("jwt", "JWT-lignende" in ut)
     f.sjekk("base64", "base64-literal" in ut)
     f.sjekk("fnr", "11 siffer i produksjonskode" in ut)
+    f.sjekk("fnr-meldingen sier nummerserie, ikke person",
+            "gyldig nummerserie for" in ut and "gyldig fødselsnummer" not in ut)
     f.sjekk("kontonummer", "validerer som kontonummer" in ut)
 
     print("\nProd- og testskillet")
@@ -369,6 +378,10 @@ def kjør_selvtest(rot):
             not any("w3.org" in linje for linje in prod_verter))
     f.sjekk("identitetsleverandør i prod er godkjent",
             not any("microsoftonline" in linje for linje in prod_verter))
+    f.sjekk("offentlig partner i prod er godkjent",
+            not any("brreg.no" in linje for linje in prod_verter))
+    f.sjekk("annet offentlig domene i prod er funn",
+            any("digdir.no" in linje for linje in prod_verter))
 
     print("\nLockfiler og storybook")
     lock_linjer = [linje for linje in funnlinjer(r) if "pnpm-lock.yaml" in linje]
@@ -378,6 +391,8 @@ def kjør_selvtest(rot):
             any(PLASSHOLDER in linje for linje in lock_linjer))
     f.sjekk("storybook-fil er testkode",
             not any(".stories.tsx" in linje for linje in funnlinjer(r)))
+    f.sjekk("cypress.config er testkode",
+            not any("cypress.config.ts" in linje for linje in funnlinjer(r)))
 
     print("\nHemmeligheter: navn er ikke verdier")
     hem_linjer = [linje for linje in funnlinjer(r) if "src/hemmelig.kt" in linje]

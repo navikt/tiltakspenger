@@ -60,6 +60,12 @@ GODKJENTE_TESTSUFFIKSER = (
 # hører den hjemme som en begrunnet unntaksoppføring, ikke som en oppmyking.
 GODKJENTE_PRODSUFFIKSER = (".nav.no", ".adeo.no", ".nais.io")
 
+# Offentlige registre og regelverkskilder Nav-apper henter fra. Avgjort 2026-09-04. Egen
+# liste, ikke slått sammen med GODKJENTE_PRODSUFFIKSER — den lista er våre egne domener,
+# og skillet skal være lesbart. Apex inkludert, samme form som over.
+OFFENTLIGE_PARTNERE = (".altinn.no", ".lovdata.no", ".brreg.no", ".skatteetaten.no",
+                       ".ssb.no")
+
 # Apper adressert med tjenestenavn i klyngen. Dette er Nais' service discovery:
 # «http://amt-deltaker» innenfor eget namespace, «http://amt-deltaker.amt» på
 # tvers, og den fullt kvalifiserte formen med .svc.cluster.local.
@@ -262,6 +268,10 @@ def vert_er_godkjent(vert, scope):
     if vert.endswith(K8S_SUFFIKSER):
         return True
     if er_klyngetjeneste(vert):
+        return True
+
+    if any(vert == suffiks.lstrip(".") or vert.endswith(suffiks)
+           for suffiks in OFFENTLIGE_PARTNERE):
         return True
 
     if scope == "prod":

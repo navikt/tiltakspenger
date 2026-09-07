@@ -59,6 +59,47 @@ baselinebeviset; `--regler-vinner` nullstiller. Presedensen står under «Status
 Er en regel feil eller mangler (ukjente regel-id-er får `unsure`), endres `kriterier.md` og skriptet
 sammen; git-historikken på kriteriefila er sporet revisor trenger.
 
+## fnr-team.py — ellevesifre per team
+
+`klassifiser.py` bygger baselinebeviset for vår egen flåte ut fra et wrapper-sveip. `fnr-team.py` er
+lettvektsmotstykket for et nabolag: pek på en mappe med klonede repoer, og få én matrise over
+ellevesifrene i hele historikken deres.
+
+```
+./script/sveip/fnr-team.py ~/dev/nav/komet --dato 2026-09-07
+```
+
+Repoene er undermappene med `.git`. Hver klone skannes med gitleaks over alle refs
+(`--log-opts=--all`) med kun `off-id`-regelen fra wrapperens `config.toml`, fire repoer om gangen.
+Treffene deles på tre akser:
+
+| Akse | Verdier | Kilde |
+|---|---|---|
+| scope | prod / test | `er_teststi` — teststi-definisjonen i [`kriterier.md`](kriterier.md) |
+| serie | gyldig nummerserie / syntetisk eller ugyldig | wrapperens `validate.py`: `fnr` og `dnr` er gyldig serie; `hnr` (Dolly), `tnr` (Test-Norge) og alt som ikke validerer er det ikke |
+| tilstand | HEAD / historikk | `git grep` etter verdien i klonens HEAD på kjøretidspunktet |
+
+Ut kommer `<teammappe>/fnr-<dato>.md` og `.csv` med kjøringsbevis, matrisen og åtte seksjoner i
+prioritert rekkefølge: gyldig serie før syntetisk, produksjonskode før testkode, HEAD før historikk.
+Numre i gyldig serie står uten verdi, som ellers her; syntetiske og ugyldige listes med verdi, så de
+kan limes inn i identvalidatoren. Exit 1 når noe i gyldig serie fortsatt står i HEAD.
+
+Likt med `klassifiser.py`: teststi, validering og plassholderfilteret importeres derfra, så en
+kriterieendring slår gjennom begge steder. Ulikt: ingen wrapper-sveip å lese, ingen statuser eller
+kriteriekoder, ingen PR-oppslag, og ingenting skrives tilbake til wrapperens `review.json`. Skriptet
+leser klonene og skriver de to filene, ikke noe mer.
+
+Trenger du verdiene, for eksempel til Dollys identvalidator, henter `fnr-verdier-team.py` dem fra klonene
+ved kjøring og legger den kommaseparerte lista på utklippstavlen — aldri i terminalen eller i en fil under git:
+
+```
+./script/sveip/fnr-verdier-team.py ~/dev/nav/komet --gruppe gyldig-head
+./script/sveip/fnr-verdier-team.py ~/dev/nav/komet --gruppe gyldig-historikk --del 1/4
+```
+
+Gruppene er `gyldig-head`, `gyldig-historikk` (begge revalideres med samme regler som over, så
+plassholdere og syntetiske serier fra samme linje ikke blir med) og `syntetisk` (verdiene fra CSV-en, som kontroll).
+
 ## Sikkerhet — hva skriptet gjør med det det leser
 
 Rapportdata og filinnhold fra repoene parses som tekst (JSON, CSV, regex) og kjøres aldri.

@@ -105,7 +105,8 @@ TESTSTI_MØNSTRE = (
     re.compile(r"(^|/)(__tests__|e2e|playwright|fixtures|testdata|test-data)/"),
     # Testriggenes egen konfigurasjon. Kun kjørerne — bygg- og lintconfiger
     # (vite, next, astro, eslint) blir med i deployment og er prod.
-    re.compile(r"(^|/)(playwright|vitest|jest)\.config\.[A-Za-z0-9]+$"),
+    # cypress.config hører til kjørerne av samme grunn som playwright.config.
+    re.compile(r"(^|/)(playwright|vitest|jest|cypress)\.config\.[A-Za-z0-9]+$"),
     # Compose-oppsett kjører lokalt og på utviklermaskiner. Nais deployer kun
     # via manifester, så en compose-fil følger aldri med noe sted.
     re.compile(r"(^|/)(docker-)?compose[^/]*\.(yml|yaml)$"),

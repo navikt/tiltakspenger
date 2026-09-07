@@ -99,9 +99,10 @@ installasjon — inngangen legger sin egen mappe på `sys.path`.
 ```
 
 Bygger et fixtur-repo i en midlertidig katalog, kjører skanneren mot det som
-subprocess, og sjekker 63 punkter: personverngarantien, prod/test-skillet,
+subprocess, og sjekker 67 punkter: personverngarantien, prod/test-skillet,
 datovalideringen, kommentarklippingen, compose- og env-klassifiseringen,
-tjenestenavn i klyngen, pakkeregistre og skjemaverter, lockfil-hoppet,
+tjenestenavn i klyngen, pakkeregistre, skjemaverter og offentlige
+partnere, lockfil-hoppet,
 navneformene hemmelighetssjekken slipper, de scope-delte unntakslistene,
 bevis-headeren,
 «Hoppet over»-blokka i alle varianter, `--uten-test`, exit-kodene og ett
@@ -179,7 +180,8 @@ frontendmønstrene `*.test.*`, `*.spec.*` og `*.stories.*` (uten ende-anker, så
 `foo.test.d.ts` og `foo.spec.ts.snap` også teller — Storybook-filer hører til av
 samme grunn: de kjører i katalogen, aldri i det som deployes), `__tests__/`, `e2e/`, `playwright/`,
 `fixtures/`, `testdata/` og `test-data/`. I tillegg testriggenes egen
-konfigurasjon: `playwright.config.*`, `vitest.config.*` og `jest.config.*` —
+konfigurasjon: `playwright.config.*`, `vitest.config.*`, `jest.config.*` og
+`cypress.config.*` —
 de kjører testene og blir aldri med i deployment. Bygg- og lintconfiger
 (`vite`, `next`, `astro`, `eslint`) er derimot prod.
 
@@ -204,9 +206,9 @@ Nettverkssjekken bruker samme prod/test-skille, og lista er ulik i de to.
 | Scope | Godkjent |
 |---|---|
 | test | `localhost`, `127.0.0.1`, `0.0.0.0`, `::1`, `host.docker.internal`, `example.com/org/net`, RFC 5737-adressene, og suffiksene `.test`, `.local`, `.localhost`, `.invalid`, `.example`, `.example.com/org/net`, `.nav.no`, `.adeo.no`, `.nais.io`. Loopback og private adresser godkjennes også via `ipaddress`. |
-| prod | `.nav.no`, `.adeo.no` og `.nais.io` (apex inkludert), apper adressert på tjenestenavn i klyngen, suffiksene `.svc.cluster.local` og `.svc.nais.local`, kjente pakkeregistre, skjemaverter og `login.microsoftonline.com`/`graph.microsoft.com`. Alt annet er funn — også `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` og `host.docker.internal`. |
+| prod | `.nav.no`, `.adeo.no` og `.nais.io` (apex inkludert), apper adressert på tjenestenavn i klyngen, suffiksene `.svc.cluster.local` og `.svc.nais.local`, kjente pakkeregistre, skjemaverter, `login.microsoftonline.com`/`graph.microsoft.com` og de offentlige partnerne. Alt annet er funn — også `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` og `host.docker.internal`. |
 
-Fire lister gjelder i **begge** scope, fordi noe som er greit i koden som
+Fem lister gjelder i **begge** scope, fordi noe som er greit i koden som
 deployes ikke kan være strengere vurdert i en testfil:
 
 | Liste | Innhold | Hvorfor |
@@ -215,10 +217,13 @@ deployes ikke kan være strengere vurdert i en testfil:
 | pakkeregistre | npmjs, GitHub Packages, Maven Central, Gradle-plugins, Confluent, crates.io, PyPI | bygget henter avhengigheter, appen ringer ikke ut |
 | skjemaverter | `www.w3.org`, `json-schema.org`, `schemas.xmlsoap.org`, `xmlns.jcp.org` | navnerom, aldri et oppslag |
 | identitetsleverandør | `login.microsoftonline.com`, `graph.microsoft.com` | plattformens egen |
+| offentlige partnere | `.altinn.no`, `.lovdata.no`, `.brreg.no`, `.skatteetaten.no`, `.ssb.no` (apex inkludert) | offentlige registre og regelverkskilder Nav-apper henter fra, avgjort 2026-09-04 |
 
 Ukjente pakkeregistre er fortsatt funn — der ligger forsyningskjede-signalet.
-Altinn, Brønnøysund, Maskinporten og andre partnerintegrasjoner varierer per
-team og hører hjemme i unntakslista med begrunnelse, ikke i lista over.
+De fem offentlige partnerne står i `OFFENTLIGE_PARTNERE`, bevisst atskilt fra
+`GODKJENTE_PRODSUFFIKSER`, som er våre egne domener. Andre
+partnerintegrasjoner — Maskinporten, Digdir, bransjeregistre — varierer per team
+og hører hjemme i unntakslista med begrunnelse, ikke i lista over.
 
 Lockfiler (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `Cargo.lock`,
 `*.lockfile`) leses ikke av nettverkssjekken i det hele tatt. De er
@@ -278,19 +283,20 @@ numre. En sjekk som krever begge kontrollsifrene er blind for dem.
 
 | Ordning | Krav | Melding |
 |---|---|---|
-| gammel | k1 og k2 stemmer | `gyldig fødselsnummer (gammel ordning), …` |
-| 2032 | kun k2 stemmer | `gyldig fødselsnummer (2032-ordning, kan også være kontonummer), …` |
+| gammel | k1 og k2 stemmer | `gyldig nummerserie for fødselsnummer (gammel ordning), …` |
+| 2032 | kun k2 stemmer | `gyldig nummerserie for fødselsnummer (2032-ordning, kan også være kontonummer), …` |
 
-Månedsklassifiseringen er den samme for begge — 01–12 ekte serie, 41–52 Dolly,
+Månedsklassifiseringen er den samme for begge — 01–12 er serien som er i bruk i
+Folkeregisteret, 41–52 Dolly,
 81–92 Test-Norge — og D-nummer (dag + 40) dekkes i begge.
 
-**Fikk du et fnr-funn?** Skanneren sier bare at nummeret har formen og
-validerer; den slår ikke opp om det er tildelt noen. Det kan du gjøre selv:
+**Fikk du et fnr-funn?** Skanneren sier bare at nummeret har formen og ligger i
+en gyldig nummerserie; den slår ikke opp om det er tildelt noen. Det kan du gjøre selv:
 
 - [Skatteetatens PID-validering](https://www.skatteetaten.no/deling/folkeregisteret/pid/validering/)
 - [Dollys identvalidator](https://dolly.ekstern.dev.nav.no/identvalidator)
 
-Et nummer i ekte serie er et funn uansett hva oppslaget svarer. Er det ikke
+Et nummer i den serien som er i bruk er et funn uansett hva oppslaget svarer. Er det ikke
 tildelt i dag, kan det bli det i morgen — nummerserien er den samme.
 
 **Kontonummer bruker samme mod11-vekter som k2.** Et nummer som kun validerer

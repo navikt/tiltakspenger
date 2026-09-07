@@ -22,10 +22,6 @@
 # kommer til riktig loggspørring. Bygges som streng og logges; kalles aldri.
 tiltakspenger-libs/nettverk console\.cloud\.google\.com/logs/query
 
-# Dokumentasjonslenke i en feilmeldingsstreng i common/Fnr.kt («Oppbygning: …»).
-# Kommentarfilteret fjerner kun lenker som står i kommentarer.
-tiltakspenger-libs/nettverk www\.skatteetaten\.no/person/folkeregister
-
 # lokal-oppstart er modulen som starter lokal infrastruktur: Databaseprobe
 # venter på at Postgres svarer på loopback, og Kommandokjører kjører docker
 # compose. Prosess- og socket-kallene er formålet med modulen.

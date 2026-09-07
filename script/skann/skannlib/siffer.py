@@ -62,7 +62,7 @@ DAGER_I_MÅNED = (31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
 
 def fnr_kategori(tekst):
-    """Returnerer (nivå, beskrivelse) for et gyldig fødselsnummer.
+    """Returnerer (nivå, beskrivelse) for et ellevesiffer i en gyldig nummerserie.
 
     D-nummer har 4 lagt til første siffer (dag 41–71). Måneden angir
     nummerserien: 01–12 er ekte, 41–52 er Dolly, 81–92 er Test-Norge.
@@ -86,7 +86,8 @@ def fnr_kategori(tekst):
 
     månedstall = int(tekst[2:4])
     if 1 <= månedstall <= 12:
-        måned, nivå, serie = månedstall, "FUNN", "ekte nummerserie"
+        måned, nivå, serie = (månedstall, "FUNN",
+                              "serien som er i bruk i Folkeregisteret")
     elif 41 <= månedstall <= 52:
         måned, nivå, serie = månedstall - 40, "INFO", "syntetisk (Dolly)"
     elif 81 <= månedstall <= 92:
@@ -100,7 +101,9 @@ def fnr_kategori(tekst):
         merke = " (2032-ordning, kan også være kontonummer)"
     else:
         merke = " (gammel ordning)"
-    return nivå, f"gyldig {form}{merke}, {serie}"
+    # «gyldig nummerserie for …», ikke «gyldig fødselsnummer»: skriptet validerer
+    # serie og kontrollsiffer, det slår ikke opp om nummeret tilhører en person.
+    return nivå, f"gyldig nummerserie for {form}{merke}, {serie}"
 
 
 def er_plassholdersekvens(tekst):

@@ -46,15 +46,14 @@ def finn_validate(wrapper: Path):
     return validate
 
 
-def git_linje(repo: Path, commit: str, fil: str, linje: int) -> str:
+def git_fil(repo: Path, commit: str, fil: str) -> list[str]:
+    """Filversjonen som linjer. Kalles én gang per (repo, commit, fil): team-tiltak har 116 021
+    linjeoppslag, men bare 321 filversjoner."""
     if not re.fullmatch(r'[0-9a-f]{7,40}', commit):
-        return ''
+        return []
     r = subprocess.run(['git', '-C', str(repo), 'show', f'{commit}:{fil}'],
                        capture_output=True, text=True, errors='replace')
-    if r.returncode != 0:
-        return ''
-    linjer = r.stdout.split('\n')
-    return linjer[linje - 1] if 0 < linje <= len(linjer) else ''
+    return r.stdout.split('\n') if r.returncode == 0 else []
 
 
 def main():
@@ -79,30 +78,36 @@ def main():
     else:
         validate = finn_validate(Path(a.wrapper).expanduser().resolve())
         vil_head = 'ja' if a.gruppe == 'gyldig-head' else 'nei'
-        nøkler = {(r['repo'], r['commit'], r['fil'], int(r['linje']))
-                  for r in rader if r['gyldig_serie'] == 'ja' and r['i_head'] == vil_head}
+        linjer_per_fil: dict[tuple, set[int]] = {}
+        for r in rader:
+            if r['gyldig_serie'] == 'ja' and r['i_head'] == vil_head:
+                linjer_per_fil.setdefault((r['repo'], r['commit'], r['fil']), set()).add(int(r['linje']))
         uløst = 0
-        for repo, commit, fil, linje in sorted(nøkler):
+        for (repo, commit, fil), linjenumre in sorted(linjer_per_fil.items()):
             if '[11 siffer]' in fil:
-                uløst += 1  # filnavnet er selv verdien og er maskert i CSV-en; se raden i md-fila
+                uløst += len(linjenumre)  # filnavnet er selv verdien og er maskert i CSV-en
                 continue
-            tekst = git_linje(mappe / repo, commit, fil, linje)
-            treff = 0
-            for kandidat in ELLEVE.findall(tekst):
-                if plassholder_sifre(kandidat):
-                    continue
-                resultat = validate(kandidat)
-                if resultat.status == 'valid' and resultat.type in GYLDIG_SERIE_TYPER:
-                    verdier.append(kandidat)
-                    treff += 1
-            if not treff:
-                uløst += 1
+            innhold = git_fil(mappe / repo, commit, fil)
+            for linje in sorted(linjenumre):
+                tekst = innhold[linje - 1] if 0 < linje <= len(innhold) else ''
+                treff = 0
+                for kandidat in ELLEVE.findall(tekst):
+                    if plassholder_sifre(kandidat):
+                        continue
+                    resultat = validate(kandidat)
+                    if resultat.status == 'valid' and resultat.type in GYLDIG_SERIE_TYPER:
+                        verdier.append(kandidat)
+                        treff += 1
+                if not treff:
+                    uløst += 1
         if uløst:
             print(f'{uløst} rader ga ingen verdi (maskert filnavn, eller linja finnes ikke i commiten)')
 
     unike = sorted(set(verdier))
     if a.del_:
         k, n = (int(x) for x in a.del_.split('/'))
+        if not 1 <= k <= n:
+            sys.exit(f'--del må være K/N med 1 ≤ K ≤ N, fikk {a.del_}')
         størrelse = -(-len(unike) // n)
         unike = unike[(k - 1) * størrelse:k * størrelse]
     tekst = ','.join(unike)

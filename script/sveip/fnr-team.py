@@ -129,11 +129,25 @@ def skann_repo(gitleaks: str, wrapper: Path, mappe: Path, repo: str) -> list[dic
             return json.load(fh) or []
 
 
-def i_head(mappe: Path, repo: str, verdi: str) -> bool:
-    """Om verdien finnes i klonens HEAD nå. Verdien sendes som eget argument etter -e, med -- bak,
-    slik at ingenting fra et repo kan bli et flagg — samme praksis som i oppfolging()."""
-    r = git(mappe / repo, 'grep', '-q', '-F', '-e', verdi, 'HEAD', '--')
-    return r.returncode == 0
+def head_ellevesifre(mappe: Path, repo: str) -> set[str] | None:
+    """Alle 11-sifrede vinduer som finnes i klonens HEAD nå, som én indeks per repo.
+
+    Ett `git grep` per repo i stedet for ett per verdi: team-tiltak ga 19 530 oppslag og minutter
+    med venting. Sifferrekker lengre enn elleve gir alle sine 11-vinduer, så et treff midt i en
+    lengre rekke telles som før (`git grep -F` matchet delstrenger). `-a` leser binærfiler som
+    tekst, som `-F`-oppslaget også traff. None betyr at git feilet — da skal ingen rad påstå noe.
+    """
+    r = git(mappe / repo, 'grep', '-a', '-h', '-o', '-E', '[0-9]{11,}', 'HEAD', '--')
+    if r.returncode not in (0, 1):
+        siste = (r.stderr or '').strip().splitlines()
+        print(f'ADVARSEL: {repo}: git grep i HEAD ga exit {r.returncode}: '
+              f'{siste[-1] if siste else "ingen utskrift"}')
+        return None
+    vinduer = set()
+    for rekke in r.stdout.split():
+        for i in range(len(rekke) - 10):
+            vinduer.add(rekke[i:i + 11])
+    return vinduer
 
 
 def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate) -> list[dict]:
@@ -143,10 +157,14 @@ def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate
                 lambda r: skann_repo(gitleaks, wrapper, mappe, r), repoer)):
             rå[repo] = treff
 
-    # HEAD-oppslaget er per (repo, verdi), ikke per treff: samme verdi gir samme svar.
-    head_svar = {}
+    # HEAD-indeksen bygges én gang per repo, parallelt som skanningen.
+    with ThreadPoolExecutor(max_workers=PARALLELLE_REPOER) as pool:
+        head_indeks = dict(zip(repoer, pool.map(lambda r: head_ellevesifre(mappe, r), repoer)))
     funn = []
     for repo, treff in rå.items():
+        if head_indeks[repo] is None:
+            print(f'ADVARSEL: {repo}: HEAD-status er ukjent, {len(treff)} treff hoppes over')
+            continue
         for v in treff:
             verdi = str(v.get('Secret') or '')
             if not re.fullmatch(r'\d{11}', verdi):
@@ -159,9 +177,6 @@ def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate
                 continue
             resultat = validate(verdi)
             type_ = resultat.type if resultat.status == 'valid' else 'ugyldig'
-            nøkkel = (repo, verdi)
-            if nøkkel not in head_svar:
-                head_svar[nøkkel] = i_head(mappe, repo, verdi)
             sti = str(v.get('File') or '')
             funn.append({
                 'repo': repo,
@@ -169,7 +184,7 @@ def samle(mappe: Path, repoer: list[str], gitleaks: str, wrapper: Path, validate
                 'type': type_,
                 'gyldig_serie': type_ in GYLDIG_SERIE_TYPER,
                 'scope': 'test' if er_teststi(sti) else 'prod',
-                'i_head': head_svar[nøkkel],
+                'i_head': verdi in head_indeks[repo],
                 'fil': sti,
                 'linje': int(v.get('StartLine') or 0),
                 'commit': commit,

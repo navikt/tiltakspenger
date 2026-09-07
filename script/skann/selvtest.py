@@ -117,6 +117,12 @@ def finn_kjøringsnummer():
 
 KJØRINGSNUMMER = finn_kjøringsnummer()
 BLOKK_VERT = "https://" + "blokk-vert" + ".io/api"
+FLERLINJE_VERT = "https://" + "flerlinje-vert" + ".io/api"
+ETTERBLOKK_VERT = "https://" + "etterblokk-vert" + ".io/api"
+STRENGBLOKK_VERT = "https://" + "strengblokk-vert" + ".io/api"
+GODKJENT_QUERY = "https://" + "api.nav" + ".no?x=1"
+GODKJENT_FRAGMENT = "https://" + "api.nav" + ".no#topp"
+EKSTERN_QUERY = "https://" + "query-vert" + ".io?x=1"
 FNR_TESTNORGE = finn_fnr(10, 82, lambda n: siffer.fnr_kategori(n) is not None)
 FNR_UMULIG_DATO = finn_fnr(31, 2, lambda n: siffer.fnr_ordning(n) is not None)
 KONTO = finn_konto()
@@ -157,6 +163,31 @@ val d = "{KJØRINGSNUMMER}"
     skriv(rot, "dok/README.md", f"""# Dok
 Kjøring {KJØRINGSNUMMER} feilet.
 Nummer {FNR_EKTE}.
+""")
+    # Blokkommentarer over flere linjer, i Kotlin og TypeScript
+    skriv(rot, "src/blokk.kt", f"""package fixtur
+/*
+ se doku: {EKSTERN}
+ og {EKSTERN}
+*/
+val e = "{FLERLINJE_VERT}"
+val f = 1 /* start
+ fortsetter {EKSTERN}
+ slutt */ val g = "{ETTERBLOKK_VERT}"
+""")
+    skriv(rot, "src/blokk.ts", f"""const s = "/*";
+const t = fetch("{STRENGBLOKK_VERT}");
+""")
+    # SQL-migrasjon under src/main er prod; «--» er kommentar der
+    skriv(rot, "src/main/resources/db/migration/V2__kommentar.sql", f"""-- kjøring {KJØRINGSNUMMER}
+select 1; -- {FNR_EKTE}
+select '{KJØRINGSNUMMER}';
+""")
+    # Godkjent vert med query eller fragment rett etter verten
+    skriv(rot, "src/query.kt", f"""package fixtur
+val q = "{GODKJENT_QUERY}"
+val h = "{GODKJENT_FRAGMENT}"
+val x = "{EKSTERN_QUERY}"
 """)
     # base64 som fyller hele linja: begge kantene er tomme
     skriv(rot, "src/b64kant.kt", f"""package fixtur
@@ -387,6 +418,32 @@ def kjør_selvtest(rot):
     f.sjekk("base64 som fyller linja er funn",
             any("src/b64kant.kt:2" in linje and "base64-literal" in linje
                 for linje in funnlinjer(r)))
+
+    print("\nBlokkommentarer over flere linjer, SQL og URL-splitting")
+    blokk = [linje for linje in funnlinjer(r) if "src/blokk.kt" in linje]
+    f.sjekk("linjer inne i /* … */ uten innledende * er stille",
+            not any("blokk.kt:3" in linje or "blokk.kt:4" in linje for linje in blokk))
+    f.sjekk("kode etter lukket blokk er funn",
+            any("blokk.kt:6" in linje and "flerlinje-vert" in linje for linje in blokk))
+    f.sjekk("blokk som åpner bak kode fortsetter på neste linje",
+            not any("blokk.kt:8" in linje for linje in blokk))
+    f.sjekk("kode etter */ på lukkelinja er funn",
+            any("blokk.kt:9" in linje and "etterblokk-vert" in linje for linje in blokk)
+            and sum("blokk.kt:9" in linje for linje in blokk) == 1)
+    f.sjekk("'/*' i TS-streng åpner ingen blokk",
+            any("blokk.ts:2" in linje and "strengblokk-vert" in linje for linje in funnlinjer(r)))
+    sql = [linje for linje in funnlinjer(r) if "V2__kommentar.sql" in linje]
+    f.sjekk("kjøringsnummer i SQL-kommentar er stille",
+            not any("sql:1" in linje for linje in sql))
+    f.sjekk("gyldig nummerserie i SQL-kommentar er funn",
+            any("sql:2" in linje and FNR_EKTE in linje for linje in sql))
+    f.sjekk("kjøringsnummer i SQL-kode er funn",
+            any("sql:3" in linje and KJØRINGSNUMMER in linje for linje in sql))
+    query = [linje for linje in funnlinjer(r) if "src/query.kt" in linje]
+    f.sjekk("godkjent vert med query eller fragment er stille",
+            not any("query.kt:2" in linje or "query.kt:3" in linje for linje in query))
+    f.sjekk("ekstern vert med query er fortsatt funn",
+            any("query.kt:4" in linje and "query-vert" in linje for linje in query))
 
     print("\nKommentarklipping")
     f.sjekk("apostrof i Kotlin-streng stopper ikke klippingen",

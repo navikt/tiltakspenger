@@ -99,7 +99,7 @@ installasjon — inngangen legger sin egen mappe på `sys.path`.
 ```
 
 Bygger et fixtur-repo i en midlertidig katalog, kjører skanneren mot det som
-subprocess, og sjekker 75 punkter: personverngarantien, prod/test-skillet,
+subprocess, og sjekker 85 punkter: personverngarantien, prod/test-skillet,
 datovalideringen, kommentarklippingen, compose- og env-klassifiseringen,
 tjenestenavn i klyngen, pakkeregistre, skjemaverter og offentlige
 partnere, lockfil-hoppet,
@@ -123,9 +123,9 @@ ligge i git — plantede tokens og identer ville trigget GitHubs secret scanning
 | `kontonummer` | 11 siffer som validerer mod11 som norsk kontonummer | alle |
 | `gitleaks` | hele git-historikken, via gitleaks-binæren på PATH | ekstern |
 
-Kommentarlinjer, etterfølgende kommentarer og `/* … */` på samme linje klippes
-bort før `nettverk` og `prosess` kjører — en dokumentasjonslenke i en KDoc er
-ikke et utgående kall. For `fnr` gjelder klippingen bare tall som ikke
+Kommentarlinjer, etterfølgende kommentarer og `/* … */` klippes bort før
+`nettverk` og `prosess` kjører — også blokker over flere linjer uten innledende
+`*`, og `--` i SQL. En dokumentasjonslenke i en KDoc er ikke et utgående kall. For `fnr` gjelder klippingen bare tall som ikke
 validerer: et uvalidert ellevesiffer i en kommentar eller i markdown (typisk et
 kjøringsnummer fra GitHub Actions) rapporteres ikke, mens en gyldig nummerserie
 er funn uansett hvor den står.
@@ -205,6 +205,7 @@ skript, byggfiler og dokumentasjon.
 
 ### Godkjente verter
 
+Verten leses fram til sti, query eller fragment, så `nav.no?x=1` er `nav.no`.
 Nettverkssjekken bruker samme prod/test-skille, og lista er ulik i de to.
 
 | Scope | Godkjent |

@@ -327,7 +327,7 @@ def er_klyngetjeneste(vert):
     return len(deler) == 2 and deler[1] not in TOPPDOMENER
 
 
-def nettverk(sti, endelse, linjer, treff):
+def nettverk(sti, endelse, kode_per_linje, treff):
     if endelse not in spraak.KODEFILER:
         return
     if LOCKFILER.search(sti):
@@ -335,26 +335,21 @@ def nettverk(sti, endelse, linjer, treff):
         # De andre sjekkene leser den fortsatt.
         return
     scope = spraak.scope(sti)
-    for nr, linje in enumerate(linjer, 1):
-        if spraak.er_kommentarlinje(linje):
-            continue
-        kode = spraak.uten_kommentar(linje, endelse)
+    for nr, kode in enumerate(kode_per_linje, 1):
         for match in URL_MØNSTER.finditer(kode):
-            vert = match.group(1).split("/")[0]
+            # Verten slutter ved sti, query eller fragment: «nav.no?x=1» er nav.no.
+            vert = re.split(r"[/?#]", match.group(1), maxsplit=1)[0]
             if vert_er_godkjent(vert, scope):
                 continue
             treff.append(("nettverk", "FUNN", sti, nr,
                           f"ikke-godkjent vert i {scope}: {vert}", match.group(0)))
 
 
-def prosess(sti, endelse, linjer, treff):
+def prosess(sti, endelse, kode_per_linje, treff):
     familie = prosessfamilie(endelse)
     if familie is None:
         return
-    for nr, linje in enumerate(linjer, 1):
-        if spraak.er_kommentarlinje(linje):
-            continue
-        kode = spraak.uten_kommentar(linje, endelse)
+    for nr, kode in enumerate(kode_per_linje, 1):
         for mønster, melding in PROSESS_MØNSTRE[familie]:
             if mønster.search(kode):
                 treff.append(("prosess", "FUNN", sti, nr, melding, kode))
@@ -424,7 +419,7 @@ def prod_melding(tekst):
     return "11 siffer i produksjonskode"
 
 
-def fnr(sti, endelse, linjer, treff):
+def fnr(sti, endelse, linjer, kode_per_linje, treff):
     """11-sifrede tall. Strengere i prod enn i test.
 
     I produksjonskode er ethvert frittstående 11-sifret tall et funn: det finnes
@@ -451,7 +446,7 @@ def fnr(sti, endelse, linjer, treff):
             if prod:
                 melding = prod_melding(tekst)
                 uvalidert = melding == "11 siffer i produksjonskode"
-                if uvalidert and (dokumentasjon or not spraak.i_kode(linje, endelse, tekst)):
+                if uvalidert and (dokumentasjon or tekst not in kode_per_linje[nr - 1]):
                     continue
                 treff.append(("fnr", "FUNN", sti, nr, melding, tekst))
                 continue
@@ -498,10 +493,12 @@ def kontonummer(sti, linjer, valgte, treff):
 
 def kjør_alle(sti, endelse, linjer, valgte, treff):
     """Kjører de valgte sjekkene på én fil."""
+    # Kommentarfri tekst beregnes én gang og deles av nettverk, prosess og fnr.
+    kode_per_linje = spraak.kodetekst(linjer, endelse)
     if "nettverk" in valgte:
-        nettverk(sti, endelse, linjer, treff)
+        nettverk(sti, endelse, kode_per_linje, treff)
     if "prosess" in valgte:
-        prosess(sti, endelse, linjer, treff)
+        prosess(sti, endelse, kode_per_linje, treff)
     if "hemmeligheter" in valgte:
         hemmeligheter(sti, linjer, treff)
     if "jwt" in valgte:
@@ -509,6 +506,6 @@ def kjør_alle(sti, endelse, linjer, valgte, treff):
     if "base64" in valgte:
         base64(sti, linjer, treff)
     if "fnr" in valgte:
-        fnr(sti, endelse, linjer, treff)
+        fnr(sti, endelse, linjer, kode_per_linje, treff)
     if "kontonummer" in valgte:
         kontonummer(sti, linjer, valgte, treff)

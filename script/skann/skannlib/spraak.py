@@ -41,6 +41,8 @@ JS_FAMILIE = {".ts", ".tsx", ".js", ".mjs", ".cjs", ".astro"}
 HASH_SPRÅK = {".sh", ".py", ".yml", ".yaml", ".properties", ".toml"}
 # Terraform og HCL støtter både «#» og «//».
 BEGGE_KOMMENTARTYPER = {".tf", ".hcl"}
+# SQL: «--» til linjeslutt, og «/* … */». Migrasjoner ligger under src/main og er prod.
+SQL_FILER = {".sql"}
 
 
 def kommentarsyntaks(endelse):
@@ -53,6 +55,8 @@ def kommentarsyntaks(endelse):
         return ("#",), ('"', "'")
     if endelse in BEGGE_KOMMENTARTYPER:
         return ("#", "//"), ('"',)
+    if endelse in SQL_FILER:
+        return ("--",), ("'",)
     return None
 
 
@@ -61,44 +65,43 @@ def kommentarsyntaks(endelse):
 DOKUMENTFILER = {".md", ".markdown", ".mdx"}
 
 # Språk med blokkommentarer «/* … */» i tillegg til linjekommentaren.
-BLOKKOMMENTAR_SPRÅK = JVM_OG_RUST | JS_FAMILIE | BEGGE_KOMMENTARTYPER
+BLOKKOMMENTAR_SPRÅK = JVM_OG_RUST | JS_FAMILIE | BEGGE_KOMMENTARTYPER | SQL_FILER
 
 
-def er_kommentarlinje(linje):
+def er_kommentarlinje(linje, endelse=None):
     """Sant når hele linja er en kommentar.
 
     «/* … */ kode» er ikke en kommentarlinje: blokka lukkes, og koden etter
     den kjører. Da klipper uten_kommentar bort blokka og beholder koden.
+    «--» teller bare i SQL: i et shellskript er «--flagg» på egen linje kode.
     """
     renset = linje.lstrip()
     if renset.startswith("/*"):
         slutt = renset.find("*/")
         return slutt == -1 or not renset[slutt + 2:].strip()
+    if endelse in SQL_FILER and renset.startswith("--"):
+        return True
     return renset.startswith(("//", "#", "*", "<!--"))
 
 
 def uten_blokkommentar(linje, strengtegn):
     """Fjerner «/* … */» som åpner på linja, utenfor strenger.
 
-    Lukkes blokka på samme linje, tas bare spennet ut og koden rundt beholdes.
-    Lukkes den ikke, er resten av linja kommentar. Blokker som strekker seg
-    over flere linjer og fortsetter uten innledende «*» ser denne ikke.
+    Returnerer (resten av linja, om en blokk står åpen ved linjeslutt). Lukkes
+    blokka på samme linje, tas bare spennet ut og koden rundt beholdes. Lukkes
+    den ikke, er resten av linja kommentar, og kodetekst() fortsetter blokka
+    på neste linje.
     """
     while True:
         i = linje.find("/*")
         if i == -1:
-            return linje
+            return linje, False
         if any(linje.count(tegn, 0, i) % 2 for tegn in strengtegn):
-            return linje  # inne i en streng: ikke en kommentar
+            return linje, False  # inne i en streng: ikke en kommentar
         j = linje.find("*/", i + 2)
         if j == -1:
-            return linje[:i]
+            return linje[:i], True
         linje = linje[:i] + " " + linje[j + 2:]
-
-
-def i_kode(linje, endelse, tekst):
-    """Sant når teksten står i kode, ikke i en kommentar på linja."""
-    return not er_kommentarlinje(linje) and tekst in uten_kommentar(linje, endelse)
 
 
 def uten_kommentar(linje, endelse):
@@ -109,12 +112,46 @@ def uten_kommentar(linje, endelse):
     streng har et odde antall anførselstegn foran seg — begge deler holder
     klippingen unna kode.
     """
+    kode, _ = _uten_kommentar(linje, endelse)
+    return kode
+
+
+def kodetekst(linjer, endelse):
+    """Koden i hver linje, med kommentarene klippet bort — tom streng for rene
+    kommentarlinjer. Følger «/* … */» over flere linjer, så en dokumentasjonslenke
+    på linje to i en blokk uten innledende «*» ikke leses som et kall. Én
+    beregning per fil, delt av nettverk, prosess og fnr.
+    """
+    ut = []
+    i_blokk = False
+    for linje in linjer:
+        if i_blokk:
+            j = linje.find("*/")
+            if j == -1:
+                ut.append("")
+                continue
+            linje = linje[j + 2:]
+            i_blokk = False
+        if er_kommentarlinje(linje, endelse):
+            if endelse in BLOKKOMMENTAR_SPRÅK and linje.lstrip().startswith("/*") \
+                    and "*/" not in linje:
+                i_blokk = True
+            ut.append("")
+            continue
+        kode, i_blokk = _uten_kommentar(linje, endelse)
+        ut.append(kode)
+    return ut
+
+
+def _uten_kommentar(linje, endelse):
+    """(kode, blokk åpen ved linjeslutt)."""
     syntaks = kommentarsyntaks(endelse)
     if syntaks is None:
-        return linje
+        return linje, False
     merker, strengtegn = syntaks
+    åpen = False
     if endelse in BLOKKOMMENTAR_SPRÅK:
-        linje = uten_blokkommentar(linje, strengtegn)
+        linje, åpen = uten_blokkommentar(linje, strengtegn)
     for i in range(len(linje)):
         for merke in merker:
             if not linje.startswith(merke, i):
@@ -123,8 +160,8 @@ def uten_kommentar(linje, endelse):
                 continue
             if any(linje.count(tegn, 0, i) % 2 for tegn in strengtegn):
                 continue
-            return linje[:i]
-    return linje
+            return linje[:i], åpen
+    return linje, åpen
 
 
 # --- Produksjonskode eller testkode ------------------------------------------

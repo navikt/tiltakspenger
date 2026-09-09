@@ -54,6 +54,7 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-meldekort-api](https://github.com/navikt/tiltakspenger-meldekort-api)
 - [tiltakspenger-meldekort-microfrontend](https://github.com/navikt/tiltakspenger-meldekort-microfrontend)
 - [tiltakspenger-journalposthendelser](https://github.com/navikt/tiltakspenger-journalposthendelser)
+- [tiltakspenger-workflows](https://github.com/navikt/tiltakspenger-workflows)
 - [tiltakspenger-interndokumentasjon](https://github.com/navikt/tiltakspenger-interndokumentasjon) (privat — intern dokumentasjon, ingen kode)
 
 ### Lokal kjøring av verdikjeden

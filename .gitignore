@@ -14,8 +14,10 @@
 
 # Lokal task-tracking (ikke commit)
 TASKS.md
-.worktrees
-.worktree
+# Arbeidstrær (git worktree add) uansett navn og nivå
+.worktrees/
+.worktree/
+worktrees/
 
 # Console- og sidedumper fra lokal nettleserautomatisering
 .playwright-mcp/

@@ -8,7 +8,7 @@ Hver skill er en mappe med en `SKILL.md` i det åpne [Agent Skills](https://code
 
 | Skill | Hva den gjør |
 |---|---|
-| [`backend-dependency-update`](./backend-dependency-update/SKILL.md) | Finn Dependabot-PR-er, ta dem gruppevis med changelog-/migreringsgjennomgang, verifiser bygg + test, og gjør en vurdering per gruppe. |
+| [`backend-dependency-update`](./backend-dependency-update/SKILL.md) | Flåtesveip av avhengigheter og sårbarheter: cooldown-policy, sveip utover Dependabot, relocation og livssyklus, låser og unntak, SBOM/trivy/Nais-kontroll, verifisering i flåterekkefølge. Skript i `scripts/`. |
 | [`tiltakspenger-testdata`](./tiltakspenger-testdata/SKILL.md) | Lag testdata lokalt (sak med innvilget vedtak, meldekortbehandling, klagebehandling) via de ferdige scriptene — digital eller papirsøknad som inngang. |
 | [`observability-feilsoking`](./observability-feilsoking/SKILL.md) | Feilsøk prod-problemer via Loki/Tempo/Mimir-API-ene — teamets labels, standardspørringer og heuristikker for timeouts, feilspikes og requester som forsvinner. |
 | [`github-issues-revisjon`](./github-issues-revisjon/SKILL.md) | Revider issues på tvers av repoene — prosjektdekning (nr. 227), duplikater/overlapp, ferdig-kandidater verifisert mot koden før lukking, og manglende kryss-lenker. |

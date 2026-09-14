@@ -14,6 +14,9 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - **DDD**: domenelogikk hører hjemme på domenemodellen som er nærmest dataene; `init`/`require`-blokker håndhever invarianter.
 - **`*Ex.kt`-filer er en del av domenetypen, ikke et lag utenfor den.** Extension-funksjoner på en domenetype samlet i egen fil (`RammebehandlingGjenopptaEx.kt`, `RammebehandlingLeggTilbakeEx.kt`, …) er bare filorganisering for å holde hovedfila lesbar. De regnes som typens egne metoder, og samme regler gjelder der: de skal håndheve invariantene og oppdatere typens metadatafelter. En operasjon som muterer domenetypen hører hjemme på typen — enten i hovedfila eller i en slik `*Ex.kt` — ikke i en service.
 - **Bare typen selv skal kalle `copy()` på seg selv.** `copy()` omgår all validering i navngitte operasjoner og lar en kaller sette et felt uten å oppdatere de andre som hører sammen med det — typisk metadata som `sistEndret`, eller et resultat som må følge saksopplysningene. Kaller du `copy()` utenfra, har du laget en muterende operasjon på feil sted; lag i stedet en navngitt funksjon på typen (eller i dens `*Ex.kt`) som håndhever invariantene. Kotlin kan i prinsippet håndheve dette med privat konstruktør og `@ConsistentCopyVisibility`, men det er tungvint nok til at vi holder det som en konvensjon inntil videre.
+- **Kafka er transport, ikke retry-mekanisme.** Consumeren vurderer om hendelsen er relevant for oss, lagrer den rått i databasen og bekrefter offset når lagringen er gjort. Jobber gjør arbeidet etterpå, med tilstand og feilteller per hendelse, så én feilende hendelse ikke stopper resten av topicet. Varsle på hendelser med gjentatte feil, ikke på consumer-lag; en innlesing som stopper fanges av heartbeat-varselet «Meldingsleser har stoppet».
+- **Konfigurasjon som bare koden trenger, står i koden, ikke i nais-manifestet.** `tiltakspenger-saksbehandling-api` er malen: manifestet inneholder det Nais selv trenger (ressurser, tilganger, database, gruppene i `azure.groups`), mens adresser, scopes og miljøverdier ligger i `EnvironmentConfig` per miljø, valgt fra `NAIS_CLUSTER_NAME` i komposisjonsroten.
+- **Funksjonsbrytere står i koden og injiseres.** En miljøvariabel som skrur funksjonalitet av og på skjuler valget for den som leser koden, og deploy er billig. Skriv betingelsen i koden med en kommentar om hva som må skje før den endres, og ta den som konstruktørparameter så testene kan slå den på.
 
 ## Språk og stil
 
@@ -21,6 +24,7 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - 4 mellomrom som innrykk, trailing comma både i deklarasjoner og kallsteder
 - **Ingen star imports** — alltid eksplisitt
 - **KDoc og kommentarer: én setning per linje.** Skriv hver setning i KDoc (`/** ... */`) og vanlige kommentarer på sin egen linje, med linjeskift etter hvert punktum, i stedet for å pakke flere setninger sammen i én lang avsnittslinje. Dette gir renere diffs (én endret setning = én endret linje) og bedre lesbarhet. Gjelder også `//`-kommentarer som består av flere setninger. (Agenter glipper ofte på dette — sjekk før du er ferdig.)
+- **Skriv hva noe gjør, ikke at det er det eneste av sitt slag.** «Det eneste stedet klienten rører nettverket» eldes dårlig og håndheves ikke av noen test. Står en slik påstand i koden fra før, sjekk at den fortsatt er sann før du omformulerer den.
 - **Norske domenenavn** — se språkregelen i [`AGENTS.md`](AGENTS.md#delte-konvensjoner). Domenetyper, pakker, funksjoner og felter som modellerer forretningsbegreper bruker norsk (`Sak`, `Søknad`, `Periode`, `Behandling`, `Vedtak`, `Saksbehandler`, …). Ikke oversett til engelsk.
 - Funksjonell stil og immutabilitet foretrekkes — unngå `var` og muterbar tilstand
 - Ingen `Optional` eller Arrows `Option` — bruk nullable typer eller `Either`
@@ -38,6 +42,8 @@ Kotlin/JVM-backendkonvensjoner for `tiltakspenger`. Les [`AGENTS.md`](AGENTS.md)
 - **Unntak — autorisasjon i interne API-er:** for endepunkter som kun konsumeres av våre egne frontender skal vi alltid verifisere at IDer i request faktisk tilhører personen/saken brukeren har tilgang til, men det er greit å kaste en exception (typisk håndtert som 403/404 av et felles `StatusPages`-oppsett) i stedet for å modellere det som en `Either.Left`. Kost/nytte: frontenden vi eier sender normalt gyldige IDer, så dette er en defense-in-depth-sjekk og ikke en forventet feilflyt.
 - **Unntak — Texas (`tiltakspenger-libs:texas`):** `TexasHttpClient` logger og re-kaster exceptions ved feil i token-introspeksjon og henting av system-tokens. Konsumenter trenger normalt ikke å fange disse — la dem boble opp og bli håndtert som 401/500 av Ktor-pipelinen / `StatusPages`. `requireXxxPrincipal()`-hjelperne i `texas` kaster `IllegalStateException` hvis principal mangler; dette er en programmeringsfeil og skal ikke catches.
 - **Skjerpet krav — eksponerte API-er (`tiltakspenger-datadeling` m.fl.):** API-er som konsumeres av andre fagsystemer utenfor teamet skal ha eksplisitt, modellert feilhåndtering hele veien ut til route-laget med `Either`, og oversette til veldokumenterte HTTP-feil. Ikke la generiske exceptions lekke ut som 500 her — konsumentene er avhengige av en stabil og tydelig feilkontrakt. Dette overstyrer Texas-/repo-unntakene over for selve route-laget i datadeling.
+- **Må en gren håndteres i service- eller jobbkode, men kan ikke inntreffe: kast, ikke ignorer.** En `Left` fra et kall som allerede er validert skal kaste med melding, så et framtidig brudd havner i vanlig feilhåndtering. Kan den inntreffe, lag en egen feiltype og test den. Dette er noe annet enn å legge til ny defensiv kode som aldri kan nås (se Kover under «Bygg, lint og statisk analyse»).
+- **Samle feil fra uavhengige sjekker uten IO; stopp ved første feil når sjekkene bygger på hverandre eller gjør IO.** Feltvalidering av en request kjøres samlet med `zipOrAccumulate` (separate sjekker) eller `mapOrAccumulate` (elementer i en samling), så brukeren får alle feilene på én gang; `ensure` kortslutter innenfor sin delblokk, så uavhengige sjekker legges i hver sin. Avhengige sjekker og sjekker med IO skrives som `either { }` med `bind()` og `ensure(...)`. Flere feil fra én kilde bæres som `Nel<Feil>`, aldri `List` eller `list.first()`.
 - I tester: bruk `getOrFail()` fra `tiltakspenger-libs:test-common` for å pakke ut `Either`.
 
 ## HTTP-klienter
@@ -46,7 +52,7 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 
 - **Kaster ikke — returnerer `Either`.** Porten/interfacet returnerer `Either<HttpKlientError, T>`, eventuelt en domenespesifikk feiltype som wrapper `HttpKlientError` (jf. `TilgangskontrollFeil`). Kallende service/jobb håndterer `Either` eksplisitt.
 - **Domenefeil utleder fra `HttpKlientError` — ikke dupliser på kallstedet.** Når en domenefeiltype bærer en `HttpKlientError`, skal ikke kallstedet plukke ut `feil.rawResponseString`/`feil.metadata.statusCode` og sende dem inn som egne konstruktørargumenter ved siden av `feil` — det er dobbel data. Legg utledningen på feiltypen selv (sekundærkonstruktør/fabrikk som tar `(request, feil)`); `request` forblir derimot eksplisitt siden det er payloaden vi selv bygde. Se `KunneIkkeUtbetale` i saksbehandling-api som referanse.
-- **Konstruktørmønster:** legg hele `HttpKlient(clock = clock) { ... }`-oppsettet som **default-verdi på `httpKlient`-parameteren** i konstruktøren, med `connectTimeout`/`defaultTimeout`/`successStatus`/`authTokenProvider` eksponert som egne parametre slik at tester kan overstyre (typisk med `HttpKlientFake`).
+- **Konstruktørmønster:** legg hele `HttpKlient(clock = clock) { ... }`-oppsettet som **default-verdi på `httpKlient`-parameteren** i konstruktøren, med `connectTimeout`/`defaultTimeout`/`successStatus`/`authTokenProvider` eksponert som egne parametre slik at tester kan overstyre (typisk med `transport = FakeHttpTransport()`).
 - **`AuthTokenProvider` injiseres som konstruktørparameter** — bygg `object : AuthTokenProvider` i `ApplicationContext`. Ikke wrap en `getToken`-lambda inne i klienten.
 - **`Clock` inn i konstruktøren**, tres gjennom fra `ApplicationContext` (se Clock og tid).
 - **DTO ≠ domene:** skill DTO fra domenemodellen; map DTO → domene i `.map { ... }` på responsen.
@@ -55,7 +61,10 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - **Token-caching er løst — ikke bygg egen.** Texas cacher selv system- og OBO-tokens, og `httpklient` har `SkipCacheRetry` som ved behov tvinger fram et ferskt token. Ingen `invaliderCache()`-varianter i klienter.
 - **PII i `toString()`:** data-klasser med PII (fnr/`brukerIdent`) overstyrer `toString()` og maskerer verdiene (`*****`).
 - **KDoc-lenker på hver klient:** (a) kildekoden til API-et vi kaller (GitHub), (b) dokumentasjon (Confluence), (c) API-spec (Swagger/OpenAPI), (d) eierteamets Slack-kanal og (e) eierteamets oppføring i [Teamkatalogen](https://teamkatalogen.nav.no) — slik at rett kontaktpunkt er ett klikk unna når integrasjonen feiler.
-- **Tester:** hver klient har en `*ClientTest` mot `HttpKlientFake`, inkludert én test som bygger default-`HttpKlient`-oppsettet. **Kover 100 % linjedekning** håndheves for klienter — legg FQN i `total.filters.includes.classes(...)` i repoets `build.gradle.kts`.
+- **Tester:** hver klient har en `*ClientTest` over `FakeHttpTransport` fra libs, inkludert én test som bygger default-`HttpKlient`-oppsettet. **Kover 100 % linjedekning** håndheves for klienter — legg FQN i `total.filters.includes.classes(...)` i repoets `build.gradle.kts`.
+- **Behold sikkerlogg-dekningen når en klient migreres.** Tell opp `Sikkerlogg`-kallene i den gamle klienten og bevar dem i servicen. Kritiske integrasjoner (utbetaling, journalføring) skal ha rå request og respons i sikkerloggen også når kallet lykkes; da bærer suksesstypen dataen, og servicen logger med `loggSuksess`.
+- **Timeouts er et budsjett per innkommende kall.** Sett per-forsøk-timeout fra målte tall (omtrent tre ganger observert maks), og regn ut verste tilfelle: alle kall etter hverandre, alle forsøk, pluss backoff, med konsumentens ventetid som tak. Kutt heller antall forsøk enn å la summen sprekke. Skriv regnestykket i KDoc-en på klienten.
+- **WireMock bare der wire-formatet er poenget.** Klienttester kjører selve klienten over `FakeHttpTransport`; hver klienttestfil har i tillegg én WireMock-test som sjekker at bytene på tråden er gyldige for en ekte server (multipart, binære svar). Sender alle tester inn en transport, må én test bygge klienten uten, ellers står default-transporten udekket.
 
 ## Typede ID-er
 
@@ -79,6 +88,8 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - **Skriv SQL-en inline i funksjonen som bruker den** — ikke trekk den ut til en top-level konstant. Vi ønsker ikke å være DRY her.
 - Repositories: interface ender på `Repo`, Postgres-implementasjon på `PostgresRepo` (`SøknadRepo` / `SøknadPostgresRepo`)
 - Lag fakes for alle repos, både til testing og til lokal kjøring
+- **Named parameters i kotliquery må være ASCII.** Parseren kjenner ikke æøå, så `:søknad` blir stående i SQL-en og feiler først ved kjøring. `:soknad` mot kolonnen `søknad` er derfor bevisst.
+- **JSONB-operatorene `?`, `?|` og `?&` kan ikke brukes med named parameters.** kotliquery bytter `:navn` til `?` før pgjdbc teller plassholdere, så spørringen feiler ved kjøring mens en fake-repo er grønn. Bruk funksjonene `jsonb_exists`, `jsonb_exists_any` og `jsonb_exists_all` i stedet; de bruker samme GIN-indeks.
 - **En domenetype skal aldri brukes til å lese fra eller skrive til databasen.** Hver app eier sine egne Db-typer og mapper til og fra dem (`TiltakstypeSomGirRettDb`, `TiltakDeltakerstatusDb` i saksbehandling-api er mønsteret). Eneste unntak er `java.time`-typer og liknende fra plattformen — aldri noe vi har laget selv, og **aldri en type fra `tiltakspenger-libs`**: da er libs i praksis skjemaet til en tabell i en annen app, og kan ikke endres uten migrering der. Det gjelder også felt inne i JSON-kolonner, som er lette å overse fordi de ikke er egne kolonner. Samme prinsipp gjelder ut mot API-er: en DTO skal ha sine egne verdier, ikke arve domenets `name`.
 
 ## JSON
@@ -92,6 +103,7 @@ Alle utgående HTTP-kall gjøres med den felles `HttpKlient` fra `tiltakspenger-
 - Standardlogging bruker `kotlin-logging` (`io.github.oshai`)
 - **Logg aldri kun til sikkerlogg.** En sikkerlogg-innføring skal alltid ha en parallell linje i vanlig logg på samme nivå, med en nøytral (ikke-sensitiv) beskrivelse av hendelsen og en eksplisitt henvisning til sikkerlogg (f.eks. «Se sikkerlogg for detaljer»). Uten den finner ingen hendelsen i vanlig logg, og sporet til detaljene mangler.
 - Overstyr `toString()` på typer som inneholder sensitive data for å unngå utilsiktede lekkasjer
+- **Logglinja bærer all kontekst som finnes der den skrives:** sakId, saksnummer, correlationId og behandlings- eller vedtak-ID, så linja kan finnes på kontekst i Loki. Mønsteret er `behandling.loggkontekst(correlationId)` og `Loggbar`. Også journalførings- og jobblinjer skal ha saksnummer.
 
 ### Logging av HTTP-kall
 
@@ -114,6 +126,7 @@ Verdier som er personopplysninger markeres med **typen**, ikke med en kommentar 
 - **Maskeringen gjelder kun `toString`.** Verdien hentes eksplisitt fra typens felt, slik at sikkerlogg, visning og lagring må be om den.
 - **Hierarkiet er `sealed`** slik at settet av personopplysningstyper er opptellbart. Hver type har en `begrunnelse` som sier hva den utleverer om personen — grunnlaget for å avstemme mot personvernkonsekvensvurderingene (PVK). En ny personopplysningstype hører derfor hjemme i `common`, ikke lokalt i en app.
 - **Husk stedsinformasjon.** Ikke bare fødselsnummer er sensitivt: for personer med adressebeskyttelse er *hvor de møter opp* ofte den mest sensitive opplysningen vi har. Arrangørnavn og sammensatte titler («Oppfølging hos Arrangør AS avd Strandveien») er adresser i praksis.
+- **`Fnr` sjekker bare at det er 11 siffer.** Ingen mod11-, dato- eller kjønnssjekk: kontrollsifrene endres av Skatteetaten, og syntetiske testnumre skal gå gjennom. Testnumre kommer fra de delte sekvensielle generatorene, aldri fra realistisk utseende numre.
 
 ## Testing
 
@@ -131,6 +144,8 @@ Verdier som er personopplysninger markeres med **typen**, ikke med en kommentar 
   - **Ikke-isolert (standard, parallelt skjema):** tester deler skjema og lever side om side. Gi hver test sin egen sak/person (unike `sakId`/`saksnummer`/`fnr`) slik at de ikke kolliderer.
   - **Isolert:** tømmer DB før testen og kjører sekvensielt. Reserver dette for **aggregerte / på-tvers-av-sak**-tester — typisk jobber som spør på tvers av alle saker. Isolert modus er treg; ikke bruk den når en sak-scoped test holder.
 - **Deterministiske, sekvensielle id-generatorer i tester.** Bruk delte generatorer for `saksnummer`, `fnr` og `journalpostId` (sekvensielle og trådsikre) i stedet for tilfeldige verdier som `Fnr.random()`. Tilfeldige 11-sifrede fnr kolliderer sjelden i én kjøring, men i et delt test-skjema gir bursdagsparadokset reell flaky-risiko over mange CI-kjøringer. Generatorene holdes på **ett høyt nivå** (én delt instans i test-db-manageren, jf. `idGeneratorsFactory`) og injiseres ned i test-konteksten — **ikke** legg prosessglobal tilstand dypt inne i selve generatoren.
+- **Én route-builder per endepunkt.** Feiltilfeller får `forventet: ForventetRespons?` på samme builder, ikke egne `…ReturnerRespons`-overloads, og assertions går gjennom `defaultRequestWithAssertions` i libs, ikke egne `shouldBe` på kallstedet. Ikke flat `ForventetRespons` ut til løse status- og body-parametre.
+- **Testkontekster lager sitt eget metrikkregister.** Ingenting under `src/test`, heller ikke `Lokal*`-kontekstene, bruker prod-oppsettet for metrikker; prod-registeret kan være globalt, og libs' `Bakgrunnsprosessmålinger.registrer` kaster når samme prosessnavn registreres to ganger i samme register. Send inn `PrometheusMeterRegistry(PrometheusConfig.DEFAULT)` (eller `SimpleMeterRegistry()` i enhetstester), og hold prod-hjelperen privat i komposisjonsroten.
 
 ### Miljøflagg injiseres, slås aldri opp statisk
 
@@ -225,6 +240,15 @@ Symptomet er en assertion som viser fakens defaultverdi i stedet for den du satt
 Merk at det å bygge tilstand med en fake ikke i seg selv krever isolering.
 Det er kombinasjonen av styrt fake-verdi og sveipende jobb som gjør det.
 
+Bygger du flere saker i én test, bruk `JobberEtterIverksettelse.ingen` under oppbyggingen, og driv flyten med id-en consumeren returnerer, ikke med køspørringen.
+Det delte skjemaet tømmes ikke mellom tester, så assertions på hele tabeller kan treffe andres rader; avgrens til egen id.
+
+**Jobber behandler én id om gangen:** finn-arbeid-spørringen returnerer bare id-er, og per-id-funksjonen henter selv kontekst.
+Tester kaller per-id-funksjonen direkte; én isolert `*AggregatTest` per jobb dekker spørringen.
+
+**Logg-assertions uten delt tilstand.** En `ListAppender` på en delt logger fanger meldinger fra parallelle tester.
+Injiser en `KLogger`-delegat per instans (`Loggfanger` i meldekort-api), uten defaultverdi, og med eksplisitt loggernavn så navnet i Loki beholdes.
+
 #### Full dekning på databaselaget
 
 Målet er **100 % både linje- og grendekning (`CoverageUnit.LINE` og `CoverageUnit.BRANCH`) på hele databaselaget, tatt med route-testene som grunnsett.**
@@ -280,6 +304,9 @@ Databaselaget har to slags kode, og de skal testes ulikt:
 Skriv `Enum.entries.associateWith { it.toDb() } shouldBe mapOf(...)` med verdiene skrevet ut, eller assert hele json-strengen, og behold rundturen som en egen test for lesestien.
 Navnet på disk er kontrakten mot data som allerede er lagret; dekningstall alene sier ingenting om at den holder.
 
+**Test både nytt og lagret json-format.** Sammenlign skrevet json med en fast forventet streng, og kontroller at en fast json-streng i tidligere format fortsatt kan leses.
+Dekning alene oppdager ikke en formendring som gjør lagrede rader uleselige.
+
 **Tar du en snarvei av ytelseshensyn, skriv det i testen:** at dette er enhetstest framfor e2e, og hvorfor.
 Typisk fordi hver enum-variant ville krevd sin egen flyt gjennom prodstien — en statusenum med nitten utfall koster nitten konstruerte feilsituasjoner — mens mappingen ikke rører postgres i det hele tatt.
 Noter samtidig hva testen *ikke* sier: at varianten kan nås. En variant ingen prodsti produserer er død kode, og skal slettes framfor å dekkes.
@@ -296,6 +323,7 @@ Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.
   - `ktlint_experimental` = enabled
 - **Detekt** for statisk analyse (`config/detekt.yml`); navnemønstrene tillater norske tegn (`æøå`)
 - **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert. `koverVerify` håndhever en streng linjedekningsterskel (i `tiltakspenger-libs` er kravet **100 %**), og kjøres som en del av `build`/CI. Den kjøres **ikke** av `:<modul>:test` alene, så det er lett å overse: kjør `./gradlew :<modul>:koverVerify` (eller full `build`) etter kodeendringer, og legg til tester for ny/endret kode. Unngå å skrive uoppnåelig defensiv kode (f.eks. `?: error(...)` på en gren som aldri kan nås) på egne linjer — kover teller dem som udekket og feiler bygget.
+- **Konsist skanner prosjektkatalogen, ikke kildesettene.** I et git-worktree er `.git` en fil, så reglene finner ingen filer og passerer stille; i en klone kan `konsist-regler:test` komme fra cache. Kjør `./gradlew :konsist-regler:test --rerun-tasks` i en vanlig klone, og regn den som grønn bare når loggen viser at tasken kjørte og reglene fant kildefiler.
 - **Gradle version catalog** i `gradle/libs.versions.toml` der den finnes
 - **`io.github.ben-manes.versions`**-plugin for sjekk av oppdateringer på avhengigheter (`./gradlew dependencyUpdates`, ustabile versjoner filtreres bort via `isNonStable`)
 

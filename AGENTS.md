@@ -18,8 +18,9 @@ Denne filen dokumenterer **tverrgående regler** som gjelder for alle sub-repoer
 
 ## Agentregler (gjelder alle repoer)
 
-- **Ingen muterende git-kommandoer.** Agenter skal aldri kjøre `git add`, `git commit`, `git push`, `git reset --hard`, `git checkout -b` / branch-bytting, `git merge`, `git rebase`, `git tag`, `git stash`, `git clean` eller annet som endrer repotilstand eller historikk.
+- **Ingen muterende git-kommandoer.** Agenter skal aldri kjøre `git add`, `git commit`, `git push`, `git reset --hard`, `git checkout -b` / branch-bytting i brukerens arbeidskopi, `git merge`, `git rebase`, `git tag`, `git stash`, `git clean` eller annet som endrer repotilstand eller historikk.
 - **git-kommandoer som leser (ikke muterer) er greit**, f.eks. `git status`, `git diff`, `git log`, `git show`, `git blame`, `git branch --list`, `git remote -v`, `git ls-files`. `git fetch` regnes også som trygt — det oppdaterer kun remote-tracking refs og rører ikke working tree eller lokale branches.
+- **`git pull` og `git worktree` er greit.** `git pull` holder arbeidskopien fersk; stopp og avklar med brukeren ved konflikt. `git worktree add/list/move/remove` brukes til egne arbeidstrær under `.worktrees/`, med ny gren fra `origin/main`.
 - **Unntak ved refaktorering:** `git mv` og `git rm` er greit for å la git følge med på at filer flyttes eller fjernes.
 - Hvis en endring ser ut til å kreve en muterende git-operasjon utover unntakene over, beskriv hva som bør gjøres og la brukeren kjøre det.
 - **Foretrekk innebygde shell-/CLI-kommandoer framfor å opprette nye script-filer** (`.sh`, `.py`, …). Engangsoppgaver løses i terminalen med `bash`, `rg`, `find`, `jq`, `python3 -c "…"` osv. Opprett nye script kun når noe er ment å gjenbrukes, og legg det da i et passende sub-repo.

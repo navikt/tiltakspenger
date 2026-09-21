@@ -1,62 +1,20 @@
 #!/usr/bin/env python3
-"""Finner direkte deklarerte Maven-koordinater i et build.gradle.kts, løser $variabler, og slår opp nyeste stabile.
+"""Finner direkte deklarerte Maven-koordinater i et build.gradle.kts, løser $variabler, og slår opp nyeste versjon.
+
+Nyeste versjon er høyeste stabile versjon ute av cooldown, se maven_oppslag.py.
 
 Bruk: app-utdatert.py <sti/til/build.gradle.kts> [<flere>...]
-Skriver én markdown-tabell per fil. Kun avvik (nå != nyeste) listes.
+Skriver én markdown-tabell per fil. Bare koordinater med nyere versjon listes, også når den er holdt utenfor.
 """
 import re
 import sys
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-UNSTABLE = re.compile(r"(?i)(alpha|beta|rc\d*|m\d+|snapshot|ccs|preview|-ea|dev|cr\d*|pre|eap|b\d+$)")
+sys.dont_write_bytecode = True
+
+from maven_oppslag import holdt_utenfor_tekst, hopp, nyeste, utc
+
 SKIP_GROUPS = ("com.github.navikt.tiltakspenger-libs", "org.jetbrains.kotlin:kotlin-bom")
-
-
-def parse(v):
-    return [((0, int(p)) if p.isdigit() else (1, p)) for p in re.split(r"[.\-_]", v)]
-
-
-def fetch(url):
-    try:
-        with urllib.request.urlopen(url, timeout=25) as r:
-            return r.read().decode()
-    except Exception:
-        return None
-
-
-def latest(module, current):
-    g, a = module.split(":")
-    bases = ["https://repo1.maven.org/maven2/", "https://plugins.gradle.org/m2/",
-             "https://packages.confluent.io/maven/",
-             "https://github-package-registry-mirror.gc.nav.no/cached/maven-release/"]
-    for base in bases:
-        xml = fetch(f"{base}{g.replace('.', '/')}/{a}/maven-metadata.xml")
-        if not xml:
-            continue
-        vs = re.findall(r"<version>([^<]+)</version>", xml)
-        # Samme linje som nå for ktor (låst 3.4) og netty 4.1
-        if g == "io.ktor":
-            vs = [v for v in vs if v.startswith("3.4.")]
-        if module == "io.netty:netty-bom" and current.startswith("4.1."):
-            vs = [v for v in vs if v.startswith("4.1.")]
-        stable = [v for v in vs if not UNSTABLE.search(v.replace(".Final", "").replace(".RELEASE", ""))]
-        if not stable:
-            return None
-        return max(stable, key=parse)
-    return None
-
-
-def hopp(cur, new):
-    c = [p for p in re.split(r"[.\-]", cur) if p.isdigit()]
-    n = [p for p in re.split(r"[.\-]", new) if p.isdigit()]
-    if cur == new:
-        return "-"
-    if c[:1] != n[:1]:
-        return "MAJOR"
-    if c[:2] != n[:2]:
-        return "minor"
-    return "patch"
 
 
 for path in sys.argv[1:]:
@@ -76,18 +34,19 @@ for path in sys.argv[1:]:
     for pid, v in re.findall(r'id\("([^"]+)"\)\s+version\s+"([^"]+)"', txt):
         coords.add((f"{pid}:{pid}.gradle.plugin", v, "(plugin)"))
     print(f"\n## {path}")
-    print("| modul | variabel | nå | nyeste | hopp |")
-    print("|---|---|---|---|---|")
+    print("| modul | variabel | nå | nyeste | publisert UTC | hopp | holdt utenfor |")
+    print("|---|---|---|---|---|---|---|")
 
     def job(c):
         module, ver, var = c
-        new = latest(module, ver)
-        return (module, var, ver, new)
+        return (module, var, ver, nyeste(module, ver))
 
     with ThreadPoolExecutor(max_workers=12) as ex:
         rows = list(ex.map(job, sorted(coords)))
-    for module, var, ver, new in rows:
-        if new is None:
-            print(f"| {module} | {var} | {ver} | ? | ikke funnet |")
-        elif new != ver:
-            print(f"| {module} | {var} | {ver} | {new} | {hopp(ver, new)} |")
+    for module, var, ver, oppslag in rows:
+        if oppslag is None:
+            print(f"| {module} | {var} | {ver} | ? | | ikke funnet | |")
+        elif oppslag.versjon != ver or oppslag.holdt_utenfor:
+            new = oppslag.versjon
+            tid = utc(oppslag.publisert) if new != ver else ""
+            print(f"| {module} | {var} | {ver} | {new} | {tid} | {hopp(ver, new)} | {holdt_utenfor_tekst(oppslag)} |")

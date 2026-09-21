@@ -1,6 +1,6 @@
 ---
 name: backend-dependency-update
-description: Gjennomfør et fullstendig flåtesveip av avhengigheter i tiltakspenger — JVM, frontender, bilder, workflows og infrastruktur. Finn tillatte oppdateringer utover Dependabot, vurder livssyklus, migreringer og versjonslåser, kontroller sårbarheter, og verifiser og rapporter endringene.
+description: Gjennomfør et fullstendig flåtesveip av avhengigheter i tiltakspenger — JVM, frontender, bilder, workflows og infrastruktur. Finn tillatte oppdateringer utover Dependabot, be Dependabot gjenskape utdaterte PR-er, vurder livssyklus, migreringer og versjonslåser, kontroller sårbarheter, og verifiser og rapporter endringene.
 license: MIT
 metadata:
   domain: backend frontend
@@ -13,11 +13,11 @@ Sveip hele flåten, også avhengigheter uten åpne Dependabot-PR-er. Oppdater gr
 
 ## Rammer
 
-- **Ingen `git add`, `commit`, `push`, `merge`, `rebase` eller `checkout` i brukerens arbeidskopi.** Lesende git (`status`, `diff`, `log`, `fetch`) er greit. Mennesket committer; klargjør diffen og commit-meldingen.
+- **Ingen `git add`, `commit`, `push`, `merge`, `rebase` eller `checkout` i brukerens arbeidskopi.** Lesende git (`status`, `diff`, `log`), `fetch`, `pull` og `git worktree` er greit. Brukeren committer; klargjør diffen og commit-meldingen.
 - **Ett repo per commit.** Bump av felleslib i sju apper er sju commits.
 - **Kjør `./gradlew` inne i sub-repoet.** Hvert repo har egen wrapper og egen `.git`.
 - **Bygg alltid i en egen worktree** (`git worktree add -f .worktrees/<navn> origin/main` inne i sub-repoet) når arbeidskopien kan være i bruk av andre: en annen gren, uforklarte endringer eller en Gradle-daemon du ikke startet (`ps -axo pid,etime,command | grep GradleDaemon`). Parallelle bygg i samme arbeidskopi gir falske feil (MissingFileSnapshot, Kover-brudd). Konsist-tester feiler i en worktree (`.git` er en fil, fixturstien filtreres) – verifiser dem i en rsync-kopi under `~/.cache` med `git init`.
-- **Kjør Gradle-bygg som én kø, aldri parallelt**, og les sluttlinja i loggen før du melder resultat.
+- **Kjør Gradle-bygg som én kø, aldri parallelt.** Fang exit-koden fra byggkommandoen og les sluttlinja i loggen før du melder resultat.
 - Endre bare det som trengs for oppdateringen, tilhørende migrering og opprydding i utdaterte låser.
 
 ## 1. Kartlegg omfang og versjonseierskap
@@ -47,9 +47,9 @@ Bruk `rg` til å finne hvor versjonene faktisk styres. Skill mellom deklarert ve
 Finn først høyeste **stabile og tillatte** versjon per koordinat; kompatibilitet og migrering vurderes etterpå (steg 8), ikke ved å hoppe over major-versjoner i sveipet.
 
 - **Cooldown er 168 timer fra publiseringsklokkeslettet i UTC.** Dette gjelder også manuelle bumps. Tidligste oppdatering er `publisert + 168 timer`.
-- **Nav-unntak:** `navikt/*`, `ghcr.io/navikt/*`, `@navikt/*`, `@nais/*` og `nais/*-actions` kan tas med straks.
+- **«Nyeste versjon» betyr høyeste stabile versjon som er ute av cooldown.** Ferskere versjoner holdes utenfor overalt: når du velger mål, når du avgjør om en PR er utdatert, og når du melder at noe er oppdatert. Unntakene under er de eneste.
+- **Nav-unntak:** Maven-gruppene `com.github.navikt.*` og `no.nav.*`, Actions under `navikt/*` og `nais/*`, npm-pakkene `@navikt/*` og `@nais/*` og bilder under `ghcr.io/navikt/*` har ingen cooldown.
 - **Kritisk sikkerhetsunntak:** En fiks for CRITICAL/HIGH kan tas innenfor cooldown ved kjent utnyttelse eller eksponert kode i produksjon. Dokumenter beslutningen med CVE-id og konkret begrunnelse i commit-meldingen.
-- **Ktor skal bli på 3.4-linja.** Låsen følger en produksjonshendelse. Behold ignore-regelen `>=3.5.0, <3.6.0` i `dependabot.yml`, og foreslå aldri å oppheve den. At regelen ikke matcher 3.6+, gjør ikke disse versjonene tillatt.
 - Dependabots cooldown gjelder ikke security updates. Sjekk teamets regel manuelt også for disse.
 
 Frontendene skal ha dette i `pnpm-workspace.yaml`:
@@ -59,7 +59,7 @@ minimumReleaseAge: 10080
 minimumReleaseAgeExclude: ["@navikt/*", "@nais/*"]
 ```
 
-Ved regenerering av lockfila velger pnpm nyeste versjon som tilfredsstiller manifestet og aldersgrensen, med Nav-unntakene over. Kontroller faktisk resultat; faste versjoner og overrides kan holde igjen oppdateringer.
+Velg målversjoner etter policyen, oppdater manifestene, og oppdater lockfila med alderspolicyen aktiv. Kontroller resolved versjon; faste versjoner, overrides og eksisterende lockfil kan holde igjen oppdateringer.
 
 Registerkall mot `@navikt` krever token: `with-npm-token sh -c 'pnpm install && pnpm outdated'`. Hvert kall gir én passorddialog, så samle alt i én økt; aldri «Always Allow».
 
@@ -70,17 +70,38 @@ Registerkall mot `@navikt` krever token: `with-npm-token sh -c 'pnpm install && 
 Kjør inne i hvert repo, eller med `--repo navikt/<repo>`:
 
 ```bash
-gh pr list --author "app/dependabot" --state open \
-  --json number,title,headRefName,createdAt,labels
+gh pr list --author "app/dependabot" --state open --limit 100 \
+  --json number,title,headRefName,baseRefName,createdAt,labels
 
-gh pr view <nr> --json title,body,files,additions,deletions,headRefName
+gh pr view <nr> --json title,body,files,headRefName,headRefOid,commits
+gh pr diff <nr>
 ```
 
-Sammenlign PR-lista med manifestene: PR-er som allerede er tatt manuelt, men står åpne, betyr at Dependabot-jobben feiler i repoet (pnpm-repoene rammes av registeroppslaget mot `npm.pkg.github.com`).
+Sammenlign PR-lista med manifestene: PR-er som allerede er tatt manuelt, men står åpne, tyder på at Dependabot-jobben feiler i repoet (i pnpm-repoene er registeroppslaget mot `npm.pkg.github.com` en kjent årsak).
+
+### Be Dependabot gjenskape utdaterte PR-er
+
+Les målversjonen per koordinat fra PR-diffen, ikke fra tittelen, og versjonen på main fra deklarasjonen som eier den (manifest, katalog, lockfil). PR-en er utdatert når
+
+- **a)** main har samme eller nyere versjon enn PR-en foreslår, eller
+- **b)** nyeste versjon (steg 2, med publiseringstid fra steg 4) er høyere enn PR-ens mål.
+
+I en gruppert PR holder det at én koordinat treffer. Kan versjonene ikke sammenlignes (intervaller, SHA-låste Actions), rapporter PR-en som uavklart.
+
+```bash
+gh pr comment <nr> --repo navikt/<repo> --body "@dependabot recreate"
+```
+
+- Kommentaren er en skrivehandling på GitHub. List PR-ene med begrunnelse (a eller b, versjon på main, nyeste versjon og publiseringstid), og post når brukeren har bestilt det. Bruk maskinens skrivewrapper for `gh` der agenten bare har lesetoken.
+- `recreate` overskriver grenen. Avklar PR-er med commits fra andre enn Dependabot med brukeren først.
+- Noter `headRefOid` og målversjoner før kommentaren. Les Dependabots svar, `state`, `headRefOid` og diffen etterpå. PR-en kan bli lukket, få nytt mål eller stå uendret; i en gruppe kan noen koordinater falle ut mens resten blir stående. Kan ingen behandling bekreftes, rapporter utfallet som uavklart. Ikke post samme kommando på nytt.
+- Dependabot følger `cooldown` og `ignore` i `dependabot.yml`, ikke denne policyen. Kontroller det nye målet mot steg 2. Security-PR-er følger ikke cooldown og kan få et mål yngre enn 168 timer; vurder det etter sikkerhetsunntaket.
+- Rapporter PR-er med mål en versjonslås i steg 7 forbyr separat, også når verken a eller b treffer. `recreate` gjør ikke målet tillatt.
+- `@dependabot rebase` oppdaterer PR-en mot main uten å velge versjon på nytt, og løser verken a eller b.
 
 Kjør et selvstendig sveip:
 
-- `scripts/nyeste-versjoner.py` (fra libs-rota) slår opp nyeste stabile per nøkkel i `gradle/libs.versions.toml`; `scripts/app-utdatert.py <build.gradle.kts>` gjør det samme for direkte deklarerte koordinater i app-repoene. Begge går mot Maven Central og Plugin Portal.
+- `nyeste-versjoner.py` (kjøres fra libs-rota; skriptene ligger i `scripts/` ved siden av denne fila) slår opp nyeste versjon per nøkkel i `gradle/libs.versions.toml`; `app-utdatert.py <build.gradle.kts>` gjør det samme for direkte deklarerte koordinater i app-repoene. Begge går mot Maven Central, Plugin Portal, Confluent og Navs speil, følger cooldown og Nav-unntaket, og lister ferskere versjoner med tidligste tillatte tidspunkt i kolonnen «holdt utenfor».
 - Kjør `./gradlew dependencyUpdates` i libs og metarepoet; begge har ben-manes versions-plugin.
 - Kjør `pnpm outdated` i alle pnpm-repoene.
 - Kontroller wrapper, Actions, basebilder og øvrige deklarasjoner som disse verktøyene ikke dekker.
@@ -96,7 +117,7 @@ Lagre kilde og publiseringsklokkeslett i UTC for hver valgt eller utsatt kandida
 | Maven Central | `https://repo1.maven.org/maven2/<g>/<a>/<v>/`, med punktum i gruppe erstattet av `/`; bruk datoen på POM-linja |
 | Plugin Portal og Confluent | `Last-Modified` for artefakten/POM-en |
 | npm | `npm view <pakke> time --json` |
-| GitHub Actions | `gh api repos/<o>/<r>/releases/tags/<tag>` → `published_at` |
+| GitHub Actions | `gh release view <tag> --repo <o>/<r> --json publishedAt` |
 | Bilder og øvrige artefakter | Registerets publiseringsmetadata eller dokumentert release-kilde for den konkrete versjonen/digesten |
 
 Ikke bruk PR-opprettelse, lokal nedlasting eller commit-dato som publiseringstidspunkt. For Actions med flytende tag: identifiser den konkrete releasen taggen peker på.
@@ -116,7 +137,7 @@ Manglende relocation utelukker ikke flytting. Sjekk README, release notes og mig
 Sjekk README, vedlikeholdspolicy, EOL/deprecation og anbefalt etterfølger.
 
 ```bash
-gh api repos/<o>/<r> --jq .archived
+gh repo view <o>/<r> --json isArchived
 ```
 
 Stillstand alene beviser ikke avvikling. Dokumenter eksplisitte signaler og kilder. Skill mellom vanlig versjonsbump, nødvendig migrering og uavklart vedlikeholdsstatus.
@@ -137,7 +158,7 @@ Fjern låsen når årsaken er borte, og verifiser resolved versjon og tester. Be
 | Buildscript-ekskludering av `org.apache.avro:avro-ipc-jetty` i journalposthendelser og saksbehandling-api | Fjerner Jetty 9.4 fra buildscript. Fjern unntaket når upstream ikke lenger drar den utsatte komponenten. Ekskluder aldri hele `avro-tools`: `.avdl` trenger `avro-idl`. |
 | pnpm-overrides for `sharp`, `js-cookie`, `uuid`, `qs`, `body-parser`, `shell-quote` i soknad/saksbehandling/meldekort | Bruk `pnpm why <pakke>`. Fjern hver override når foreldrepakken selv krever fikset versjon og lockfila bekrefter det. |
 | `minimumReleaseAgeExclude` i saksbehandling | Nav-unntaket skal stå likt i alle pnpm-repoene: `["@navikt/*", "@nais/*"]`. Behold så lenge Nav-unntaket er teamets policy. |
-| Ktor-ignore | Lås til 3.4-linja etter produksjonshendelsen med 3.5-klienten. Fjernes først når ktor-klientbruken er migrert til httpklient; ikke foreslå det før da. |
+| `io.netty:netty-bom` som plattform i JVM-appene og `netty42` i libs-katalogen | `ktor-server-netty` drar inn en Netty 4.2 med åpne CVE-er, og r2dbc/reactor-netty drar 4.1, så begge linjene havner ellers på classpath. BOM-en holder alle `io.netty:*` på én fikset versjon; bump den som en vanlig koordinat. Fjern når `dependencyInsight` viser én Netty-linje uten funn uten BOM-en. |
 | `org.jetbrains.kotlin:kotlin-gradle-plugin`-constraint på build-logics buildscript i libs | `kotlin-dsl` følger Gradle-distribusjonen og drar en eldre KGP med åpen CVE. Fjern når `buildEnvironment` viser at Gradle selv leverer en versjon uten funn. |
 
 Buildscript-unntaket skal være avgrenset:
@@ -158,7 +179,7 @@ Grupper etter bibliotekfamilie, kompatibilitet og risiko.
 | Gruppe | Samordning |
 |---|---|
 | Kotlin / KGP / kotlinx | Sjekk kompatibilitetskrav; de har ikke nødvendigvis samme versjon |
-| Ktor | Samordne via BOM; behold 3.4-linja |
+| Ktor | Samordne via BOM, og bump `netty-bom` i samme runde |
 | Jackson | Følg kompatibel BOM/versjonslinje |
 | Logging | Sjekk API-kompatibilitet mellom logback, slf4j og encoder |
 | Testbiblioteker | JUnit, Kotest, MockK, Testcontainers; testscope |
@@ -175,8 +196,7 @@ For hver avhengighet: les endringene gjennom hele intervallet fra dagens versjon
 
 ```bash
 gh release view <tag> --repo <owner>/<repo> --json body --jq .body
-gh api --paginate repos/<owner>/<repo>/releases \
-  --jq '.[] | "\(.tag_name): \(.name)"'
+gh release list --repo <owner>/<repo> --limit 100 --json tagName,name,publishedAt
 curl -fsSL https://raw.githubusercontent.com/<owner>/<repo>/<tag>/CHANGELOG.md
 ```
 
@@ -208,15 +228,15 @@ Tell bare OSV-poster med tilgjengelig fiks i den handlingsrettede opptellingen. 
 ### GitHubs dependency-graph som SBOM + Trivy
 
 ```bash
-gh api /repos/navikt/<repo>/dependency-graph/sbom > <repo>.sbom.json
+curl -fsSL https://api.github.com/repos/navikt/<repo>/dependency-graph/sbom | jq .sbom > <repo>.sbom.json
 trivy sbom <repo>.sbom.json
 ```
 
-Kjør `scripts/sbom-skann.sh [repo ...]` fra en scratch-mappe (uten argumenter: hele flåten); den skriver `<repo>-sbom.json`, `<repo>-trivy.json` og én linje per funn. API-et svarer tomt på raske påfølgende kall, derfor pauser skriptet mellom repoene; et repo som feiler, kjøres på nytt.
+Kjør `sbom-skann.sh [repo ...]` fra samme `scripts/`, med en scratch-mappe som arbeidskatalog (uten argumenter: hele flåten); den skriver `<repo>-sbom.json`, `<repo>-trivy.json` og én linje per funn. API-et svarer tomt på raske påfølgende kall, derfor pauser skriptet mellom repoene; kjør et repo som feiler, på nytt.
 
-Dette bruker samme graf som Dependabot-alerts, gir fiksversjon per funn og krever ikke alert-scope på tokenet (alert-API-et svarer 403 for lesetokenet). Grafen sendes inn ved push til main, så den viser siste deployede revisjon, ikke arbeidskopien.
+Dette bruker samme graf som Dependabot-alerts og gir fiksversjon per funn. Repoene er offentlige, så endepunktet leses uten token (60 kall i timen per IP); alert-API-et krever derimot et token med alert-scope. Grafen sendes inn ved push til main, så den viser main, verken arbeidskopien eller det som er deployet.
 
-Triager på scope: For JVM-appene er det `runtimeClasspath` som havner i imaget. Buildscript og test er development; rapporter dem separat.
+SBOM-en bærer ikke scope. Avgjør scope per funn: for JVM-appene havner `runtimeClasspath` i imaget, så et funn er runtime når `dependencyInsight --configuration runtimeClasspath` finner koordinaten, eller når `trivy rootfs` på sluttbildet under viser det samme funnet. Resten er buildscript eller test; rapporter dem separat. Metarepoet har ingen innsendt graf og er ikke med.
 
 ### Lokalt sluttbilde og frontend
 
@@ -284,12 +304,13 @@ pnpm-repoene får ikke npm security-PR-er på grunn av en upstream-begrensning. 
 ## 10. Oppdater og verifiser i flåterekkefølge
 
 1. Gjør tredjepartsbumps og nødvendige constraints i **libs**, samt endringer som eies av metarepoet/workflows.
-2. Kompiler og test berørte moduler. Klargjør diff og commit-melding for mennesket.
-3. Etter menneskets push: **vent på faktisk publisering**. Det tar normalt rundt 13 minutter. Finn versjonen i «Build and deploy»-loggen: `0.0.<yyyyMMddHHmmss>`. Ikke gjett versjonen fra klokkeslettet.
+2. Kompiler og test berørte moduler. Klargjør diff og commit-melding for brukeren.
+3. Etter brukerens push: **vent på faktisk publisering**. Det tar normalt rundt 13 minutter. Finn versjonen i «Build and deploy»-loggen: `0.0.<yyyyMMddHHmmss>`. Ikke gjett versjonen fra klokkeslettet.
 4. Bump `felleslibVersion` i **alle sju JVM-appene**. Bump også `byggoppsettVersjon` i tiltak når nytt byggoppsett er publisert. Bruk fellesvariabelen, ikke separate artefaktversjoner.
 5. Verifiser at konsumentene får riktig BOM, constraints og resolved versjoner.
 6. Oppdater og verifiser frontendene og øvrige berørte repoer etter deres versjonseierskap.
-7. Kjør sluttkontroll med SBOM/Trivy og Nais. En lokal fiks er ikke lukket i produksjon før riktig image er deployet og kontrollert.
+7. Når endringene er på main i hvert berørt repo: kontroller de åpne Dependabot-PR-ene på nytt (steg 3). Er endringene fortsatt lokale, rapporter kontrollen som gjenstående.
+8. Kjør sluttkontroll med SBOM/Trivy og Nais. En lokal fiks er ikke lukket i produksjon før riktig image er deployet og kontrollert.
 
 Kjør fra det enkelte JVM-repoets worktree:
 
@@ -328,9 +349,10 @@ Knytt hver rad til CVE-er lukket, tester og eventuell gruppevurdering. Skill mel
 Sluttoppsummeringen skal inneholde:
 
 - Anbefaling per gruppe og berørte PR-numre.
+- PR-er som er bedt gjenskapt, med årsak (a eller b) og utfall: lukket, nytt mål, uendret eller uavklart. Før PR-er med forbudt mål i en egen bolk.
 - Utsatte kandidater med årsak og tidligste tillatte UTC-dato **og klokkeslett**.
 - Låser og unntak som er fjernet, flyttet eller beholdt, med fjerningsvilkår.
 - Uavklarte funn, utilgjengelige kilder og kontroller som ikke kunne kjøres.
 - Forslag til commit-melding per repo. Sikkerhetsunntak innenfor cooldown må ha CVE-id og begrunnelse.
 
-List klare PR-er og foreslå neste kommandoer ved behov. Mennesket kjører commit, push og merge.
+List klare PR-er og foreslå neste kommandoer ved behov. Brukeren kjører commit, push og merge.

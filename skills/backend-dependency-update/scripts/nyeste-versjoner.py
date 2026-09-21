@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Slår opp nyeste stabile versjon for hver nøkkel i gradle/libs.versions.toml.
+"""Slår opp nyeste versjon for hver nøkkel i gradle/libs.versions.toml.
 
-Kilder: Maven Central (repo1), Gradle Plugin Portal (plugins.gradle.org/m2), services.gradle.org for wrapperen.
+Nyeste versjon er høyeste stabile versjon ute av cooldown, se maven_oppslag.py. services.gradle.org gir wrapperen.
 Kjøres fra libs-rota. Skriver en markdown-tabell til stdout.
 """
-import re
+import json
 import sys
 import tomllib
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+
+sys.dont_write_bytecode = True
+
+from maven_oppslag import fetch, holdt_utenfor_tekst, hopp, nyeste, utc
 
 TOML = sys.argv[1] if len(sys.argv) > 1 else "gradle/libs.versions.toml"
 data = tomllib.load(open(TOML, "rb"))
@@ -22,56 +25,14 @@ for name, lib in libs.items():
     ref = v.get("ref") if isinstance(v, dict) else None
     if ref and ref not in rep:
         rep[ref] = lib["module"]
+# Plugins uten bibliotek i katalogen slås opp via markerartefakten.
+for plugin in data.get("plugins", {}).values():
+    v = plugin.get("version")
+    ref = v.get("ref") if isinstance(v, dict) else None
+    if ref and ref not in rep:
+        rep[ref] = f"{plugin['id']}:{plugin['id']}.gradle.plugin"
 rep.setdefault("ktlint", "com.pinterest.ktlint:ktlint-cli")
 rep.setdefault("kotlin", "org.jetbrains.kotlin:kotlin-gradle-plugin")
-
-UNSTABLE = re.compile(r"(?i)(alpha|beta|rc|m\d|snapshot|ccs|preview|ea|dev|cr|pre|eap|b\d+$)")
-
-
-def parse(v: str):
-    parts = re.split(r"[.\-_]", v)
-    out = []
-    for p in parts:
-        if p.isdigit():
-            out.append((0, int(p)))
-        else:
-            out.append((1, p))
-    return out
-
-
-def fetch(url: str) -> str | None:
-    try:
-        with urllib.request.urlopen(url, timeout=25) as r:
-            return r.read().decode()
-    except Exception:
-        return None
-
-
-def latest_for(module: str):
-    g, a = module.split(":")
-    for base in ("https://repo1.maven.org/maven2/", "https://plugins.gradle.org/m2/"):
-        xml = fetch(f"{base}{g.replace('.', '/')}/{a}/maven-metadata.xml")
-        if not xml:
-            continue
-        vs = re.findall(r"<version>([^<]+)</version>", xml)
-        stable = [v for v in vs if not UNSTABLE.search(v.replace(".Final", ""))]
-        if not stable:
-            return None, base
-        return max(stable, key=parse), base
-    return None, None
-
-
-def hopp(cur: str, new: str) -> str:
-    c = [p for p in re.split(r"[.\-]", cur) if p.isdigit()]
-    n = [p for p in re.split(r"[.\-]", new) if p.isdigit()]
-    if cur == new:
-        return "-"
-    if c[:1] != n[:1]:
-        return "MAJOR"
-    if c[:2] != n[:2]:
-        return "minor"
-    return "patch"
-
 
 rows = []
 
@@ -80,21 +41,26 @@ def job(key):
     cur = versions[key]
     module = rep.get(key)
     if not module:
-        return (key, cur, "?", "(ingen modul)", "")
-    new, kilde = latest_for(module)
-    if new is None:
-        return (key, cur, "?", module, "ikke funnet")
-    return (key, cur, new, module, hopp(cur, new))
+        return (key, cur, "?", "", "", "(ingen modul)", "")
+    oppslag = nyeste(module, cur)
+    if oppslag is None:
+        return (key, cur, "?", "", "ikke funnet", module, "")
+    new = oppslag.versjon
+    return (key, cur, new, utc(oppslag.publisert) if new != cur else "", hopp(cur, new), module, holdt_utenfor_tekst(oppslag))
 
 
 with ThreadPoolExecutor(max_workers=12) as ex:
     rows = list(ex.map(job, sorted(versions)))
 
-print("| nøkkel | nå | nyeste stabil | hopp | modul |")
-print("|---|---|---|---|---|")
-for key, cur, new, module, h in rows:
-    print(f"| {key} | {cur} | {new} | {h} | {module} |")
+print("| nøkkel | nå | nyeste | publisert UTC | hopp | modul | holdt utenfor |")
+print("|---|---|---|---|---|---|---|")
+for key, cur, new, tid, h, module, utenfor in rows:
+    print(f"| {key} | {cur} | {new} | {tid} | {h} | {module} | {utenfor} |")
 
 gw = fetch("https://services.gradle.org/versions/current")
 print()
-print("Gradle current:", gw.strip() if gw else "ukjent")
+if gw:
+    gradle = json.loads(gw)
+    print(f"Gradle current: {gradle['version']} (bygget {gradle['buildTime']})")
+else:
+    print("Gradle current: ukjent")

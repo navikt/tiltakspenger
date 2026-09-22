@@ -38,6 +38,11 @@ Se [meta](https://github.com/mateodelnorte/meta) for flere kommandoer.
 Dersom du nå åpner `build.gradle` med `Open` (som Project) i IntelliJ så får du alle komponentene inn i ett
 IntelliJ-oppsett.
 
+Gradle-wrapperen oppgraderes med `./gradlew :wrapper --gradle-version <versjon>`, kjørt i repoet som skal
+oppgraderes. Metarepoet er et composite build og kjører hele flåten på rotas Gradle-versjon, så rota skal
+ikke ligge bak sub-repoene. `tiltakspenger-libs` bruker `all`-distribusjonen og trenger
+`--distribution-type all` i tillegg; uten flagget setter tasken den tilbake til `bin`.
+
 Repoene som er inkludert i dette meta-repoet er
 
 - [tiltakspenger-iac](https://github.com/navikt/tiltakspenger-iac)

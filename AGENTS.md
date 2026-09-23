@@ -105,7 +105,7 @@ Fordi hvert sub-repo er sitt eget git-repo, skal agenter:
 1. **Finne sub-repoer** ved å kjøre `list_dir` på dette rotnivået, ikke ved å stole på `file_search` for `**/*`.
 2. **Lese AGENTS.md fra sub-repoet** du jobber i (alle sub-repoer har minst en stubb-AGENTS.md som lenker hit). Kombiner reglene der med reglene i denne filen samt relevant backend-/frontend-fil.
 3. **Søke inne i et sub-repo** ved å `cd`-e inn i det og kjøre `rg` / `grep -r` / `find` direkte, eller ved å gi absolutte stier til `read_file` og `list_dir`. Workspace-verktøyene `file_search` / `grep_search` finner ikke filer inne i sub-repoer.
-4. **Kjøre bygg og tester inne i sub-repoet** — hvert sub-repo har sin egen Gradle wrapper / `package.json` / hjelpeskripter. Wrapperen oppgraderes med `./gradlew :wrapper --gradle-version <versjon>` i det aktuelle repoet; `tiltakspenger-libs` bruker `all`-distribusjonen og trenger `--distribution-type all` i tillegg.
+4. **Kjøre bygg og tester inne i sub-repoet** — hvert sub-repo har sin egen Gradle wrapper / `package.json` / hjelpeskripter. Wrapperen oppgraderes med `./gradlew :wrapper --gradle-version <versjon>` i det aktuelle repoet.
 5. Når en selv-oppdatering er på sin plass: oppdater filen som er nærmest endringen — `AGENTS.md` for tverrgående endringer, `AGENTS-backend.md` / `AGENTS-frontend.md` for type-spesifikke, og sub-repoets `AGENTS.md` for repo-spesifikke.
 
 ## Delte konvensjoner

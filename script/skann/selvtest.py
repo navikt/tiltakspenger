@@ -43,7 +43,7 @@ BASE64 = ("TWFuIGlzIGRpc3Rpbmd1" + "aXNoZWQsIG5vdCBvbmx5"
           + "IGJ5IGhpcyByZWFzb24s" + "IGJ1dCBieQ11")
 DOCKER_VERT = "http://" + "host.docker" + ".internal:6969/token"
 LOKAL_VERT = "http://" + "local" + "host:8080/health"
-K8S_VERT = "http://" + "tiltakspenger" + "-tiltak"
+K8S_VERT = "http://" + "tiltakspenger" + "-arena"
 K8S_VERT_NS = "http://" + "tiltakspenger" + "-tiltak.tpts"
 FREMMED_NS = "http://" + "annet" + "-app.tpts"
 K8S_FULL = "http://" + "poao-tilgang.poao" + ".svc.cluster.local"
@@ -503,10 +503,10 @@ def kjør_selvtest(rot):
     f.sjekk("localhost i prodfil er funn",
             any("localhost" in linje for linje in prod_verter))
     f.sjekk("enkeltledds tjenestenavn i prod er godkjent",
-            not any("tiltakspenger-tiltak" in linje and ".tpts" not in linje
+            not any("tiltakspenger-arena" in linje and ".tpts" not in linje
                     for linje in prod_verter))
     f.sjekk("namespace-kvalifisert tjenestenavn i prod er godkjent",
-            not any("tiltakspenger-tiltak.tpts" in linje for linje in prod_verter))
+            not any("tiltakspenger-arena.tpts" in linje for linje in prod_verter))
     f.sjekk("annet teams namespace i prod er godkjent",
             not any("annet-app.tpts" in linje for linje in prod_verter))
     f.sjekk(".svc.cluster.local i prod er godkjent",

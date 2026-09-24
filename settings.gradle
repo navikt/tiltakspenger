@@ -5,7 +5,6 @@ includeBuild "tiltakspenger-libs"
 includeBuild "tiltakspenger-arena"
 includeBuild "tiltakspenger-saksbehandling"
 includeBuild "tiltakspenger-saksbehandling-api"
-includeBuild "tiltakspenger-tiltak"
 includeBuild "tiltakspenger-soknad-api"
 includeBuild "tiltakspenger-soknad"
 includeBuild 'tiltakspenger-pdfgenrs'

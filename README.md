@@ -48,7 +48,6 @@ Repoene som er inkludert i dette meta-repoet er
 - [tiltakspenger-libs](https://github.com/navikt/tiltakspenger-libs)
 - [tiltakspenger-arena](https://github.com/navikt/tiltakspenger-arena)
 - [tiltakspenger-saksbehandling-api](https://github.com/navikt/tiltakspenger-saksbehandling-api)
-- [tiltakspenger-tiltak](https://github.com/navikt/tiltakspenger-tiltak)
 - [tiltakspenger-saksbehandling](https://github.com/navikt/tiltakspenger-saksbehandling)
 - [tiltakspenger-soknad-api](https://github.com/navikt/tiltakspenger-soknad-api)
 - [tiltakspenger-pdfgenrs](https://github.com/navikt/tiltakspenger-pdfgenrs)

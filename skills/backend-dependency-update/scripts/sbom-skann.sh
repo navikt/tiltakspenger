@@ -10,7 +10,7 @@ set -u
 REPOER=("$@")
 if [ ${#REPOER[@]} -eq 0 ]; then
   REPOER=(tiltakspenger-libs tiltakspenger-arena tiltakspenger-datadeling tiltakspenger-journalposthendelser
-    tiltakspenger-meldekort-api tiltakspenger-saksbehandling-api tiltakspenger-soknad-api tiltakspenger-tiltak
+    tiltakspenger-meldekort-api tiltakspenger-saksbehandling-api tiltakspenger-soknad-api
     tiltakspenger-soknad tiltakspenger-saksbehandling tiltakspenger-meldekort tiltakspenger-meldekort-microfrontend
     tiltakspenger-pdfgenrs tiltakspenger-workflows tiltakspenger-iac)
 fi

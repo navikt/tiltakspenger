@@ -28,7 +28,7 @@ tiltakspenger-iac                      tiltakspenger-saksbehandling
 tiltakspenger-journalposthendelser     tiltakspenger-saksbehandling-api
 tiltakspenger-libs                     tiltakspenger-soknad
 tiltakspenger-meldekort                tiltakspenger-soknad-api
-tiltakspenger-meldekort-api            tiltakspenger-tiltak
+tiltakspenger-meldekort-api
 ```
 
 Velg **ikke** `All repositories`.

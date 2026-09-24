@@ -14,7 +14,7 @@ Sveip hele flåten, også avhengigheter uten åpne Dependabot-PR-er. Oppdater gr
 ## Rammer
 
 - **Ingen `git add`, `commit`, `push`, `merge`, `rebase` eller `checkout` i brukerens arbeidskopi.** Lesende git (`status`, `diff`, `log`), `fetch`, `pull` og `git worktree` er greit. Brukeren committer; klargjør diffen og commit-meldingen.
-- **Ett repo per commit.** Bump av felleslib i sju apper er sju commits.
+- **Ett repo per commit.** Bump av felleslib i seks apper er seks commits.
 - **Kjør `./gradlew` inne i sub-repoet.** Hvert repo har egen wrapper og egen `.git`.
 - **Bygg alltid i en egen worktree** (`git worktree add -f .worktrees/<navn> origin/main` inne i sub-repoet) når arbeidskopien kan være i bruk av andre: en annen gren, uforklarte endringer eller en Gradle-daemon du ikke startet (`ps -axo pid,etime,command | grep GradleDaemon`). Parallelle bygg i samme arbeidskopi gir falske feil (MissingFileSnapshot, Kover-brudd). Konsist-tester feiler i en worktree (`.git` er en fil, fixturstien filtreres) – verifiser dem i en rsync-kopi under `~/.cache` med `git init`.
 - **Kjør Gradle-bygg som én kø, aldri parallelt.** Fang exit-koden fra byggkommandoen og les sluttlinja i loggen før du melder resultat.
@@ -27,7 +27,7 @@ Hele flåten skal med:
 | Område | Repoer |
 |---|---|
 | Fellesbiblioteker og plattform | `tiltakspenger-libs` |
-| Sju JVM-apper | `tiltakspenger-arena`, `tiltakspenger-datadeling`, `tiltakspenger-journalposthendelser`, `tiltakspenger-meldekort-api`, `tiltakspenger-saksbehandling-api`, `tiltakspenger-soknad-api`, `tiltakspenger-tiltak` |
+| Seks JVM-apper | `tiltakspenger-arena`, `tiltakspenger-datadeling`, `tiltakspenger-journalposthendelser`, `tiltakspenger-meldekort-api`, `tiltakspenger-saksbehandling-api`, `tiltakspenger-soknad-api` |
 | Frontender | `tiltakspenger-soknad`, `tiltakspenger-saksbehandling`, `tiltakspenger-meldekort`, `tiltakspenger-meldekort-microfrontend` |
 | Øvrig | `tiltakspenger-pdfgenrs`, `tiltakspenger-workflows`, `tiltakspenger-iac` og metarepoet |
 
@@ -38,7 +38,7 @@ Bruk `rg` til å finne hvor versjonene faktisk styres. Skill mellom deklarert ve
 **Versjonseierskap:**
 
 - JVM-tredjepartsversjoner bumpes kun i `tiltakspenger-libs` og metarepoet/workflows, etter hvor de eies.
-- De sju JVM-appene bumper bare `felleslibVersion`; `tiltakspenger-tiltak` bumper også `byggoppsettVersjon` i `gradle.properties`.
+- De seks JVM-appene bumper bare `felleslibVersion`.
 - Ikke innfør app-lokale tredjepartsbumps for å omgå sentral styring. Nødvendige sikkerhetsconstraints og opprydding i eksisterende unntak håndteres etter steg 7 og 9.
 - Frontendpakker, basebilder og øvrige avhengigheter oppdateres i deklarasjonen som eier dem.
 
@@ -306,7 +306,7 @@ pnpm-repoene får ikke npm security-PR-er på grunn av en upstream-begrensning. 
 1. Gjør tredjepartsbumps og nødvendige constraints i **libs**, samt endringer som eies av metarepoet/workflows.
 2. Kompiler og test berørte moduler. Klargjør diff og commit-melding for brukeren.
 3. Etter brukerens push: **vent på faktisk publisering**. Det tar normalt rundt 13 minutter. Finn versjonen i «Build and deploy»-loggen: `0.0.<yyyyMMddHHmmss>`. Ikke gjett versjonen fra klokkeslettet.
-4. Bump `felleslibVersion` i **alle sju JVM-appene**. Bump også `byggoppsettVersjon` i tiltak når nytt byggoppsett er publisert. Bruk fellesvariabelen, ikke separate artefaktversjoner.
+4. Bump `felleslibVersion` i **alle seks JVM-appene**. Bruk fellesvariabelen, ikke separate artefaktversjoner.
 5. Verifiser at konsumentene får riktig BOM, constraints og resolved versjoner.
 6. Oppdater og verifiser frontendene og øvrige berørte repoer etter deres versjonseierskap.
 7. Når endringene er på main i hvert berørt repo: kontroller de åpne Dependabot-PR-ene på nytt (steg 3). Er endringene fortsatt lokale, rapporter kontrollen som gjenstående.

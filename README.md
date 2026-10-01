@@ -113,6 +113,10 @@ for kubectl-contextene. Scriptet feiler på vanlig måte hvis du ikke er det.
 Oppførsel kan justeres med miljøvariabler, bl.a. `NAMESPACE`, `DEV_CLUSTERS`,
 `PROD_CLUSTERS`, `KUBE_TIMEOUT` og `DEPLOY_WORKFLOW` — se toppen av scriptet.
 
+### Databasene i dev og prod
+
+Oppskrift, databasenavn og rettighetsmodell står i [docs/drift/databaser-i-dev-og-prod.md](docs/drift/databaser-i-dev-og-prod.md).
+
 ### Import av data til lokale databaser
 
 Det kan være praktisk å populere lokale databaser med data fra dev-miljøet. Du trenger `pg_dump` og `pg_restore` versjon 17 eller nyere fra [Postgres binaries](https://www.postgresql.org/download/).
@@ -136,10 +140,9 @@ Eksempel for saksbehandling-api, se docker-compose for parametre for andre apper
 docker compose up -d postgresSaksbehandling
 ```
 
-- Start en lokal proxy til dev-databasen du skal importere fra, med [nais cli](https://docs.nais.io/persistence/postgres/how-to/personal-access/). Se doc'en for førstegangsoppsett, senere kan du kjøre disse kommandoene:
+- Start en proxy mot dev-databasen; `grant` må være kjørt først, se [Databasene i dev og prod](docs/drift/databaser-i-dev-og-prod.md):
 ```
-kubectl config use-context dev-gcp
-nais postgres proxy -p 5444 tiltakspenger-saksbehandling-api -t tpts -e dev-gcp --reason lols
+nais postgres proxy tiltakspenger-saksbehandling-api -p 5444 -t tpts -e dev-gcp --reason "import av dev-data til lokal database"
 ```
 
 - Kjør `pg_dump` for å dumpe dev-databasen:
@@ -288,6 +291,7 @@ Oppskrifter for herding av utviklermaskinen ligger i [`docs/sikkerhet/maskin-har
 Målet er at nøkler ligger i maskinvare og ikke kan kopieres ut av maskinen, og at legitimasjon som alltid er tilgjengelig bare kan lese.
 For macOS: [SSH-nøkkel i Secure Enclave](docs/sikkerhet/maskin-hardening/ssh-nokkel-mac.md), [signerte commits](docs/sikkerhet/maskin-hardening/signerte-commits-mac.md) og [lesetoken for `gh`](docs/sikkerhet/maskin-hardening/gh-lesetoken.md).
 For Linux finnes en [samlet oppskrift for signering](docs/sikkerhet/maskin-hardening/signerte-commits-linux.md) som ikke er testet.
+Sikkerhetsinnstillingene i GitHub sammenlignes på tvers av repoene med [`script/sikkerhetsinnstillinger/`](script/sikkerhetsinnstillinger/README.md).
 
 ## Team-board (GitHub Project)
 

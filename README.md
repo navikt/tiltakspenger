@@ -223,6 +223,8 @@ Referanseimplementasjonen er `Datovelger`/`Periodevelger` i [`tiltakspenger-sokn
 
 ## Feilsøking med logger og traces
 
+Om en utbetaling nådde Oppdragssystemet og ble utbetalt, ser du i [Utbetalingsportalen](docs/drift/utbetalingsportalen.md), ikke i loggene.
+
 Alle appene (frontender og backender) er auto-instrumentert med OpenTelemetry via NAIS (`observability.autoInstrumentation` i nais.yml). Det gir to id-er som injiseres automatisk i logglinjene — via pino på frontendene (merk: `tiltakspenger-meldekort` logger med `console` og får dem ikke i dag) og logback-MDC på backendene — og som propageres automatisk mellom tjenestene på HTTP-kall:
 
 - **`trace_id`** identifiserer **hele kjeden** for én request, ende til ende. Alle tjenestene requesten er innom (ingress → wonderwall → frontend → api → PDL/texas osv.) deler samme trace_id. Dette er nøkkelen for å korrelere logger på tvers av tjenester.

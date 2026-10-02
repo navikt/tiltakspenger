@@ -37,9 +37,9 @@ Bruk `rg` til å finne hvor versjonene faktisk styres. Skill mellom deklarert ve
 
 **Versjonseierskap:**
 
-- JVM-tredjepartsversjoner bumpes kun i `tiltakspenger-libs` og metarepoet/workflows, etter hvor de eies.
-- De seks JVM-appene bumper bare `felleslibVersion`.
-- Ikke innfør app-lokale tredjepartsbumps for å omgå sentral styring. Nødvendige sikkerhetsconstraints og opprydding i eksisterende unntak håndteres etter steg 7 og 9.
+- `tiltakspenger-libs` eier fellesbiblioteker og egne tredjepartsversjoner i sin katalog, mens metarepoet/workflows eier egne avhengigheter.
+- Hver app eier egen `plugins {}` (Kotlin-pluginen lik `kotlin` i libs) og egne tredjepartskoordinater i tillegg til `felleslibVersion`.
+- Målet er fortsatt at tredjepartsversjoner skal komme fra libs. Nødvendige sikkerhetsconstraints og opprydding i eksisterende unntak håndteres etter steg 7 og 9.
 - Frontendpakker, basebilder og øvrige avhengigheter oppdateres i deklarasjonen som eier dem.
 
 ## 2. Bruk versjonspolicyen på alle kandidater
@@ -102,7 +102,7 @@ gh pr comment <nr> --repo navikt/<repo> --body "@dependabot recreate"
 Kjør et selvstendig sveip:
 
 - `nyeste-versjoner.py` (kjøres fra libs-rota; skriptene ligger i `scripts/` ved siden av denne fila) slår opp nyeste versjon per nøkkel i `gradle/libs.versions.toml`; `app-utdatert.py <build.gradle.kts>` gjør det samme for direkte deklarerte koordinater i app-repoene. Begge går mot Maven Central, Plugin Portal, Confluent og Navs speil, følger cooldown og Nav-unntaket, og lister ferskere versjoner med tidligste tillatte tidspunkt i kolonnen «holdt utenfor».
-- Kjør `./gradlew dependencyUpdates` i libs og metarepoet; begge har ben-manes versions-plugin.
+- Kjør `./gradlew dependencyUpdates` i hver av de seks appene (ben-manes versions-plugin ligger der), ikke i libs eller metarepoet.
 - Kjør `pnpm outdated` i alle pnpm-repoene.
 - Kontroller wrapper, Actions, basebilder og øvrige deklarasjoner som disse verktøyene ikke dekker.
 

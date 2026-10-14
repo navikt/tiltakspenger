@@ -158,6 +158,7 @@ Noen ting gjelder **både** for backend og frontend:
     - **Alert-manifester som deployes med variabler går gjennom handlebars.** Skriv Prometheus-maler i annotasjoner som `'\{{ $labels.app }}'` i enkle anførselstegn, også i kommentarer; et uescapet `{{ $labels.app }}` blir tom streng. Sjekk `PRINT_PAYLOAD` i deploy-loggen.
     - **Vær varsom med workflow-endringer i `tiltakspenger-iac`.** Deploy-workflowene lister sin egen fil i `paths`, så en ren workflow-endring deployer alerts, kafka og terraform til dev og prod ved merge, uten test-gate foran.
     - **Dependabot ser ikke Chainguard-bildene fra Navs speil** (`cgr-nav/pull-through`). Bruk flytende tagg med en kommentar som sier hvorfor; digest-lås bare for bilder Dependabot kan lese.
+    - **Actions låses i `.github/workflows/actions.lock`, ikke med SHA i workflowfila.** Referer actions med tag (`actions/checkout@v7.0.1`), kjør `gh actions-lock --no-migrate-local-actions` i repo-roten når du endrer `uses:`, og commit lockfila i samme endring. Rediger den aldri for hånd. Lint-gaten kjører `gh actions-lock --verify`. Reusable workflows fra andre repoer (tms-deploy) og `docker://`-images låses ikke av lockfila og pinnes fortsatt i fila. Detaljer i workflows-README-en i `tiltakspenger-workflows`.
 
 ## Lesegrenser og stille avkorting
 

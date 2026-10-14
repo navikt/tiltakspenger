@@ -86,7 +86,7 @@ Les målversjonen per koordinat fra PR-diffen, ikke fra tittelen, og versjonen p
 - **a)** main har samme eller nyere versjon enn PR-en foreslår, eller
 - **b)** nyeste versjon (steg 2, med publiseringstid fra steg 4) er høyere enn PR-ens mål.
 
-I en gruppert PR holder det at én koordinat treffer. Kan versjonene ikke sammenlignes (intervaller, SHA-låste Actions), rapporter PR-en som uavklart.
+I en gruppert PR holder det at én koordinat treffer. Kan versjonene ikke sammenlignes (intervaller, Actions på gren som `@master`), rapporter PR-en som uavklart.
 
 ```bash
 gh pr comment <nr> --repo navikt/<repo> --body "@dependabot recreate"

@@ -152,7 +152,7 @@ Fjern låsen når årsaken er borte, og verifiser resolved versjon og tester. Be
 
 | Lås/unntak | Årsak og handling |
 |---|---|
-| `org.jetbrains.kotlin:kotlin-compiler-embeddable` strictly `2.0.21`, med Dependabot-ignore i alle app-repoer | Konsist `0.17.3` krasjer med nyere kompilator. Flytt låsen til libs’ konsist-regler som `api`-constraint. Fjern overflødige app-låser etter publisering og verifisert arv. Selve låsen og tilhørende ignore fjernes når Konsist støtter Kotlin 2.4. |
+| Dependabot-ignore for `org.jetbrains.kotlin:kotlin-compiler-embeddable` i malen `dependabot-gradle.yml` | Rest etter låsen til `2.0.21`, som Konsist `0.17.3` trengte. Konsist `0.18.1` bygger på Kotlin 2.4, og låsen er fjernet fra libs og appene. Fjern ignore i malen og deretter i kopiene. |
 | `org.apache.kafka:kafka-clients` strictly i libs-plattformen, journalposthendelser og saksbehandling-api | Confluents `-ccs`-fork vinner ellers konfliktoppløsningen. Behold låsen. Kommentaren skal beskrive at fjerning krever at riktig klient velges uten den; dette er ikke oppfylt i dag. |
 | httpclient5/httpcore5-constraints | Behold markøren `httpklient-unntak: <begrunnelse>` for Konsist-regelen `IngenAndreHttpKlienter`. Fjern når `kafka-schema-registry-client` selv drar fikset versjon. |
 | Buildscript-ekskludering av `org.apache.avro:avro-ipc-jetty` i journalposthendelser og saksbehandling-api | Fjerner Jetty 9.4 fra buildscript. Fjern unntaket når upstream ikke lenger drar den utsatte komponenten. Ekskluder aldri hele `avro-tools`: `.avdl` trenger `avro-idl`. |

@@ -8,7 +8,9 @@ De to første hører sammen og tas i rekkefølge, siden signering forutsetter at
 1. [SSH-nøkkel i Secure Enclave (macOS)](ssh-nokkel-mac.md) — Secretive, nøkkelgenerering og registrering på GitHub. Testet.
 2. [Signerte commits (macOS)](signerte-commits-mac.md) — signering med samme nøkkel, og hvordan kravet slås på i et repo. Testet.
 3. [Lesetoken for `gh`](gh-lesetoken.md) — fine-grained token uten skrivetilgang, i stedet for OAuth-grantet `gh auth login` lager. Testet.
+4. [Eget token for Copilot CLI (macOS)](copilot-cli-token.md) — token som bare kan sende Copilot-forespørsler, og som agenten i `nav-pilot` og `cplt` bare ser som en plassholder. Testet.
 
 For Linux dekker [signerte commits (Linux)](signerte-commits-linux.md) både nøkkelgenerering med FIDO2-sikkerhetsnøkkel og signering i én oppskrift.
 Den er **ikke testet**.
 Punkt 3 er plattformuavhengig utover at `pbpaste` og `pbcopy` er macOS-kommandoer.
+Punkt 4 bruker nøkkelringen i macOS via `security`, og er bare testet der.

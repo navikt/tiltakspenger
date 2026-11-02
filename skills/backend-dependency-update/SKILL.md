@@ -223,7 +223,7 @@ nais login --nais
 nais vulnerability list all -t tpts -o json
 ```
 
-Tell bare OSV-poster med tilgjengelig fiks i den handlingsrettede opptellingen. Ufiksede Debian-CVE-er i distroless telles ikke der. Hold slike funn separat fra fikser som kan gjennomføres nå.
+Tell bare OSV-poster med tilgjengelig fiks i den handlingsrettede opptellingen. Ufiksede CVE-er i baseimaget telles ikke der. Hold slike funn separat fra fikser som kan gjennomføres nå.
 
 ### GitHubs dependency-graph som SBOM + Trivy
 

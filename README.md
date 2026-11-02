@@ -72,6 +72,16 @@ på siden av øvrige apper for å kunne teste frontend lokalt.
 For enkel bruk av docker-compose-oppsett er det skrevet noen bash-script som ligger på
 rot av dette repositoryet.
 
+Backend-imagene bygges på Chainguard-images fra Navs private speil, så `./up.sh` krever at du er logget inn mot det
+(se [Navs Chainguard-side](https://sikkerhet.nav.no/docs/verktoy/chainguard-dockerimages/)):
+
+```bash
+gcloud auth configure-docker europe-north1-docker.pkg.dev
+gcloud auth login
+```
+
+Med Podman: `gcloud auth print-access-token | podman login -u oauth2accesstoken --password-stdin europe-north1-docker.pkg.dev`.
+
 | script          | beskrivelse                                                                                                                                                                                                                                                        |
 |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ./up.sh         | Script for å bygge og starte alle apper i docker-compose (se i [up.sh](https://github.com/navikt/tiltakspenger/blob/main/up.sh) for tilgjengelige options)                                                                                                         |

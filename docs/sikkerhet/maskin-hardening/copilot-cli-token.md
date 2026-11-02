@@ -17,18 +17,27 @@ brew install navikt/tap/nav-pilot navikt/tap/cplt
 ## Hvorfor eget token
 
 Når du starter `nav-pilot`, kjører Copilot CLI inne i `cplt`.
-Copilot CLI trenger et GitHub-token for å bekrefte tilgangen din og føre forbruket på kontoen din.
-Inne i sandkassa har ikke Copilot CLI tilgang til nøkkelringen i macOS, så en innlogging med `/login` lagrer påloggingen i klartekst på disken.
+Etter at du har satt opp [lesetoken for `gh`](gh-lesetoken.md) i steg 3, er det to ulike tokens i sving med hver sin oppgave:
+
+- **Tokenet fra steg 3 ([lesetoken for `gh`](gh-lesetoken.md))** har `navikt` som eier og lesetilgang til utvalgte repoer.
+  Det brukes av `gh` i terminalen din, og av agenten inne i `cplt` (gjennom `cplt` sin `gh`-guard) når den kjører `gh` for å lese issues, PR-er og workflow-kjøringer.
+  Det er sånn det skal være.
+- **Tokenet i denne oppskriften (steg 4)** er et personlig token på din egen GitHub-bruker med kun `Copilot Requests: Read-only`, selv om Copilot-kvoten din kommer fra `navikt`.
+  Det brukes bare av selve Copilot CLI for å bekrefte Copilot-tilgangen din og føre forbruket på kontoen din.
+  Det har ingen tilgang til `navikt` eller private repoer.
+
+Uten eget oppsett prøver `cplt` å logge inn Copilot CLI med tokenet fra `gh`, men et token med `navikt` som `Resource owner` kan ikke ha kontotillatelsen `Copilot Requests`.
+Inne i sandkassa har heller ikke Copilot CLI tilgang til nøkkelringen i macOS, så en innlogging med `/login` lagrer påloggingen i klartekst på disken.
 Bruk derfor ikke `/login`, men lag et eget token som leses fra nøkkelringen utenfor sandkassa.
-Det er et personlig token på din egen GitHub-konto, selv om Copilot-kvoten din kommer fra `navikt`.
 
 Oppsettet beskytter tokenet på to måter:
 
 - Inne i sandkassa ser agenten bare en plassholder, også om den følger ondsinnede instruksjoner fra kode, issues eller nettsider (prompt injection).
-  Proxyen til `cplt` setter inn det ekte tokenet bare i forespørsler til GitHub-hoster.
+  Proxyen til `cplt` setter inn det ekte tokenet bare i forespørsler til GitHub-hosts.
   Plassholderen er verdiløs hvis den sendes andre steder.
-- Utenfor sandkassa er det ekte tokenet tilgjengelig for prosesser du starter i terminalen, fordi `.zshrc` eksporterer det.
-  Tokenet kan bare sende Copilot-forespørsler, ikke lese private repoer eller skrive noe sted.
+- Utenfor sandkassa er det ekte tokenet tilgjengelig for prosesser du starter i terminalen, fordi `.zshrc` eksporterer det ved oppstart.
+  Tokenet kan bare sende Copilot-forespørsler, ikke lese private repoer eller skrive noe sted, så det verste en annen prosess kan gjøre er å stjele av Copilot-kvoten din.
+  Vil du unngå at variabelen ligger fast i miljøet ved oppstart, kan du legge en funksjon i `.zshrc` som henter tokenet kun når `nav-pilot` starter.
 
 ## 1. Lag tokenet
 
@@ -58,7 +67,10 @@ Legg denne linjen til i `~/.zshrc`:
 export COPILOT_GITHUB_TOKEN="$(security find-generic-password -a "$USER" -s copilot-cli-pat -w 2>/dev/null)"
 ```
 
-`COPILOT_GITHUB_TOKEN` går foran `GH_TOKEN` og `GITHUB_TOKEN`, så Copilot CLI bruker dette tokenet selv om de andre variablene er satt.
+Copilot CLI støtter tre miljøvariabler for pålogging: `COPILOT_GITHUB_TOKEN`, `GH_TOKEN` og `GITHUB_TOKEN`.
+`GH_TOKEN` og `GITHUB_TOKEN` er generelle GitHub-variabler som også leses av `gh` og andre verktøy, der de overstyrer tokenet i nøkkelringen.
+Legger du Copilot-tokenet i en av dem, vil både `gh` i terminalen og agentens `gh`-kall i `cplt` bruke det i stedet for lesetokenet fra [steg 3](gh-lesetoken.md), og feile mot `navikt`-repoene.
+Bruk derfor `COPILOT_GITHUB_TOKEN`, som bare leses av Copilot CLI.
 
 ## 4. Send tokenet inn i `cplt`
 

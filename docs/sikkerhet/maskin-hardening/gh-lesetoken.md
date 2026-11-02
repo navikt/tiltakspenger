@@ -129,6 +129,15 @@ Et OAuth-grant beholder dessuten unionen av alt som noen gang er innvilget, og `
 - Push over HTTPS avvises. Push går over ssh.
 - Private og interne repoer gir 404 hvis de ikke står i utvalget. Git-lesing der går over ssh; trenger du API-tilgang, lag et eget token med kort levetid for anledningen.
 
+## Neste steg: eget token for Copilot CLI
+
+Når du kjører `nav-pilot` i `cplt`, får agenten tilgang til `gh` gjennom `cplt` sin `gh`-guard.
+Agenten bruker da lesetokenet fra denne oppskriften når den slår opp issues, PR-er og workflow-kjøringer i `navikt`, og det er sånn det skal være.
+
+Selve Copilot CLI kan derimot ikke bruke dette tokenet til å logge inn mot Copilot-tjenesten.
+Til vanlig henter `cplt` tokenet fra `gh` i nøkkelringen for å logge inn Copilot CLI, men et fine-grained token med `navikt` som `Resource owner` kan ikke ha kontotillatelsen `Copilot Requests`.
+Fortsett derfor med [Eget token for Copilot CLI](copilot-cli-token.md) for å gi selve Copilot CLI et eget token til modellkall.
+
 ## Fornyelse
 
 GitHub varsler før utløp.

@@ -57,6 +57,21 @@ PDF-scriptene lagrer til `$PDF_UT_DIR` (default `/tmp/tiltakspenger-pdfer`), med
 én PDF per brev fra pdfgenrs. PDF-er som kun genereres av jobber (journalføring)
 dekkes ikke.
 
+## Mot dev (Hel Ved v3)
+
+Kjør med `MILJO=dev`; personen lagrer ett token per ident med `dev-token.sh` (se README-ens «Dev»-del), og `dev-token.sh liste` viser hvilke som finnes, med roller og utløpstid.
+Scriptene velger selv saksbehandler og beslutter ut fra rollene i tokenene; overstyr med `DEV_SAKSBEHANDLER=<ident>` og `DEV_BESLUTTER=<ident>`.
+En bruker med fortrolig eller strengt fortrolig adresse gir 403 med `tilgang_nektet_kode_7` eller `tilgang_nektet_kode_6`; begge identene må da ha tilgang til den graderingen, og tokenets `groups` viser ikke det.
+Agenten lager aldri tokens selv og ber om nye når `_lib.sh` melder at de har utløpt.
+Bruk bare fiktive fødselsnumre (4–9 som tredje siffer, Navs og Skatteetatens syntetiske serier); scriptene avviser andre.
+
+```bash
+cd tiltakspenger-saksbehandling/scripts/testdata
+MILJO=dev ./finn-testbrukere.sh                 # eksisterende brukere fra benken, med V2/V3
+./sjekk-testbrukere.sh                          # brukerne fra Confluence med søkbare tiltak, V3-KLAR=ja uten sak
+./helved-v3-scenarioer.sh <FNR eller SAKSNUMMER>  # alle utbetalingscasene på én sak
+```
+
 ## Nyttig å vite (så du ikke gjetter)
 
 - Auth mot LokalMain bruker fake Texas-tokens: saksbehandler `TokenMcTokenface` (A123456), beslutter `TokenMcTokenface2` (B123456). To brukere pga. 4-øyne.

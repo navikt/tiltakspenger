@@ -78,6 +78,7 @@ MILJO=dev ./hent-eller-opprett-sak.sh <FNR> V2  # ny sak på V2 (eller V3) før 
 Papirsøknad i dev trenger en journalpost som gjelder brukeren.
 `MILJO=dev ./registrer-papir-soknad.sh <SAKSNUMMER>` henter den selv med `finn-journalpost.sh`; finnes ingen, lag en med `opprett-journalpost.sh` og kjør på nytt.
 Tiltaket hentes fra `GET /tiltak` i soknad-api som brukeren, og søknaden gjelder hele tiltaket med indeks `TILTAKSINDEKS` (default 0).
+Mottatt dato er tiltakets startdato, og `SOKNAD_MOTTATT_DATO` overstyrer den.
 Journalpostscriptene bruker maskintoken fra tokengeneratoren mot SAF og dokarkiv og trenger ingen OBO-tokens.
 
 ## Nyttig å vite (så du ikke gjetter)

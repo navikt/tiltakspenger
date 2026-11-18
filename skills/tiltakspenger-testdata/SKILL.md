@@ -69,13 +69,21 @@ Bruk bare fiktive fødselsnumre (4–9 som tredje siffer, Navs og Skatteetatens 
 cd tiltakspenger-saksbehandling/scripts/testdata
 MILJO=dev ./finn-testbrukere.sh                 # eksisterende brukere fra benken, med V2/V3
 ./sjekk-testbrukere.sh                          # brukerne fra Confluence med søkbare tiltak, V3-KLAR=ja uten sak
+MILJO=dev ./hent-eller-opprett-sak.sh <FNR> V2  # ny sak på V2 (eller V3) før søknaden sendes
 ./helved-v3-scenarioer.sh <FNR eller SAKSNUMMER>  # alle utbetalingscasene på én sak
+./finn-journalpost.sh <FNR>                     # brukerens journalpost i SAF, til papirsøknad
+./opprett-journalpost.sh <FNR>                  # ny journalpost i dokarkiv når brukeren ikke har noen
 ```
+
+Papirsøknad i dev trenger en journalpost som gjelder brukeren.
+`MILJO=dev ./registrer-papir-soknad.sh <SAKSNUMMER>` henter den selv med `finn-journalpost.sh`; finnes ingen, lag en med `opprett-journalpost.sh` og kjør på nytt.
+Tiltaket hentes fra `GET /tiltak` i soknad-api som brukeren, og søknaden gjelder hele tiltaket med indeks `TILTAKSINDEKS` (default 0).
+Journalpostscriptene bruker maskintoken fra tokengeneratoren mot SAF og dokarkiv og trenger ingen OBO-tokens.
 
 ## Nyttig å vite (så du ikke gjetter)
 
 - Auth mot LokalMain bruker fake Texas-tokens: saksbehandler `TokenMcTokenface` (A123456), beslutter `TokenMcTokenface2` (B123456). To brukere pga. 4-øyne.
-- Papir bruker fnr `12845678911` (matcher SAF-fakens journalpost `12345`).
+- Papir lokalt bruker fnr `12845678911` (matcher SAF-fakens journalpost `12345`).
 - `kjedeId` inneholder `/` og må URL-encodes (`%2F`) — scriptene håndterer dette.
 - Papir-utledning av tiltaksdeltakelse i client-fakene er kjent skjør; scriptene har en fallback. Se TODO-ene i `TiltaksdeltakelseFakeKlient.kt` / `LocalApplicationContext.kt`.
 

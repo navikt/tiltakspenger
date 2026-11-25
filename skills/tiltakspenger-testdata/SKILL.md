@@ -41,17 +41,17 @@ Begge lager en sak med iverksatt innvilget vedtak + meldekortbehandling + klageb
 
 Scriptene er lagdelt (byggekloss → kombo → topp-nivå). Velg minste script som løser oppgaven:
 
-| Utvikleren vil ha | Kjør |
-| --- | --- |
-| Alt (sak + meldekort + klage) | `opprett-alt-digital.sh` / `opprett-alt-papir.sh` |
-| Bare en sak med innvilget vedtak | `opprett-innvilget-sak-digital.sh` / `opprett-innvilget-sak-papir.sh` |
-| Bare en meldekortbehandling | innvilget sak-script, deretter `opprett-meldekortbehandling.sh SAK_ID KJEDE_ID` |
-| Bare en klagebehandling | `opprett-klage.sh SAK_ID [VEDTAK_ID]` (på en eksisterende sak) |
-| Simuleringer å teste (ytelse, feilutbetaling, justering en-/flerdags, sperre-scenarioer på tvers av meldeperioder/måneder, trekk m/reversering, månedsskifte-splitt) | `opprett-simuleringsscenarioer.sh` |
-| Iverksatt meldekort / åpen korrigering med egne dagstatuser | `fyll-og-iverksett-meldekort.sh` / `opprett-meldekort-korrigering.sh` `SAKSNUMMER [DATO=STATUS ...]` |
-| Alle PDF-brevene som filer | `forhandsvis-alle-pdfer.sh` (krever pdfgenrs på 8084 i docker) |
-| Ett enkelt PDF-brev | `forhandsvis-vedtaksbrev.sh` / `forhandsvis-meldekortbrev.sh` / `forhandsvis-klagebrev.sh` |
-| Ett enkelt endepunkt-steg | tilsvarende byggekloss-script (se `scripts/testdata/README.md`) |
+| Utvikleren vil ha                                                                                                                                                    | Kjør                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Alt (sak + meldekort + klage)                                                                                                                                        | `opprett-alt-digital.sh` / `opprett-alt-papir.sh`                                                    |
+| Bare en sak med innvilget vedtak                                                                                                                                     | `opprett-innvilget-sak-digital.sh` / `opprett-innvilget-sak-papir.sh`                                |
+| Bare en meldekortbehandling                                                                                                                                          | innvilget sak-script, deretter `opprett-meldekortbehandling.sh SAK_ID KJEDE_ID`                      |
+| Bare en klagebehandling                                                                                                                                              | `opprett-klage.sh SAK_ID [VEDTAK_ID]` (på en eksisterende sak)                                       |
+| Simuleringer å teste (ytelse, feilutbetaling, justering en-/flerdags, sperre-scenarioer på tvers av meldeperioder/måneder, trekk m/reversering, månedsskifte-splitt) | `opprett-simuleringsscenarioer.sh`                                                                   |
+| Iverksatt meldekort / åpen korrigering med egne dagstatuser                                                                                                          | `fyll-og-iverksett-meldekort.sh` / `opprett-meldekort-korrigering.sh` `SAKSNUMMER [DATO=STATUS ...]` |
+| Alle PDF-brevene som filer                                                                                                                                           | `forhandsvis-alle-pdfer.sh` (krever pdfgenrs på 8084 i docker)                                       |
+| Ett enkelt PDF-brev                                                                                                                                                  | `forhandsvis-vedtaksbrev.sh` / `forhandsvis-meldekortbrev.sh` / `forhandsvis-klagebrev.sh`           |
+| Ett enkelt endepunkt-steg                                                                                                                                            | tilsvarende byggekloss-script (se `scripts/testdata/README.md`)                                      |
 
 PDF-scriptene lagrer til `$PDF_UT_DIR` (default `/tmp/tiltakspenger-pdfer`), med
 én PDF per brev fra pdfgenrs. PDF-er som kun genereres av jobber (journalføring)
@@ -67,10 +67,14 @@ Bruk bare fiktive fødselsnumre (4–9 som tredje siffer, Navs og Skatteetatens 
 
 ```bash
 cd tiltakspenger-saksbehandling/scripts/testdata
-MILJO=dev ./finn-testbrukere.sh                 # eksisterende brukere fra benken, med V2/V3
+MILJO=dev ./finn-testbrukere.sh                 # eksisterende brukere fra benken, med datohint for V2/V3
 ./sjekk-testbrukere.sh                          # brukerne fra Confluence med søkbare tiltak, V3-KLAR=ja uten sak
 MILJO=dev ./hent-eller-opprett-sak.sh <FNR> V2  # ny sak på V2 (eller V3) før søknaden sendes
-./helved-v3-scenarioer.sh <FNR eller SAKSNUMMER>  # alle utbetalingscasene på én sak
+./helved-v3-scenarioer.sh "$SAKSNUMMER"                    # legacy-modus med seks V3-steg på én sak
+./helved-v3-scenarioer.sh forbered-papir "$FNR" V3       # ny sak med eksplisitt V2 eller V3
+./helved-v3-scenarioer.sh fullfor papir-saker.tsv
+./helved-v3-scenarioer.sh simuler-gate utbetaling.tsv
+./helved-v3-scenarioer.sh utbetaling utbetaling.tsv
 ./finn-journalpost.sh <FNR>                     # brukerens journalpost i SAF, til papirsøknad
 ./opprett-journalpost.sh <FNR>                  # ny journalpost i dokarkiv når brukeren ikke har noen
 ```
@@ -80,6 +84,29 @@ Papirsøknad i dev trenger en journalpost som gjelder brukeren.
 Tiltaket hentes fra tiltaksdeltakelsene på saken i sb-api (2023–2027), og søknaden gjelder hele tiltaket med indeks `TILTAKSINDEKS` (default 0).
 Mottatt dato er tiltakets startdato, og `SOKNAD_MOTTATT_DATO` overstyrer den.
 Journalpostscriptene bruker maskintoken fra tokengeneratoren mot SAF og dokarkiv og trenger ingen OBO-tokens.
+
+## Hel Ved V3 med papirsaker i batch
+
+`forbered-papir FNR V2|V3 [TILTAKSINDEKS]` oppretter en ny sak, registrerer papirsøknaden og fører den til VEDTATT.
+En eksisterende sak avvises før papirregistrering fordi oppdragsversjonen ikke kan verifiseres fra `GET /sak`.
+Bruk legacy-modus eller `fullfor` for eksisterende saker først etter at oppdragsversjonen er verifisert fra en autoritativ kilde.
+En vellykket kjøring skriver ut `OPPDRAGSVERSJON=V2` eller `OPPDRAGSVERSJON=V3`; bruk denne verdien eller en annen autoritativ kontroll i manifestets `VERSJON`.
+Ikke utled manifestets `VERSJON` fra datoen i saksnummeret alene.
+`fullfor MANIFEST.tsv` leser saksnummer fra første kolonne eller en ren saksnummerlinje, hopper over duplikater og endrer ikke en allerede vedtatt nyeste papirsøknad.
+En delvis aktiv papirsøknad føres bare videre når den også er sakens nyeste søknadsbehandling.
+`simuler-gate` og `utbetaling` krever fire TSV-felt i denne rekkefølgen: `SAKSNUMMER`, `VERSJON`, `OPPDRAG_BEREGNET`, `SIMULERING_OK`.
+Overskriften er valgfri; tomme linjer og kommentarer som starter med `#` er tillatt, og bekreftelsesfeltene må være `ja` eller `nei`.
+Bare `ja` passerer bekreftelsesgaten, og `simuler-gate` er skrivebeskyttet og kan kontrollere saker som allerede har meldekortbehandlinger.
+`utbetaling` godtar bare `VERSJON=V3` og avviser saker med eksisterende meldekortbehandlinger i de to første kjedene eller en aktiv flyt.
+Kjør først `simuler-gate` for en skrivebeskyttet kontroll, og kjør `utbetaling` bare når alle sakene er klare.
+`OPPDRAG_BEREGNET=ja` må bekrefte en fullført daglig Q1-beregning, og `SIMULERING_OK=ja` må komme fra en faktisk separat simulering.
+Oppdragssystemet beregner i Q1 vanligvis rundt kl. 17 Europe/Oslo, men tidspunktet varierer og det er ikke prod-lignende nedetid.
+Vent på fullført daglig beregning etter VEDTATT, og kontroller resultatet med en faktisk simulering.
+Skriptet sover ikke til kl. 17, poller ikke Oppdragssystemet, og bruker ikke noe Hel Ved-statusendepunkt.
+Dolly- og Modia-oppretting, tokenfornyelse og eksterne statuser er manuelle eller eksterne forutsetninger.
+Skriptet automatiserer ikke duplikater, rekkefølgefeil, timeoutinjeksjon eller produksjon.
+Hel Ved V3-saker dokumenterer ikke migrering; normal migrering krever egne V2-saker og avklart historikk.
+Normal migrering skal aldri bruke `opphevSperrenStraks=true` eller `migrer-uten-kontrollsimulering.sh` som bevis.
 
 ## Nyttig å vite (så du ikke gjetter)
 

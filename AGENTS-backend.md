@@ -324,7 +324,11 @@ Alle Kotlin-backendtjenester deler den samme baseline-byggkonfigurasjonen.
   - `ktlint_experimental` = enabled
 - **Detekt** for statisk analyse (`config/detekt.yml`); navnemønstrene tillater norske tegn (`æøå`)
 - **Kover** (`org.jetbrains.kotlinx.kover`) for coverage der det er aktivert. `koverVerify` håndhever en streng linjedekningsterskel (i `tiltakspenger-libs` er kravet **100 %**), og kjøres som en del av `build`/CI. Den kjøres **ikke** av `:<modul>:test` alene, så det er lett å overse: kjør `./gradlew :<modul>:koverVerify` (eller full `build`) etter kodeendringer, og legg til tester for ny/endret kode. Unngå å skrive uoppnåelig defensiv kode (f.eks. `?: error(...)` på en gren som aldri kan nås) på egne linjer — kover teller dem som udekket og feiler bygget.
-- **Konsist skanner prosjektkatalogen, ikke kildesettene.** I et git-worktree er `.git` en fil, så reglene finner ingen filer og passerer stille; i en klone kan `konsist-regler:test` komme fra cache. Kjør `./gradlew :konsist-regler:test --rerun-tasks` i en vanlig klone, og regn den som grønn bare når loggen viser at tasken kjørte og reglene fant kildefiler.
+- **Konsist skanner prosjektkatalogen, ikke et deklarert Gradle-lesesett.**
+  En grønn kjøring kan komme fra cachen uten at reglene har lest koden.
+  I `tiltakspenger-libs` avhenger `:konsist-regler:test` av `arkitekturTest`, som alltid er ute av dato og frakoblet build cache.
+  I andre repoer kjører du test-tasken for Konsist-testene med `--rerun-tasks`.
+  Regn en kjøring som grønn bare når loggen viser at tasken kjørte og reglene fant kildefiler.
 - **Gradle version catalog** i `gradle/libs.versions.toml` der den finnes
 - **`io.github.ben-manes.versions`**-plugin for sjekk av oppdateringer på avhengigheter (`./gradlew dependencyUpdates`, ustabile versjoner filtreres bort via `isNonStable`)
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# status.sh — gir et hurtigblikk på tilstanden til tiltakspenger:
-#   1) Siste byggstatus på main for alle våre GitHub-repoer (via `gh`)
-#   2) Status på alle pods i namespace `tpts` i dev og prod (via `kubectl`)
+# status.sh gir en rask oversikt over tiltakspenger:
+#   1) GitHub Copilot-kvote for hele kontoen.
+#   2) Siste byggstatus på `main` for alle GitHub-repoene våre (via `gh`).
+#   3) Status på alle pods i namespacet `tpts` i dev og prod (via `kubectl`).
 #
 # Forventer at du allerede er logget inn:
 #   - GitHub:  `gh auth login`
@@ -44,6 +45,159 @@ else
 fi
 
 header() { printf '\n%s━━━ %s ━━━%s\n' "$BOLD$BLUE" "$1" "$RESET"; }
+
+# --- midlertidig katalog og opprydding ------------------------------------
+tmpdir=""
+copilot_server_pid=""
+
+stop_copilot_server() {
+    local waited=0
+    [[ -n "$copilot_server_pid" ]] || return 0
+
+    if kill -0 "$copilot_server_pid" 2>/dev/null; then
+        kill "$copilot_server_pid" 2>/dev/null || true
+        while (( waited < 20 )) && kill -0 "$copilot_server_pid" 2>/dev/null; do
+            sleep 0.1
+            waited=$((waited + 1))
+        done
+        kill -9 "$copilot_server_pid" 2>/dev/null || true
+    fi
+
+    wait "$copilot_server_pid" 2>/dev/null || true
+    copilot_server_pid=""
+}
+
+cleanup_status() {
+    stop_copilot_server
+    if [[ -n "$tmpdir" ]]; then
+        rm -rf "$tmpdir"
+    fi
+    return 0
+}
+
+trap cleanup_status EXIT
+trap 'exit 130' INT
+trap 'exit 131' QUIT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
+tmpdir="$(mktemp -d)" || {
+    echo "${RED}Kan ikke opprette midlertidig katalog for statusoversikten.${RESET}" >&2
+    exit 1
+}
+
+copilot_quota_unavailable() {
+    printf '%sGitHub Copilot-kvote (hele kontoen): utilgjengelig%s\n' "$YELLOW" "$RESET"
+}
+
+copilot_quota() {
+    if ! command -v copilot >/dev/null 2>&1 || ! command -v python3 >/dev/null 2>&1; then
+        copilot_quota_unavailable
+        return 0
+    fi
+
+    local copilot_log="$tmpdir/copilot-server.log"
+    local copilot_port=""
+    local attempt
+    copilot --server </dev/null >"$copilot_log" 2>&1 &
+    copilot_server_pid=$!
+
+    for ((attempt = 0; attempt < 100; attempt++)); do
+        copilot_port="$(sed -nE 's/.*CLI server listening on port ([0-9]+).*/\1/p' "$copilot_log" | head -n 1)"
+        [[ -n "$copilot_port" ]] && break
+        if ! kill -0 "$copilot_server_pid" 2>/dev/null; then
+            wait "$copilot_server_pid" 2>/dev/null || true
+            copilot_server_pid=""
+            copilot_quota_unavailable
+            return 0
+        fi
+        sleep 0.1
+    done
+
+    if [[ ! "$copilot_port" =~ ^[0-9]+$ ]] || (( copilot_port < 1 || copilot_port > 65535 )); then
+        stop_copilot_server
+        copilot_quota_unavailable
+        return 0
+    fi
+
+    local quota_response
+    quota_response="$(
+        python3 - "$copilot_port" 2>/dev/null <<'PY'
+import json
+import re
+import socket
+import sys
+
+request = json.dumps({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "account.getQuota",
+    "params": {},
+}, separators=(",", ":")).encode("utf-8")
+wire = f"Content-Length: {len(request)}\r\n\r\n".encode("ascii") + request
+
+with socket.create_connection(("127.0.0.1", int(sys.argv[1])), timeout=3) as connection:
+    connection.settimeout(3)
+    connection.sendall(wire)
+    response = bytearray()
+    while b"\r\n\r\n" not in response:
+        chunk = connection.recv(4096)
+        if not chunk or len(response) > 65536:
+            raise RuntimeError("Invalid response headers")
+        response.extend(chunk)
+    headers, body = response.split(b"\r\n\r\n", 1)
+    match = re.search(rb"(?im)^Content-Length:\s*(\d+)\s*$", headers)
+    if not match:
+        raise RuntimeError("Missing content length")
+    length = int(match.group(1))
+    if length > 1048576:
+        raise RuntimeError("Response too large")
+    while len(body) < length:
+        chunk = connection.recv(4096)
+        if not chunk:
+            raise RuntimeError("Incomplete response body")
+        body.extend(chunk)
+
+print(json.dumps(json.loads(body[:length]), separators=(",", ":")))
+PY
+    )" || {
+        stop_copilot_server
+        copilot_quota_unavailable
+        return 0
+    }
+
+    local quota_fields
+    quota_fields="$(jq -er '
+        .result.quotaSnapshots.premium_interactions
+        | select(
+            (.entitlementRequests | type) == "number"
+            and (.usedRequests | type) == "number"
+            and (.remainingPercentage | type) == "number"
+            and (.tokenBasedBilling | type) == "boolean"
+            and .entitlementRequests > 0
+            and .usedRequests >= 0
+            and .remainingPercentage >= 0
+            and .remainingPercentage <= 100
+        )
+        | [(((100 - .remainingPercentage) * 10 | round) as $percentage_tenths | "\((($percentage_tenths / 10) | floor)),\($percentage_tenths % 10)"), .usedRequests, .entitlementRequests, .tokenBasedBilling]
+        | @tsv
+    ' <<<"$quota_response" 2>/dev/null)" || {
+        stop_copilot_server
+        copilot_quota_unavailable
+        return 0
+    }
+
+    local percentage_display used_requests total_requests token_based quota_unit
+    IFS=$'\t' read -r percentage_display used_requests total_requests token_based <<<"$quota_fields"
+    quota_unit="premiumforespørsler"
+    [[ "$token_based" == "true" ]] && quota_unit="GitHub Copilot-kreditter"
+
+    stop_copilot_server
+    printf '%s\n' "GitHub Copilot-kvote (hele kontoen): $percentage_display % brukt, $used_requests av $total_requests $quota_unit"
+}
+
+copilot_quota
+echo
 
 # printf sin %-Ns teller BYTES, ikke tegn — multibyte-tegn (✓, ✗, —) gjør at
 # kolonnene forskyves. pad fyller til ønsket antall tegn i stedet.
@@ -102,7 +256,10 @@ discover_repos() {
 if [[ -n "${REPOS:-}" ]]; then
     read -r -a repo_list <<< "$REPOS"
 else
-    mapfile -t repo_list < <(discover_repos)
+    repo_list=()
+    while IFS= read -r repo; do
+        [[ -n "$repo" ]] && repo_list+=("$repo")
+    done < <(discover_repos)
 fi
 
 # ==========================================================================
@@ -116,8 +273,6 @@ printf '%s%-44s %-14s %-22s %-26s %s%s\n' "$DIM" "REPO" "STATUS" "WORKFLOW" "NÅ
 # (metarepoet, tiltakspenger-iac) faller tilbake til én rad per workflow.
 DEPLOY_WORKFLOW="${DEPLOY_WORKFLOW:-Build and deploy}"
 GH_TIMEOUT="${GH_TIMEOUT:-20}"
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
 
 gh_to=""
 command -v timeout  >/dev/null 2>&1 && gh_to="timeout $GH_TIMEOUT"
@@ -186,14 +341,14 @@ fetch_repo() {
 # sekvensielt på de tregeste. Resultatet skrives til en temp-fil per repo og
 # rendres etterpå i opprinnelig (sortert) rekkefølge.
 i=0
-for repo in "${repo_list[@]}"; do
+for repo in "${repo_list[@]+"${repo_list[@]}"}"; do
     fetch_repo "$repo" > "$tmpdir/$i.json" &
     i=$((i + 1))
 done
 wait
 
 i=0
-for repo in "${repo_list[@]}"; do
+for repo in "${repo_list[@]+"${repo_list[@]}"}"; do
     run_json="$(cat "$tmpdir/$i.json" 2>/dev/null)"
     i=$((i + 1))
 
@@ -256,7 +411,7 @@ KUBE_TIMEOUT="${KUBE_TIMEOUT:-8}"
 # (124 = timeout, som GNU `timeout`).
 run_capped() {
     local secs="$1"; shift
-    local outfile; outfile="$(mktemp)"
+    local outfile="$tmpdir/kubectl.out"
     "$@" >"$outfile" 2>&1 &
     local pid=$!
     local waited=0
@@ -282,6 +437,9 @@ pods_for_env() {
     local env_label="$1"; shift
     local clusters=("$@")
     header "Pods i $env_label (namespace: $NAMESPACE)"
+    if (( ${#clusters[@]} == 0 )); then
+        return 0
+    fi
     for ctx in "${clusters[@]}"; do
         printf '%s· context %s%s\n' "$BOLD" "$ctx" "$RESET"
 
@@ -317,5 +475,3 @@ pods_for_env() {
 pods_for_env "DEV"  $DEV_CLUSTERS
 # shellcheck disable=SC2086
 pods_for_env "PROD" $PROD_CLUSTERS
-
-echo

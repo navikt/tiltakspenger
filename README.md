@@ -102,12 +102,15 @@ kjøres fra IntelliJ, med `main()` i `LokalMain.kt`.
 | ./up-soknad.sh   | Script for å bygge og starte alle apper i docker-compose-soknad (se i [up-soknad.sh](https://github.com/navikt/tiltakspenger/blob/main/up-soknad.sh) for tilgjengelige options) |
 | ./down-soknad.sh | Script for å stoppe alle apper i docker-compose-soknad. Tar ingen options                                                                                                        |
 
-### Status på bygg og pods
+### Status på bygg, pods og GitHub Copilot
 
-`script/status.sh` gir et hurtigblikk på tilstanden til hele verdikjeden:
+`script/status.sh` gir en rask oversikt over tilstanden i hele verdikjeden:
 
+- **GitHub Copilot-kvote** for hele kontoen, hentet fra kommandolinjeverktøyet til GitHub Copilot når målingen er tilgjengelig.
 - **Siste utrulling** (`Build and deploy`) på `main` for alle våre GitHub-repoer, hentet med `gh`.
 - **Pod-status** i namespace `tpts` i dev og prod, hentet med `kubectl`.
+
+Resten vises som vanlig dersom kvoten mangler.
 
 ```
 ./script/status.sh

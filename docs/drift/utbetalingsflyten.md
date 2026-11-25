@@ -102,7 +102,7 @@ sequenceDiagram
 - Jobbene `saksbehandling-jobb-send-utbetalinger` og `saksbehandling-jobb-oppdater-utbetalingsstatus` kjører uavhengig av åpningstiden; helved og MQ-køen holder på utbetalingen til OS åpner.
 - `AutomatiskMeldekortbehandlingJobb` og `OppdaterUtbetalingsoversiktJobb` står over utenfor `Åpningstider.erInnenforØkonomisystemetsÅpningstider`, fordi simulering og utbetalingsoversikt krever at OS er åpent.
 - `Åpningstider.senesteSendetidspunktSomKanStåIReskontroen` regner ut eksemplene i tabellen over.
-- Status `FEILET` prøves ikke på nytt og må følges opp manuelt; får en utbetaling ikke OK innen 3 dager, varsler `OppdaterUtbetalingsstatusService`.
+- Status `FEILET` prøves ikke på nytt og må følges opp manuelt; får en utbetaling ikke OK innen 3 dager, varsler `OppdaterUtbetalingsstatusJobb`.
 - Reverseres en utbetaling innen to virkedager, før posteringene har nådd UR, gir simuleringen tom respons.
 - I helved v3 kan en utbetaling angres med `DELETE /utbetalinger/:uid` samme dag før 21:00; vi bruker fortsatt v2.
 - Du kontrollerer en utbetaling i OS og UR i Utbetalingsportalen: [utbetalingsportalen.md](utbetalingsportalen.md).

@@ -44,13 +44,13 @@ jq -e '.totalCount == (.items | length)' prosjekt.json > /dev/null \
   || { echo "Prosjektlista er avkortet: $(jq '.totalCount' prosjekt.json) items finnes, $(jq '.items|length' prosjekt.json) hentet. Hev --limit."; exit 1; }
 jq -r '.items[] | select(.content.type == "Issue") | "\(.content.repository)#\(.content.number)"' prosjekt.json | sort > prosjekt.txt
 
-# Alle repoer med «tiltakspenger» i navnet. Søke-APIet oppgir total_count, så avkorting er synlig.
-gh api '/search/repositories?q=org:navikt+tiltakspenger+in:name&per_page=100' > repoer.json
-jq -e '.total_count == (.items | length) and (.incomplete_results | not)' repoer.json > /dev/null \
-  || { echo "Repolista er ufullstendig: $(jq '.total_count' repoer.json) treff, $(jq '.items|length' repoer.json) hentet."; exit 1; }
+# Alle repoer med «tiltakspenger» i navnet. Søket gir høyst 1000 treff, så 1000 treff betyr at lista kan være avkortet.
+gh search repos tiltakspenger --owner navikt --match name --limit 1000 --json name,fullName,isArchived > repoer.json
+jq -e 'length < 1000' repoer.json > /dev/null \
+  || { echo "Repolista kan være avkortet: $(jq 'length' repoer.json) hentet, som er søkets tak."; exit 1; }
 # Søket treffer «tiltakspenger» hvor som helst i navnet, så prefikset filtrerer bort fremmede repoer
 # (dvh_tiltakspenger, RPA_DIR_*Tiltakspenger*) som ikke er våre.
-jq -r '.items[] | select(.archived | not) | select(.name | startswith("tiltakspenger")) | .full_name' repoer.json | sort > repoer.txt
+jq -r '.[] | select(.isArchived | not) | select(.name | startswith("tiltakspenger")) | .fullName' repoer.json | sort > repoer.txt
 
 # Alle åpne issues i de repoene. --state står eksplisitt: default er «open», og lukkede
 # issues er usynlige helt til du ber om --state all.

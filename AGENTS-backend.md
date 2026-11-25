@@ -135,7 +135,7 @@ Verdier som er personopplysninger markeres med **typen**, ikke med en kommentar 
 - **JUnit 5** som test-runner (JUnit 4 er ekskludert globalt)
 - **Mockk** er tilgjengelig, men vi foretrekker generelt fakes fremfor mocks
 - **Testcontainers** for integrasjonstester mot ekte DB / Kafka
-- Testlivssyklus: `@TestInstance(Lifecycle.PER_CLASS)`
+- Testlivssyklus: settes globalt til per klasse i build-logic; tester skal ikke ha `@TestInstance`.
 - **Ikke** bruk JUnits assertion-metoder (`assertEquals`, `assertTrue`, …)
 
 ### Ende-til-ende og databasetester
@@ -300,7 +300,7 @@ Databaselaget har to slags kode, og de skal testes ulikt:
 - **Ren mapping** — jsonb-varianter, enum-oversettelser og felter med avansert mapping — skal ha enhetstester.
   Ligger mappingen i samme fil som postgres-koden, trekk den ut i en egen db-hjelpefil, så skillet blir synlig i filstrukturen.
 
-**Enhetstesten skal pinne den faktiske strengen eller json-en, ikke bare rundturen.**
+**Enhetstesten skal låse fast den faktiske strengen eller json-en, ikke bare rundturen.**
 `x.toDb().toDomain() shouldBe x` er symmetrisk og passerer selv om en variant omdøpes i *begge* `when`-ene samtidig — og da er dataen som allerede ligger i databasen ulesbar uten at noe slår ut.
 Skriv `Enum.entries.associateWith { it.toDb() } shouldBe mapOf(...)` med verdiene skrevet ut, eller assert hele json-strengen, og behold rundturen som en egen test for lesestien.
 Navnet på disk er kontrakten mot data som allerede er lagret; dekningstall alene sier ingenting om at den holder.

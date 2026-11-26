@@ -75,13 +75,14 @@ MILJO=dev ./hent-eller-opprett-sak.sh <FNR> V2  # ny sak på V2 (eller V3) før 
 ./helved-v3-scenarioer.sh fullfor papir-saker.tsv
 ./helved-v3-scenarioer.sh simuler-gate utbetaling.tsv
 ./helved-v3-scenarioer.sh utbetaling utbetaling.tsv
+./helved-v3-scenarioer.sh verifiser-helved helved-verifisering.tsv
 ./finn-journalpost.sh <FNR>                     # brukerens journalpost i SAF, til papirsøknad
 ./opprett-journalpost.sh <FNR>                  # ny journalpost i dokarkiv når brukeren ikke har noen
 ```
 
 Papirsøknad i dev trenger en journalpost som gjelder brukeren.
 `MILJO=dev ./registrer-papir-soknad.sh <SAKSNUMMER>` henter den selv med `finn-journalpost.sh`; finnes ingen, lag en med `opprett-journalpost.sh` og kjør på nytt.
-Tiltaket hentes fra tiltaksdeltakelsene på saken i sb-api (2023–2027), og søknaden gjelder hele tiltaket med indeks `TILTAKSINDEKS` (default 0).
+Tiltaket hentes fra tiltaksdeltakelsene på saken i saksbehandlings-API-et (2023–2027), og søknaden gjelder hele tiltaket med indeks `TILTAKSINDEKS` (default 0).
 Mottatt dato er tiltakets startdato, og `SOKNAD_MOTTATT_DATO` overstyrer den.
 Journalpostscriptene bruker maskintoken fra tokengeneratoren mot SAF og dokarkiv og trenger ingen OBO-tokens.
 
@@ -90,23 +91,33 @@ Journalpostscriptene bruker maskintoken fra tokengeneratoren mot SAF og dokarkiv
 `forbered-papir FNR V2|V3 [TILTAKSINDEKS]` oppretter en ny sak, registrerer papirsøknaden og fører den til VEDTATT.
 En eksisterende sak avvises før papirregistrering fordi oppdragsversjonen ikke kan verifiseres fra `GET /sak`.
 Bruk legacy-modus eller `fullfor` for eksisterende saker først etter at oppdragsversjonen er verifisert fra en autoritativ kilde.
-En vellykket kjøring skriver ut `OPPDRAGSVERSJON=V2` eller `OPPDRAGSVERSJON=V3`; bruk denne verdien eller en annen autoritativ kontroll i manifestets `VERSJON`.
+En vellykket kjøring skriver ut `OPPDRAGSVERSJON=V2` eller `OPPDRAGSVERSJON=V3` fra den eksplisitte opprettelsen, og dette er unntaket som ikke trenger oppdragstilstand-endepunktet.
+Bruk denne verdien eller en annen autoritativ kontroll i manifestets `VERSJON`.
 Ikke utled manifestets `VERSJON` fra datoen i saksnummeret alene.
 `fullfor MANIFEST.tsv` leser saksnummer fra første kolonne eller en ren saksnummerlinje, hopper over duplikater og endrer ikke en allerede vedtatt nyeste papirsøknad.
 En delvis aktiv papirsøknad føres bare videre når den også er sakens nyeste søknadsbehandling.
 `simuler-gate` og `utbetaling` krever fire TSV-felt i denne rekkefølgen: `SAKSNUMMER`, `VERSJON`, `OPPDRAG_BEREGNET`, `SIMULERING_OK`.
 Overskriften er valgfri; tomme linjer og kommentarer som starter med `#` er tillatt, og bekreftelsesfeltene må være `ja` eller `nei`.
 Bare `ja` passerer bekreftelsesgaten, og `simuler-gate` er skrivebeskyttet og kan kontrollere saker som allerede har meldekortbehandlinger.
+`simuler-gate` leser `GET /sak/{saksnummer}/oppdragstilstand` for hver rad og blokkerer når svaret ikke kan leses sikkert.
 `utbetaling` godtar bare `VERSJON=V3` og avviser saker med eksisterende meldekortbehandlinger i de to første kjedene eller en aktiv flyt.
+`utbetaling` kjører den samme oppdragstilstand-kontrollen både i gaten og rett før første mutering i hver sak, og stopper hvis endepunktet ikke kan leses.
 Kjør først `simuler-gate` for en skrivebeskyttet kontroll, og kjør `utbetaling` bare når alle sakene er klare.
-`OPPDRAG_BEREGNET=ja` må bekrefte en fullført daglig Q1-beregning, og `SIMULERING_OK=ja` må komme fra en faktisk separat simulering.
-Oppdragssystemet beregner i Q1 vanligvis rundt kl. 17 Europe/Oslo, men tidspunktet varierer og det er ikke prod-lignende nedetid.
-Vent på fullført daglig beregning etter VEDTATT, og kontroller resultatet med en faktisk simulering.
-Skriptet sover ikke til kl. 17, poller ikke Oppdragssystemet, og bruker ikke noe Hel Ved-statusendepunkt.
+`OPPDRAG_BEREGNET=ja` betyr at operatøren har bekreftet at Oppdragssystemet fullførte en relevant Q1-beregning etter at saken ble `VEDTATT`.
+Beregningens faktiske tidsplan er ikke verifisert.
+`SIMULERING_OK=ja` bekrefter at en faktisk, separat simulering viste forventet Q1-resultat.
+Før du iverksetter et meldekort, sender en V3-melding eller går videre med migrering, må simuleringen vise forventet Q1-resultat.
+Registrer forventet Q1-resultat og eventuelle avvik for hver sak og hvert scenario.
+Skriptet venter ikke på et klokkeslett, poller ikke Oppdragssystemet og bruker ikke noe Hel Ved-statusendepunkt.
 Dolly- og Modia-oppretting, tokenfornyelse og eksterne statuser er manuelle eller eksterne forutsetninger.
 Skriptet automatiserer ikke duplikater, rekkefølgefeil, timeoutinjeksjon eller produksjon.
+Oppdragstilstand-endepunktet brukes bare i lokal/dev og aldri i produksjon.
 Hel Ved V3-saker dokumenterer ikke migrering; normal migrering krever egne V2-saker og avklart historikk.
 Normal migrering skal aldri bruke `opphevSperrenStraks=true` eller `migrer-uten-kontrollsimulering.sh` som bevis.
+`verifiser-helved` bruker bare Peisschtappern-endepunktet `GET /api/saker/<saksnummer>/TILTPENG` med eksternt Hel Ved-saksnummer, ikke id fra saksbehandlings-API-et `sak_*`.
+Kommando: `./helved-v3-scenarioer.sh verifiser-helved helved-verifisering.tsv`.
+Verifiseringen er skrivebeskyttet og erstatter ikke simulering, migreringsbevis, driftsskjema eller vurdering av personopplysninger.
+Kommandoen trenger ikke OBO-tokens, men den krever naisdevice mot intern dev og tilgang til tokengeneratorens offentlige maskintokenendepunkt.
 
 ## Nyttig å vite (så du ikke gjetter)
 

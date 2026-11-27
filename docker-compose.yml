@@ -142,7 +142,9 @@ services:
 
   saksbehandling-api:
     build:
-      context: ./tiltakspenger-saksbehandling-api
+      # Lokalmodulen har LocalConfig; prod-imaget i rota starter ikke uten NAIS_CLUSTER_NAME.
+      # Krever `./gradlew :lokal:installDist` (up.sh bygger alle moduler med installDist).
+      context: ./tiltakspenger-saksbehandling-api/lokal
       dockerfile: Dockerfile
     depends_on:
       - postgresSaksbehandling

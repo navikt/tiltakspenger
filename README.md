@@ -69,6 +69,10 @@ på siden av øvrige apper for å kunne teste frontend lokalt.
 
 #### Bruk av docker-compose oppsett for saksbehandling
 
+Compose bygger `saksbehandling-api` fra `tiltakspenger-saksbehandling-api/lokal`, og imaget har eget inngangspunkt i `LokalComposeMain`.
+Distribusjonen må være bygget først, enten med `./up.sh -b` eller med `./gradlew :lokal:installDist` i API-repoet.
+`docker-compose.yml` og API-repoet må oppdateres sammen, fordi Compose er avhengig av modulen `lokal`.
+
 For enkel bruk av docker-compose-oppsett er det skrevet noen bash-script som ligger på
 rot av dette repositoryet.
 
